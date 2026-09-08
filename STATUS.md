@@ -62,7 +62,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
-| P7-S3 | AgentCore entrypoint                       | TODO   | —     | —        | —     |
+| P7-S3 | AgentCore entrypoint                       | IN_PROGRESS | Atharv | —   | 09-08 |
 | P7-S4 | Deploy to AgentCore Runtime                | TODO   | —     | —        | —     |
 | P8-S1 | README                                     | TODO   | —     | —        | —     |
 | P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
