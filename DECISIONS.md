@@ -532,3 +532,44 @@ criterion cannot be quietly stripped of its evidence and then never asked about.
 **Result: gap ids match ground truth exactly on all three cases** — `["ps-04b"]` for `gap`, empty
 for `clean` and `denial`. `./scripts/verify.sh P3` exits zero at 185 tests. **P3, the phase the
 product lives or dies on, is complete.**
+
+---
+
+## 2026-09-08 · The justification is built, not written — and that is what makes it safe
+
+**Decision (P4-S1).** `build_justification(coverage, case)` is fully deterministic. One `Claim` per
+`MET` criterion, in the policy's order, citing only spans the verifier marked `verified`.
+
+**Why not have a model write it.** Three reasons, in order of weight:
+
+1. **It makes the guarantee structural.** "Every referenced span is verified" is true by
+   construction — there is no code path that emits a claim without evidence. A model would make it
+   true by instruction, which is the distinction this whole product exists to draw.
+2. **`Claim.supporting_span_ids` carries `min_length=1`.** Handing that to a model reproduces the
+   exact failure already recorded here: a `min_length` on `cpt_codes` made the model fabricate
+   procedure codes for a note that stated none. A schema constraint the model cannot satisfy
+   honestly is a constraint that teaches it to lie — and here it would teach it to invent a span
+   id, which is the single worst thing this document could contain.
+3. **It costs no quota.** P3-S3 through P4-S1 now run with zero model calls.
+
+The cost is prose that reads as structured rather than flowing. That is an acceptable trade for a
+payer-facing document whose whole value is that every sentence is checkable.
+
+**Only MET criteria become claims.** INSUFFICIENT is a question for the practice and belongs in the
+gap list. UNMET is a criterion the note shows is *not* satisfied — arguing it would hand the payer
+its own denial rationale.
+
+**Fails in the safe direction.** Spans default to `verified=False`, so a coverage that skipped
+`enforce_verification` produces an *empty* justification rather than an unverified one. An empty
+document is recoverable; an unsupported one is not.
+`test_a_coverage_that_never_went_through_the_verifier_yields_no_claims` pins that.
+
+**Fails loudly on a case mismatch.** A justification built from another case's coverage would argue
+the wrong patient, so `coverage.case_id != case.case_id` raises.
+
+**The diagnosis is deliberately not repeated per claim.** It is one fact about the case; restating
+it on all ten claims reads as machine output. It belongs in the packet header, emitted once in
+P4-S3.
+
+**Measured:** clean 10 claims / 15 spans, gap 9 / 12, denial 10 / 11 — every cited span verified in
+all three cases. `./scripts/verify.sh P4-S1 --offline` exits zero at 197 tests.
