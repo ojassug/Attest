@@ -1,0 +1,11 @@
+{
+  "tier": "fast",
+  "model_id": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-09-08T10:14:05.160005+00:00",
+  "value": {
+    "requirement": "required",
+    "policy_id": "pacificsource-commercial-tms",
+    "citation": "Transcranial Magnetic Stimulation \u2014 PacificSource Enterprise Policy (Commercial) \u2014 https://pacificsource.com/sites/default/files/2026-07/transcranial-magnetic-stimulation.pdf",
+    "rationale": "PacificSource (Commercial) requires prior authorization for Transcranial magnetic stimulation for major depressive disorder. CPT 90867 is listed in that policy."
+  }
+}

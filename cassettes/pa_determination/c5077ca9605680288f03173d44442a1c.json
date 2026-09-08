@@ -1,0 +1,11 @@
+{
+  "tier": "fast",
+  "model_id": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-09-08T10:14:11.185011+00:00",
+  "value": {
+    "requirement": "required",
+    "policy_id": "highmark-hho-de-mp-1147",
+    "citation": "Transcranial Magnetic Stimulation (TMS) \u2014 Medical Policy HHO-DE-MP-1147 \u2014 https://www.highmarkhealthoptions.com/content/dam/digital-marketing/en/highmark/highmarkhealthoptions/providers/medical-payment-policies/medical-policies/hho-de-mp-1147-transcranialmagneticstimulation(TMS)_02222023.pdf",
+    "rationale": "Highmark Health Options (Medicaid) requires prior authorization for Transcranial magnetic stimulation for major depressive disorder. CPT 90867 is listed in that policy."
+  }
+}

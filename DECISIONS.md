@@ -282,3 +282,31 @@ back in as another flakiness fix).
 **Ground truth was also wrong** and has been corrected — `denial.md` now states its requested
 codes, as a real prior-authorization referral would. Flagged here because the protocol forbids
 editing ground truth to make a test pass without saying so.
+
+---
+
+## 2026-09-08 · `live` means "cannot be replayed", and offline is a valid gate pass
+
+**Superseded.** The original rule (P0-S3) said an `--offline` run was *not* a valid gate pass.
+That predated cassettes and is now wrong.
+
+**Decision.** The `live` marker means exactly one thing: **the assertion cannot be replayed from a
+cassette**. Only provider-connectivity checks qualify — that tool calling and structured output
+work against the real API, and that the agent genuinely invokes its tool rather than answering
+from memory. A recorded response proves none of those.
+
+Every other model-backed test replays from `cassettes/`. `./scripts/verify.sh <target> --offline`
+therefore verifies all logic with no API key and **is** a valid gate pass.
+
+**Why it changed.** Marking whole modules `live` meant every cumulative gate run burned daily
+quota re-proving connectivity. With a 20-request daily cap per model, the gate became
+self-defeating — running it exhausted the quota the next run needed. P2 now runs in 0.6s offline
+versus two minutes and ~10 requests live.
+
+It is also how a judge reproduces our results without credentials, which the rules require.
+
+**Cache keys drop the model id** for the same reason: quotas are per model, so models get rotated,
+and keying on the model id discarded every cassette each time. The producing model is recorded
+inside each cassette instead, keeping results attributable for the P8-S3 metrics.
+
+**Re-run live** after changing provider or model, and once before submission.
