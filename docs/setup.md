@@ -2,15 +2,50 @@
 
 ## Prerequisites
 
-- **Python 3.12.** The system default on this machine is 3.14, which is too new for the Strands
-  dependency tree. Use 3.12 explicitly.
+- **Python 3.12.** The default on at least one of our machines is 3.14, which is too new for the
+  Strands dependency tree. Use 3.12 explicitly.
+
+Sessions alternate between a POSIX machine and a Windows one, so both are given throughout.
+CPython's `venv` writes executables to `bin/` on POSIX and `Scripts/` on Windows — that difference
+is the single most common way this project wastes a session.
+
+**macOS / Linux**
 
 ```bash
 python3.12 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 ```
 
-`scripts/verify.sh` finds `.venv/bin/pytest` on its own — you do not need to activate anything.
+**Windows** (PowerShell or Git Bash)
+
+```bash
+py -3.12 -m venv .venv
+.venv/Scripts/python.exe -m pip install -e ".[dev]"
+```
+
+`scripts/verify.sh` probes both layouts and finds pytest on its own — you do not need to activate
+anything. If it finds none it exits **2** with a setup message, which is deliberately distinct
+from a gate failure: a non-zero gate must only ever mean tests failed.
+
+## Running the gate
+
+The whole suite replays from `cassettes/` — no API key, no network, about 1.5 seconds:
+
+```bash
+./scripts/verify.sh P3 --offline     # a phase, plus every phase before it
+./scripts/verify.sh ALL --offline    # everything
+```
+
+Two things that are easy to trip over:
+
+- **One test still needs a key to be *present*.** `test_p2_s3.py::test_pa_tool_is_registered`
+  builds an `Agent`, and `build_model()` refuses to construct without a credential — even though
+  it makes no request, so any dummy string satisfies it. A genuinely keyless run is one test
+  short. This is a known open item, recorded in `DECISIONS.md`.
+- **Never remove the explicit `encoding="utf-8"` from a file read.** Python otherwise uses the
+  locale default, which is cp1252 on Windows. That crashes on the policy text and — far worse —
+  silently changes the cassette cache key, so a machine holding every cassette starts demanding
+  live API calls. It cost this project a full debugging session; see `DECISIONS.md`.
 
 ## Model provider
 
@@ -25,7 +60,11 @@ python3.12 -m venv .venv
 Verify:
 
 ```bash
+# macOS / Linux
 .venv/bin/python -c "from attest.llm import have_credentials; assert have_credentials()"
+# Windows
+.venv/Scripts/python.exe -c "from attest.llm import have_credentials; assert have_credentials()"
+
 ./scripts/verify.sh P0
 ```
 
