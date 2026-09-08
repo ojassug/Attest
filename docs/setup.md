@@ -33,8 +33,11 @@ Verify:
 
 | Tier | Model | Used for |
 |---|---|---|
-| `fast` | `gemini-3.5-flash` | Intake extraction, denial parsing |
-| `reasoning` | `gemini-3.6-flash` | Criterion matching, appeal drafting |
+| `fast` | `gemini-3.5-flash-lite` | Intake extraction, denial parsing |
+| `reasoning` | `gemini-3.8-flash` | Criterion matching, appeal drafting |
+
+These rotate as daily quotas are exhausted. Cassettes are keyed on **tier**, not model id, so
+rotating a model does not discard recorded responses.
 
 Override with `ATTEST_MODEL_FAST` / `ATTEST_MODEL_REASONING` in `.env`.
 
@@ -52,11 +55,23 @@ Chosen by probing the live API on 2026-09-08, **not** from the Strands docs, whi
 - **No `-latest` aliases.** They shift underneath us, which would let demo behaviour drift between
   the recorded video and the judges' run.
 
-### Transient failures are expected
+### Quota: 20 requests per day, per model
 
-The free tier returns `503 high demand` unpredictably. A full P3 run makes roughly thirty model
-calls, so `attest.llm.with_retry` wraps model calls with exponential backoff. Permanent errors
-(bad key, retired model) are re-raised immediately rather than retried.
+Not per minute. This is the project's binding constraint.
+
+Mitigations already in place:
+- **Cassettes** (`cassettes/`) record every structured response. The full suite replays offline in
+  under a second with no API key — run `./scripts/verify.sh ALL --offline`.
+- **Batching**: all criteria for a case go in one call, so a full run is 3 calls rather than 30.
+- **Rotation**: each model has its own daily allowance. Change `DEFAULT_MODELS` in
+  `src/attest/llm.py` when one is exhausted.
+
+Iteration still costs quota, because changing a prompt changes the cache key and forces a
+re-record. **Enabling billing on the same key removes the ceiling** — no code change, and at
+flash pricing the entire project is a few dollars. Recommended before P4/P5.
+
+`attest.llm.with_retry` also handles transient `503 high demand`, which the free tier returns
+unpredictably. Permanent errors (bad key, retired model) are re-raised immediately.
 
 ## Switching to Amazon Bedrock
 
@@ -73,5 +88,7 @@ deferred to P7.
 | Item | Status |
 |---|---|
 | Gemini API key | done |
-| AWS Builder ID | **outstanding** |
-| AWS $50 credit request | **outstanding** |
+| **Rotate the Gemini key** | **outstanding** — it was pasted into a chat transcript on 09-08. Regenerate at <https://aistudio.google.com/apikey> and update `.env`. Low stakes (free-tier key, gitignored), but worth closing. |
+| Enable Gemini billing | recommended before P4/P5 — removes the 20/day ceiling |
+| AWS Builder ID | **outstanding** — required Devpost field, free, no AWS account needed |
+| AWS $50 credit request | **outstanding** — closes Sep 11, 12:00pm PT. Only useful if P7 AgentCore happens. |

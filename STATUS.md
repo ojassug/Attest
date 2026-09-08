@@ -12,9 +12,9 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0, P1, P2 complete. **P3-S1 is next — the core phase.** |
-| **Next step** | `P3-S1` — policy ingestion. Watch the Gemini daily quota. |
-| **Blocking deadline** | AWS $50 credit request — **Sep 11, 2026, 12:00pm PT** (now a P8-S5 item, not a build blocker) |
+| **Phase** | P0, P1, P2, P3-S1, P3-S2 complete. **P3-S3 is next.** |
+| **Next step** | `P3-S3` — evidence-span verifier. Deterministic, needs no quota. |
+| **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
 | **Demo video URL** | not yet recorded |
@@ -46,7 +46,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P2-S3 | Intake agent wiring                        | DONE   | Atharv| 1b99b51  | 09-08 |
 | P3-S1 | Policy ingestion to draft criteria         | DONE   | Atharv| e0f07e4  | 09-08 |
 | P3-S2 | Per-criterion evidence matching            | DONE   | Atharv| a1358d9  | 09-08 |
-| P3-S3 | Evidence-span verifier                     | IN_PROGRESS | Atharv | —        | 09-08 |
+| P3-S3 | Evidence-span verifier                     | TODO   | —     | —        | —     |
 | P3-S4 | Verifier enforcement in the pipeline       | TODO   | —     | —        | —     |
 | P3-S5 | Gap list                                   | TODO   | —     | —        | —     |
 | P4-S1 | Justification from verified evidence only  | TODO   | —     | —        | —     |
@@ -80,37 +80,71 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 ---
 
-**2026-09-08 — Atharv** *(session 1)*
+**2026-09-08 — Atharv** *(session 1 — long session, ended on usage limit)*
 
-**P0-S2, P0-S3 and all of P1 are DONE.** Full `./scripts/verify.sh P1` is green: 82 tests.
+**Done: all of P0, P1, P2, plus P3-S1 and P3-S2.** `./scripts/verify.sh P3-S2 --offline` is green:
+146 tests in 0.5s, no API key needed.
 
-What exists: the handoff protocol, the gate runner, Pydantic domain models, the policy-pack
-schema and loader, two real TMS policy packs, and three synthetic cases with committed ground
-truth.
+**Next: `P3-S3`, the evidence-span verifier.** Good step to pick up on — it is fully
+deterministic, needs no model calls and no quota, and it is the feature that makes the product's
+central claim true rather than aspirational.
 
-**The project is now blocked on `P0-S1` (AWS).** P0-S4 and everything in P2 onward calls a model,
-and the Bedrock model id comes out of P0-S1. Do not guess it — run
-`aws bedrock list-foundation-models` as the DoD says; regional availability varies.
+---
 
-Things worth knowing before you touch this:
+### Read DECISIONS.md before touching anything
 
-- **Ground truth is the standard, and it is deliberately written ahead of the code.**
-  `data/synthetic/expected/*.json` says exactly what verdict every criterion must receive for
-  every case. When P3's matcher disagrees, the matcher is wrong until proven otherwise. Do not
-  edit ground truth to make a test pass without saying so in DECISIONS.md.
-- **The gap case's gap is subtle on purpose.** `gap.md` asserts "An augmentation trial was
-  attempted" with no agent, no dose and no duration. Correct behaviour is `INSUFFICIENT` on
-  `ps-04b` plus a question to the practice — not a guess, and not failing the whole request.
-- **The denial case is fully documented and denied anyway.** That is the point: the payer is
-  wrong, and the appeal quotes the medication table and CBT dates back at Highmark's own policy
-  language. If someone "fixes" that note to be genuinely deficient, the appeal demo dies.
-- **Schema changed mid-phase.** `Criterion.polarity` and a required `PolicyPack.appeal_window_source`
-  were added during P1-S3 — see DECISIONS.md. The cumulative gate caught the resulting fixture
-  breakage in P1-S2 immediately, which is the protocol working.
-- **Both appeal windows are unconfirmed placeholders.** Neither payer PDF states one. Fine for a
-  synthetic demo; must be verified before any real filing.
+Nine decisions are recorded there and several are counter-intuitive. The four that will bite you:
 
-Environment: Python 3.12 in `.venv`. `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
-`verify.sh` finds `.venv/bin/pytest` on its own.
+1. **Ground truth is authoritative. Never edit it to make a test pass.** It was wrong twice and
+   the *model* was right both times — `denial.md` had no CPT codes, and `clean.md`/`gap.md` had no
+   patient age. Both times the fix was to correct the note toward realism, not to relax the
+   expectation. If you must change ground truth, say so in DECISIONS.md in the same commit.
+
+2. **Never add a schema constraint that makes absence unrepresentable.** A `min_length=1` on
+   `cpt_codes`, added to fix flakiness, forced the model to fabricate procedure codes for a note
+   that stated none — the exact failure this product exists to prevent, reproduced in our own
+   code. Two tests now guard it, one behavioural and one on the schema itself.
+
+3. **`live` means "cannot be replayed from a cassette"** — provider connectivity only, three tests
+   total. Everything else replays from `cassettes/`, so `--offline` **is** a valid gate pass. This
+   supersedes the original P0-S3 rule that said otherwise.
+
+4. **Facility criteria are deliberately excluded from packs.** Ingestion finds them (attendant
+   training, resuscitation equipment) but nothing in a clinical note can ever evidence them, so
+   they would sit permanently INSUFFICIENT and make complete cases look incomplete.
+
+---
+
+### The binding constraint: Gemini quota
+
+**20 requests per day, per model.** Not per minute. Four models were spent on 09-08:
+`gemini-3.5-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, and `gemini-3.8-flash` (currently the
+reasoning tier, partially used).
+
+Cassettes mean the *test suite* costs nothing — but **iteration does**, because changing a prompt
+changes the cache key and forces a re-record.
+
+If you hit 429:
+- Rotate to an unused model in `DEFAULT_MODELS` (`src/attest/llm.py`). Cassettes are keyed on
+  **tier**, not model id, so rotating no longer discards them. Remaining candidates:
+  `gemini-3.1-flash-lite`, `gemini-omni-1.1-flash`, `gemini-3.5-flash-lite` (fast tier, partly used).
+- Or wait for the daily reset.
+- **The real fix is enabling billing** on the same Google AI Studio key. No code change, and at
+  flash pricing the whole project is a few dollars. Recommended before P4/P5.
+
+---
+
+### State
+
+- **Provider:** Gemini. `fast` = `gemini-3.5-flash-lite`, `reasoning` = `gemini-3.8-flash`.
+  Bedrock deferred to P7 — AWS account not set up. Swapping is one constructor in
+  `src/attest/llm.py`; nothing else names a provider.
+- **Matching accuracy:** 30/30 verdicts correct across three cases and both payers.
+- **Environment:** Python 3.12 in `.venv`. `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
+- **Run the gate:** `./scripts/verify.sh P3-S2 --offline` should be green before you start.
+
+**Outstanding, not blocking:** AWS Builder ID (required Devpost field), $50 AWS credit
+(**Sep 11, 12:00pm PT**), and the Gemini API key should be rotated — it was pasted into a chat
+transcript. See `docs/setup.md`.
 
 Nothing is mid-flight. Working tree is clean.
