@@ -573,3 +573,54 @@ P4-S3.
 
 **Measured:** clean 10 claims / 15 spans, gap 9 / 12, denial 10 / 11 — every cited span verified in
 all three cases. `./scripts/verify.sh P4-S1 --offline` exits zero at 197 tests.
+
+---
+
+## 2026-09-08 · Gate 1 is enforced twice, and the hash is what makes an approval mean anything
+
+**Decision (P4-S2).** Human approval before submission is enforced in two independent places:
+
+1. **The agent path.** `SubmissionGate` (a Strands `HookProvider`) registers on
+   `BeforeToolCallEvent` and calls `event.interrupt("gate1_submission", ...)` before
+   `emit_submission_artifact`. Strands raises `InterruptException`, stops the event loop, and
+   returns the interrupt to the caller — so the tool never runs, and the gate holds even when the
+   agent is driven headlessly with no UI in the loop to remember to ask.
+2. **The emitter.** `emit_submission_artifact` independently refuses to write unless the packet
+   carries an `ApprovalRecord` whose hash matches the content in front of it.
+
+**Why both.** Each alone leaves a way around. The hook guards only the agent path — a direct call
+to the emitter bypasses it entirely. The emitter guards only the filesystem — it cannot stop an
+agent from trying, or ask a human anything. `Attest-PRODUCT.md` §6 calls this non-negotiable
+product behaviour, and non-negotiable means it should not depend on which entry point was used.
+
+**The content hash is the load-bearing part.** Without it an `ApprovalRecord` proves an approval
+happened at *some* point. With it, it proves a clinician approved *this* content — so editing the
+packet after sign-off invalidates the approval rather than riding on it.
+`test_tampering_after_approval_is_refused` approves one packet, emits another, and requires the
+refusal.
+
+`content_hash` **excludes the `approval` field**, which is not fastidiousness but necessity: the
+record contains the hash, so including it would be circular — attaching the approval would change
+the hash stored inside that approval. The dump is canonicalised (sorted keys, no incidental
+whitespace) so a packet always hashes the same way regardless of field construction order.
+
+**Refusal is not silence.** An empty or blank approver sets `cancel_tool` rather than falling
+through. "Nobody said yes" must never be treated as "nobody said no" — the same reasoning that
+makes `PARequirement.UNKNOWN` exist.
+
+**Validation happens strictly before anything is created**, so a refused emit leaves no directory,
+no empty file, and nothing that could be mistaken for a partial submission.
+`test_artifact_blocked_without_approval` asserts the output directory is still empty.
+
+**How the approval reaches the emitter.** The hook is the only place that knows who approved and
+when, so on resume it writes the `ApprovalRecord` into the tool's input against the packet the
+human was actually shown. Without that wiring the agent path would approve and then fail at the
+emitter, which is why it is pinned by a test rather than left implicit.
+
+**Testable without a model.** `event.interrupt()` touches only `agent._interrupt_state`, so the
+gate is exercised against a constructed `BeforeToolCallEvent` and a stub agent — real Strands
+behaviour, no quota, no cassette. The full agent loop is left to P7's orchestrator tests.
+
+**Note on scope.** `src/attest/packet/emit.py` exists now because Gate 1 is meaningless without
+something to gate. It writes Markdown; **P4-S3 adds the PDF and the artifact-content
+requirements.**
