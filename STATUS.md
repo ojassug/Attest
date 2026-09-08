@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P1 complete. P0-S1 in progress (Gemini key), then P0-S4, then P2. |
-| **Next step** | `P0-S1` — paste a Gemini key into `.env`. Everything is blocked behind it. |
+| **Phase** | P0 and P1 complete. **P2-S1 is next.** |
+| **Next step** | `P2-S1` — note to structured Case. Nothing is blocked. |
 | **Blocking deadline** | AWS $50 credit request — **Sep 11, 2026, 12:00pm PT** (now a P8-S5 item, not a build blocker) |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -33,10 +33,10 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 | Step  | Title                                      | Status | Owner | Gate SHA | Date  |
 |-------|--------------------------------------------|--------|-------|----------|-------|
-| P0-S1 | Model provider access (Gemini key)         | IN_PROGRESS | Atharv | —        | 09-08 |
+| P0-S1 | Model provider access (Gemini key)         | DONE   | Atharv| 65511ee  | 09-08 |
 | P0-S2 | Protocol documents                         | DONE   | Atharv| pre-gate | 09-08 |
 | P0-S3 | Repo skeleton, tooling, gate runner        | DONE   | Atharv| 93c3aa3  | 09-08 |
-| P0-S4 | Model provider smoke test                  | TODO   | —     | —        | —     |
+| P0-S4 | Model provider smoke test                  | DONE   | Atharv| 65511ee  | 09-08 |
 | P1-S1 | Pydantic domain models                     | DONE   | Atharv| d666605  | 09-08 |
 | P1-S2 | Policy pack format and loader              | DONE   | Atharv| 8e9bc2d  | 09-08 |
 | P1-S3 | Two TMS policy packs                       | DONE   | Atharv| 0dba1ff  | 09-08 |
