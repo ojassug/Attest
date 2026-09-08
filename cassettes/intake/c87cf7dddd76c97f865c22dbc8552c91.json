@@ -1,0 +1,13 @@
+{
+  "patient_ref": "SYNTH-999",
+  "payer": "PacificSource",
+  "plan": "Commercial",
+  "member_id": "PS-0000-0000",
+  "group_number": null,
+  "service": "transcranial magnetic stimulation",
+  "cpt_codes": [],
+  "units_requested": null,
+  "duration_weeks": null,
+  "primary_diagnosis_code": "F33.2",
+  "primary_diagnosis_text": "Major depressive disorder, recurrent, severe"
+}

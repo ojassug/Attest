@@ -50,6 +50,8 @@ device and no implanted metal within 30 centimetres of the intended coil positio
 
 Refer for repetitive transcranial magnetic stimulation. Proposed course does not exceed five
 days a week for six weeks, for a total of 30 sessions, followed by a three-week taper.
+Requested codes: 1 unit of 90867 for treatment planning and cortical mapping, 30 units of
+90868 for treatment delivery, and 2 units of 90869 for motor threshold redetermination.
 
 Treatment will be delivered on a NeuroStar Advanced Therapy system, an FDA-cleared TMS device,
 by a physician adequately trained and experienced in the specific techniques used.
