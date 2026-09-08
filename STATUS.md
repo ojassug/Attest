@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P4 complete.** **P5-S1 is next.** |
-| **Next step** | `P5-S1` — denial parsing. First model-calling step since P3-S2; check quota. |
+| **Phase** | **P0–P4 complete**, plus P7-S3 (taken out of order). **P7-S4 is next, then P5.** |
+| **Next step** | `P7-S4` — deploy to AgentCore. **Blocked on machine setup**: AWS CLI, Docker, and `bedrock-agentcore-starter-toolkit` are all absent. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -62,7 +62,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
-| P7-S3 | AgentCore entrypoint                       | IN_PROGRESS | Atharv | —   | 09-08 |
+| P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| 99b4b7c  | 09-08 |
 | P7-S4 | Deploy to AgentCore Runtime                | TODO   | —     | —        | —     |
 | P8-S1 | README                                     | TODO   | —     | —        | —     |
 | P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
