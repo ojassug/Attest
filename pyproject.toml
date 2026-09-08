@@ -29,10 +29,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# The repo root must be importable so tests can import `agent_runtime`, which AgentCore
-# requires at the root. `python -m pytest` adds the CWD implicitly but the `pytest`
-# console script - which scripts/verify.sh uses - does not, so state it explicitly.
-pythonpath = ["."]
 # Markers are generated from the step headings in PLAN.md. PLAN.md is the contract;
 # tests/test_p0_s3.py::test_every_step_has_a_marker fails if the two ever drift.
 markers = [
