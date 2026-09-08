@@ -82,32 +82,67 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 **2026-09-08 — Atharv** *(session 2)*
 
-**P3 is complete.** `./scripts/verify.sh P3 --offline` exits zero at **185 tests**. The session-1
-notes below are still worth reading, but two of their specifics are superseded: the count is no
-longer 146, and P3-S3 is no longer next.
+**P0 through P4 are complete.** `./scripts/verify.sh P4 --offline` exits zero at **223 tests** in
+about two seconds. The session-1 note below is still worth reading, but its specifics are
+superseded — the count is no longer 146 and P3-S3 is long done.
 
-**Two platform bugs were found and fixed before any feature work**, because the recorded baseline
-did not reproduce on Windows:
+### Read this before starting P5
+
+**P5-S1 and P5-S2 cannot start without a Gemini API key.** `have_credentials()` is currently
+`False`, there is no `.env` on this machine, and no `cassettes/` namespace exists for the appeal
+path — so there is nothing to replay and the first run must be live. P5-S3 and P5-S4 are
+deterministic and need no quota.
+
+**Enable billing on the key before starting.** P5 is the most prompt-iteration-heavy phase left,
+and every prompt change forces a cassette re-record. The free tier is 20 requests per day *per
+model* and four models were already spent on 09-08. At flash pricing the whole project is a few
+dollars; see `docs/setup.md`.
+
+**P5-S4 will probably hit `ArtifactRenderError`.** fpdf2's core fonts are latin-1 only and the
+denial letter contains em-dashes, so an appeal PDF quoting it will refuse to render rather than
+silently substitute the character. That refusal is deliberate — see DECISIONS.md — and the fix is
+`FPDF.add_font` with a Unicode TTF plus the font file. Budget ten minutes for it.
+
+**PLAN.md's `live` annotations are stale.** It marks several P3–P5 tests `(marker live)`, but
+DECISIONS.md reserves `live` for calls that genuinely cannot be replayed. Every step since P3-S2
+has used `@needs_model` instead. Follow the code, not that annotation — and note PLAN.md itself
+has *not* been corrected, which is a deliberate open item rather than an oversight.
+
+### Two platform bugs, fixed before any feature work
+
+The recorded baseline did not reproduce on Windows, so this session started by fixing that:
 
 1. `verify.sh` probed only `.venv/bin/pytest` (POSIX) and exited **127** while printing
    `GATE FAILED`. A missing runner now exits 2; `GATE FAILED` again means only that tests failed.
 2. Every `read_text()` omitted `encoding=`, so Windows used cp1252. That crashed on the policy
    text and, worse, silently changed the cassette cache key — so a machine holding every cassette
    demanded a live API key for every model-backed test. The offline gate was Linux-only.
+   **Never remove an explicit `encoding="utf-8"`.**
 
-**Known and still open:** `test_p2_s3.py::test_pa_tool_is_registered` is not marked `live` but
-still needs a key to be *present* (any dummy string works — no request is made). A keyless run is
-184/185. Fixing it means either letting `build_model()` construct without a key, which contradicts
-a recorded decision, or skipping the test without credentials, which weakens the gate. Not yet
-decided.
+### Known and still open
 
-**P3 outcome:** span verification is **39/39 (100%)** across all three cases with **zero criteria
-downgraded**, so P3-S2's 30/30 ground-truth accuracy is intact. Gap ids match ground truth exactly.
-P3-S3 through P3-S5 cost **no quota at all** — all deterministic or cassette-replayed.
+`test_p2_s3.py::test_pa_tool_is_registered` is not marked `live` but still needs a key to be
+*present* — any dummy string works, no request is made. Measured: a keyless run is **222/223**,
+with a placeholder **223/223**. Fixing it means either letting `build_model()` construct without a
+key, which contradicts a recorded decision, or skipping the test without credentials, which
+weakens the gate. Not decided.
 
-**Next: `P4-S1`.** Note that P4-S3 requires PDF output and `pyproject.toml` still declares no PDF
-library. Pick one that ships Windows wheels (`fpdf2` or `reportlab`); `weasyprint` needs GTK system
-libraries and would break the "judges clone and run" requirement.
+### Where the product stands
+
+- **Verification:** 39/39 spans verify verbatim (100%) with **zero** criteria downgraded, so
+  P3-S2's 30/30 ground-truth verdict accuracy is intact. Gap ids match ground truth exactly.
+- **Gate 1 is enforced twice** — a `BeforeToolCallEvent` interrupt on the agent path, and an
+  independent hash check in the emitter. Editing a packet after sign-off invalidates the approval.
+- **Artifacts** emit as Markdown + PDF from one block list, so the checkable document and the sent
+  document cannot drift.
+- **P3-S3 through P4-S3 made zero model calls** — six consecutive steps, no quota touched.
+
+### Not code, and overdue
+
+- **AWS $50 credit form closes Sep 11, 12:00pm PT.** Not requested.
+- **AWS Builder ID** — a required Devpost field. Not obtained.
+- The Gemini key should be rotated; it was pasted into a chat transcript.
+- `README.md` was brought up to date this session, but P8-S1 still owns the final pass.
 
 ---
 
