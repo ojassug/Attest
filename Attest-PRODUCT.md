@@ -87,7 +87,7 @@ Why it stays unsolved for this user: existing PA vendors target large health sys
 
 ## 4. What the product does
 
-Given a patient's clinical note and insurance details, AuthPilot:
+Given a patient's clinical note and insurance details, Attest:
 
 1. **Reads and structures the case** — pulls out the service requested, diagnosis, requested duration/units, payer, and plan.
 2. **Determines whether a prior authorization is required** for that service under that payer/plan, and explains why, pointing to the policy it relied on.
