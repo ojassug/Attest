@@ -188,3 +188,44 @@ psychotherapy criterion at all. The same patient can clear one and fail the othe
 That is the product's whole thesis — criteria are payer-specific, and matching them is the work.
 Two packs that agreed would make the claim untestable. `test_packs_impose_materially_different_criteria`
 and `test_highmark_requires_psychotherapy_failure_and_pacificsource_does_not` pin the difference.
+
+---
+
+## 2026-09-08 · Model provider is Gemini, not Bedrock — Bedrock deferred to P7
+
+**Decision.** `build_model()` uses Strands' `GeminiModel` against a free Google AI Studio key.
+Two tiers: `gemini-2.5-flash` for intake and denial parsing, `gemini-2.5-pro` for criterion
+matching and appeal drafting. Both overridable via `ATTEST_MODEL_FAST` / `ATTEST_MODEL_REASONING`.
+
+**Why.** Bedrock needs a full AWS account setup (IAM user, access keys, per-region model access)
+that Atharv was not ready to do, and with the Sep 14 deadline the build could not sit idle waiting
+for it. A Gemini key takes about a minute and needs no credit card. Claude Pro is a consumer plan
+and carries no API access, so an Anthropic key was not available either.
+
+**This costs us nothing on the rules.** §1.3 requires the **Strands Agents SDK**; Bedrock and
+AgentCore are explicitly optional and only "strengthen" the Technical Implementation score
+(`Attest-PRODUCT.md:29`, `:45`). AgentCore Runtime hosts *your code*, and that code may call any
+model API — so a P7 AgentCore deployment remains available regardless of provider.
+
+**Why two tiers.** The pipeline's demands are wildly uneven. Intake is field-pulling. Criterion
+matching needs drug-class knowledge, therapeutic-dose judgement, date arithmetic against a
+duration bar, and **exact verbatim quoting** — the verifier rejects paraphrase, and weaker models
+paraphrase when asked to quote. Paying for reasoning only where it matters is free.
+
+**Switching back is one file.** Nothing outside `src/attest/llm.py` names a provider. If the AWS
+account gets set up, swap the constructor and the $50 credit covers the compute.
+
+---
+
+## 2026-09-08 · Strands' provider index page is stale — trust the per-provider page
+
+**Decision.** The Gemini provider is `strands.models.gemini.GeminiModel`, installed with
+`pip install 'strands-agents[gemini]'`.
+
+**Why this is worth recording.** The docs contradict themselves. The model-providers index page
+lists `strands.models.google.GoogleModel` under extra `google`; the dedicated Gemini page says
+`strands.models.gemini.GeminiModel` under extra `gemini`. The second is correct — verified by
+installing and enumerating `strands.models`, where `google` does not exist at all.
+
+**How to apply.** When a Strands API detail matters, verify it against the installed package
+rather than the index page. Do not spend a debugging cycle rediscovering this one.

@@ -1,0 +1,91 @@
+"""Model provider selection — the single place the rest of the codebase learns which model to use.
+
+Everything else calls ``build_model()``. Swapping providers (Gemini today, Bedrock once the AWS
+account is set up) is a change here and nowhere else. See DECISIONS.md.
+
+Two tiers, because the pipeline's demands are wildly uneven:
+
+* ``fast`` — intake extraction and denial parsing. Structured field-pulling; almost any current
+  model does it.
+* ``reasoning`` — criterion matching and appeal drafting. Needs drug-class knowledge, therapeutic
+  dose judgement, date arithmetic against a duration bar, and exact verbatim quoting (the
+  verifier rejects paraphrase). This is the step the product lives or dies on.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from typing import Literal
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ENV_FILE = REPO_ROOT / ".env"
+
+Tier = Literal["fast", "reasoning"]
+
+DEFAULT_MODELS: dict[str, str] = {
+    "fast": "gemini-2.5-flash",
+    "reasoning": "gemini-2.5-pro",
+}
+
+KEY_VARS = ("GOOGLE_API_KEY", "GEMINI_API_KEY")
+
+
+def load_env(path: Path = ENV_FILE) -> None:
+    """Read KEY=VALUE lines from .env into os.environ without overwriting real env vars.
+
+    Deliberately dependency-free and deliberately non-overriding: a key exported in the shell
+    or injected by a deployment beats the local file.
+    """
+    if not path.exists():
+        return
+    for raw in path.read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
+def api_key() -> str | None:
+    load_env()
+    for var in KEY_VARS:
+        if os.environ.get(var):
+            return os.environ[var]
+    return None
+
+
+def have_credentials() -> bool:
+    """Used to skip live tests cleanly rather than fail them with an opaque auth error."""
+    return api_key() is not None
+
+
+def model_id(tier: Tier = "reasoning") -> str:
+    """Resolved model id. ``ATTEST_MODEL_FAST`` / ``ATTEST_MODEL_REASONING`` override."""
+    load_env()
+    return os.environ.get(f"ATTEST_MODEL_{tier.upper()}", DEFAULT_MODELS[tier])
+
+
+def build_model(tier: Tier = "reasoning", **params):
+    """The configured Strands model for a tier.
+
+    Raises with an actionable message rather than letting an auth failure surface deep inside
+    an agent run, where it reads as a model quality problem instead of a setup problem.
+    """
+    from strands.models.gemini import GeminiModel
+
+    key = api_key()
+    if not key:
+        raise RuntimeError(
+            "No Gemini API key found.\n"
+            f"  Looked for: {' or '.join(KEY_VARS)} in the environment and in {ENV_FILE}\n"
+            "  Get a free key at https://aistudio.google.com/apikey, then put it in .env as:\n"
+            "      GOOGLE_API_KEY=your-key-here\n"
+            "  .env is gitignored. Never commit it."
+        )
+
+    return GeminiModel(
+        client_args={"api_key": key},
+        model_id=model_id(tier),
+        params=params or None,
+    )
