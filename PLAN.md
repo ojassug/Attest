@@ -198,7 +198,9 @@ The ground-truth files are what make every later phase's DoD objective. Without 
 ## P2-S2 — PA-required determination (deterministic, no LLM)
 
 **DoD**
-- [ ] **File** `src/attest/tools/pa_lookup.py` exposes `check_pa_required(cpt, payer, plan) -> PADetermination` with `.required`, `.policy_id`, `.citation`
+- [ ] **File** `src/attest/tools/pa_lookup.py` exposes `check_pa_required(cpt, payer, plan) -> PADetermination` with `.requirement`, `.policy_id`, `.citation`, `.rationale`
+      *(refined from `.required`: a boolean would collapse `UNKNOWN` into `False`, which is the
+      exact bug this step exists to prevent — hence a three-state enum)*
 - [ ] **Test** `test_p2_s2.py::test_determination_matches_ground_truth` — correct for all three cases
 - [ ] **Test** `test_p2_s2.py::test_unmapped_cpt_returns_unknown_not_false` — an unmapped CPT returns `UNKNOWN`, never `required=False`. Absence of a policy is not evidence that no PA is needed, and the agent must never imply otherwise.
 
