@@ -51,7 +51,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P3-S5 | Gap list                                   | DONE   | Atharv| 7385449  | 09-08 |
 | P4-S1 | Justification from verified evidence only  | DONE   | Atharv| 86eb7d0  | 09-08 |
 | P4-S2 | Gate 1 — approval before submission        | DONE   | Atharv| 6ae10bd  | 09-08 |
-| P4-S3 | Submission artifact                        | TODO   | —     | —        | —     |
+| P4-S3 | Submission artifact                        | IN_PROGRESS | Atharv | —   | 09-08 |
 | P5-S1 | Denial parsing                             | TODO   | —     | —        | —     |
 | P5-S2 | Rebuttal drafting                          | TODO   | —     | —        | —     |
 | P5-S3 | Gate 2 — approval before appeal            | TODO   | —     | —        | —     |
