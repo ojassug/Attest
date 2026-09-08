@@ -70,7 +70,18 @@ if [ "$OFFLINE" -eq 1 ]; then
   EXPR="$EXPR and not live"
 fi
 
-if [ -x ".venv/bin/pytest" ]; then PYTEST=".venv/bin/pytest"; else PYTEST="pytest"; fi
+# CPython's venv writes bin/ on POSIX and Scripts/ on Windows. Probe both: sessions
+# alternate between machines, and the gate command has to mean the same thing on each.
+# A missing runner exits 2 (setup error), never a gate failure - "GATE FAILED" must
+# only ever mean tests failed.
+if   [ -x ".venv/bin/pytest" ];         then PYTEST=".venv/bin/pytest"
+elif [ -x ".venv/Scripts/pytest.exe" ]; then PYTEST=".venv/Scripts/pytest.exe"
+elif command -v pytest >/dev/null 2>&1; then PYTEST="pytest"
+else
+  echo "FAIL: no pytest found - looked in .venv/bin, .venv/Scripts, and on PATH." >&2
+  echo "      Create the environment first; see docs/setup.md" >&2
+  exit 2
+fi
 
 echo "gate: $TARGET  (through $STOP)"
 [ "$OFFLINE" -eq 1 ] && echo "mode: OFFLINE — provider-connectivity tests excluded; model logic replays from cassettes"
