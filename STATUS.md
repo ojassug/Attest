@@ -37,7 +37,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P0-S2 | Protocol documents                         | DONE   | Atharv| pre-gate | 09-08 |
 | P0-S3 | Repo skeleton, tooling, gate runner        | DONE   | Atharv| 93c3aa3  | 09-08 |
 | P0-S4 | Bedrock smoke test                         | TODO   | —     | —        | —     |
-| P1-S1 | Pydantic domain models                     | TODO   | —     | —        | —     |
+| P1-S1 | Pydantic domain models                     | IN_PROGRESS | Atharv | —        | 09-08 |
 | P1-S2 | Policy pack format and loader              | TODO   | —     | —        | —     |
 | P1-S3 | Two TMS policy packs                       | TODO   | —     | —        | —     |
 | P1-S4 | Synthetic corpus and ground truth          | TODO   | —     | —        | —     |
