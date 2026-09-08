@@ -7,7 +7,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — early development.** The product design, phase plan, and engineering protocol are complete; the implementation is in progress. Nothing is runnable end to end yet. See [Project status & roadmap](#project-status--roadmap) for exactly where things stand, and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the criteria engine works.** Phases **P0–P3 are complete and gated**: intake, PA determination, per-criterion evidence matching, the deterministic evidence verifier, and the gap list all run end to end against synthetic cases. The full suite replays offline from recorded model responses in about 1.5 seconds with no API key. Packet assembly (P4), the appeal loop (P5), and the reviewer UI (P6) are next. See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -94,7 +94,7 @@ Attest is built as a multi-step, tool-using agent system on the **Strands Agents
 These are non-negotiable and encoded as tests, not aspirations:
 
 - **The agent assembles and argues; humans decide and submit.** It never makes a coverage or medical-necessity decision on its own. Two hard gates — before submission and before an appeal is sent — require a clinician to review and approve every clinical assertion.
-- **Evidence-traceable by design.** No clinical claim enters any document unless a **deterministic verifier** confirms the quote appears verbatim in the source note (under whitespace normalization). A semantically correct paraphrase is *rejected on purpose* — paraphrase is the hallucination failure mode being defended against. Unverifiable spans downgrade their criterion to *insufficient* and are logged, never silently dropped.
+- **Evidence-traceable by design.** No clinical claim enters any document unless a **deterministic verifier** confirms the quote appears verbatim in the source note (whitespace runs and Markdown emphasis markers are treated as equivalent; nothing else is). A semantically correct paraphrase is *rejected on purpose* — paraphrase is the hallucination failure mode being defended against. Unverifiable spans downgrade their criterion to *insufficient* and are logged, never silently dropped.
 - **Absence of a policy is not evidence that no PA is needed.** An unmapped service returns `UNKNOWN`, never "not required" — telling a practice "no PA needed" because a policy wasn't found is the worst possible failure.
 - **The engine is specialty-agnostic; specialties are data.** Policy packs and extraction schemas are data files; no specialty knowledge is hardcoded. Adding a specialty costs a pack, not a rewrite.
 - **Synthetic data only.** All notes and denial letters are synthetic and banner-marked; ground-truth expected outcomes are committed *before* any matching code exists, which is what makes every later step objectively verifiable. Live payer-portal / EHR integration and real-PHI handling are explicitly post-hackathon.
@@ -105,11 +105,12 @@ These are non-negotiable and encoded as tests, not aspirations:
 |---|---|
 | Language | Python |
 | Agent framework | `strands-agents`, `strands-agents-tools` |
-| Model | Claude on **Amazon Bedrock** (exact model id confirmed against `bedrock list-foundation-models` before it is pinned) |
+| Model | **Gemini** via Google AI Studio — `gemini-3.5-flash-lite` (fast) and `gemini-3.8-flash` (reasoning). Amazon Bedrock is deferred to P7; nothing outside `src/attest/llm.py` names a provider, so swapping it is one constructor. See [DECISIONS.md](DECISIONS.md). |
 | Structured output | Strands structured output → Pydantic models (typed verdicts, never parsed from prose) |
 | Human-in-the-loop | `BeforeToolCallEvent.interrupt(...)` |
-| Deployment | **Amazon Bedrock AgentCore Runtime** (`BedrockAgentCoreApp` + `@app.entrypoint`) |
+| Deployment | **Amazon Bedrock AgentCore Runtime** (`BedrockAgentCoreApp` + `@app.entrypoint`) — planned, P7 |
 | UI | **Streamlit**, hosted on Streamlit Community Cloud for a free, public, judge-testable link |
+| Documents | `fpdf2` for the submission and appeal PDFs |
 | Validation / data | `pydantic`, `pyyaml` |
 | Testing | `pytest`, with every build step gated behind a cumulative test marker |
 
@@ -119,22 +120,31 @@ Work is organized into small, individually verifiable steps. A step is **done on
 
 | Phase | Focus | State |
 |---|---|---|
-| **P0** | Foundation, AWS/Bedrock access, engineering protocol, repo skeleton | 🟡 in progress |
-| **P1** | Domain models, policy-pack format, real public TMS policies, synthetic corpus + ground truth | ⬜ planned |
-| **P2** | Intake (note → structured case) and PA-required determination | ⬜ planned |
-| **P3** ▲ | Criteria engine — per-criterion evidence matching + the deterministic verifier *(the core)* | ⬜ planned |
-| **P4** ▲ | Packet assembly & Gate 1 (approval before submission) | ⬜ planned |
+| **P0** | Foundation, model provider access, engineering protocol, repo skeleton | ✅ done |
+| **P1** | Domain models, policy-pack format, real public TMS policies, synthetic corpus + ground truth | ✅ done |
+| **P2** | Intake (note → structured case) and PA-required determination | ✅ done |
+| **P3** ▲ | Criteria engine — per-criterion evidence matching + the deterministic verifier *(the core)* | ✅ done |
+| **P4** ▲ | Packet assembly & Gate 1 (approval before submission) | 🟡 next |
 | **P5** ▲ | Denial → appeal loop & Gate 2 (approval before appeal) | ⬜ planned |
 | **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ⬜ planned |
 | — | **Submittable product complete through here** | |
 | **P7** | Multi-agent orchestration depth + AgentCore deployment | ⬜ upside |
 | **P8** | Submission deliverables (README, architecture diagram, metrics, demo video, Devpost) | ⬜ planned |
 
-▲ = required for a viable submission. As of the latest planning session, the foundation phase (P0) is underway — the product spec, phase plan, decision log, and license are in place, and the repository skeleton is being built out.
+▲ = required for a viable submission.
+
+**P3 — the phase the product lives or dies on — is complete**, and the numbers behind that claim are reproducible offline:
+
+| Measure | Result |
+|---|---|
+| Criterion verdicts vs. committed ground truth | **30/30** across three cases and two payers |
+| Evidence spans verifying verbatim against their note | **39/39 (100%)**, with zero criteria downgraded |
+| Gap list vs. ground truth | exact on all three cases |
+| `./scripts/verify.sh P3 --offline` | exits zero, **185 tests**, ~1.5s, no API key |
 
 ## Repository layout
 
-The repository currently holds the product definition and the engineering protocol that lets two contributors hand work off cleanly across sessions and machines:
+Alongside the engine, the repository holds the product definition and the engineering protocol that lets two contributors hand work off cleanly across sessions and machines:
 
 | File | Purpose |
 |---|---|
@@ -143,8 +153,13 @@ The repository currently holds the product definition and the engineering protoc
 | [`STATUS.md`](STATUS.md) | The live status board — one row per step; the single source of truth for progress. |
 | [`DECISIONS.md`](DECISIONS.md) | Append-only decision log — every non-obvious choice and the reasoning behind it. |
 | [`LICENSE`](LICENSE) | Apache License 2.0. |
+| [`src/attest/`](src/attest) | The engine: domain models, policy-pack loader, intake, criteria matching, the evidence verifier, and the gap list. |
+| [`data/synthetic/`](data/synthetic) | Synthetic notes and denial letters, plus ground truth committed *before* the matching code existed. |
+| `cassettes/` | Recorded model responses, so the whole suite replays offline with no API key and no quota. |
+| [`scripts/verify.sh`](scripts/verify.sh) | The step gate. Runs a step's tests plus every prior step's. |
+| [`docs/setup.md`](docs/setup.md) | Developer setup, model provider, and the daily-quota notes. |
 
-The planned source layout (introduced as the phases land) is `src/attest/` for the agents, criteria engine, verifier, packet/appeal modules and case store; `data/synthetic/` for notes, denials, and committed ground truth; `scripts/verify.sh` for the step gate; and `app.py` for the Streamlit UI.
+Still to land: `src/attest/packet/` and `src/attest/appeal/` (P4–P5), the case store (P6-S1), and `app.py` for the Streamlit UI (P6-S3).
 
 ### Working protocol
 
@@ -152,23 +167,34 @@ This is a two-person, sequential build (one contributor works until their usage 
 
 ## Getting started
 
-> ⚠️ **Not yet runnable.** The commands below describe the intended developer setup and will work once the core phases (P0–P6) land. Track readiness in [STATUS.md](STATUS.md).
-
-Planned setup:
+The engine and its full test suite run today, offline, with **no API key and no network** — every model call replays from a recorded cassette. `python -m attest.demo` and the Streamlit UI land in P4 and P6-S3 respectively.
 
 ```bash
 git clone https://github.com/ojassug/Attest.git
 cd Attest
-pip install -e .
-
-# run the criteria engine against a synthetic case (planned)
-python -m attest.demo --case clean
-
-# launch the reviewer UI (planned)
-streamlit run app.py
 ```
 
-Running the agent will require AWS credentials with Amazon Bedrock model access in the configured region. Exact setup — region, model id, and credentials — will be documented in `docs/aws-setup.md` as part of the foundation phase.
+Python **3.12** specifically — 3.13+ is too new for the Strands dependency tree. CPython's `venv` writes executables to `bin/` on POSIX and `Scripts/` on Windows:
+
+```bash
+# macOS / Linux
+python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+```
+
+```bash
+# Windows
+py -3.12 -m venv .venv && .venv/Scripts/python.exe -m pip install -e ".[dev]"
+```
+
+Then run the gate. It needs nothing else:
+
+```bash
+./scripts/verify.sh P3 --offline
+```
+
+> One test (`test_pa_tool_is_registered`) constructs a Strands `Agent` and so wants a credential to be *present* — it makes no request, so any placeholder in `.env` satisfies it. Without one the run is 184/185. This is a known open item, tracked in [DECISIONS.md](DECISIONS.md).
+
+To re-record cassettes or run the three provider-connectivity tests you need a free [Google AI Studio](https://aistudio.google.com/apikey) key in `.env`. Note the free tier allows **20 requests per day per model** — see [`docs/setup.md`](docs/setup.md) for the model roster, rotation, and why cassettes exist. Amazon Bedrock is deferred to P7; `docs/aws-setup.md` will cover it then.
 
 ## Compliance, safety & scope
 
