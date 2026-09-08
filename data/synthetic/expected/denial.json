@@ -1,0 +1,34 @@
+{
+  "case_id": "SYNTH-003",
+  "note_file": "notes/denial.md",
+  "denial_file": "denials/denial_001.md",
+  "pack_id": "highmark-hho-de-mp-1147",
+  "description": "Highmark Medicaid case that is fully documented and is denied anyway. The note satisfies every criterion, including four psychopharmacologic trials across two classes with two augmentation trials, and a failed CBT trial with MADRS scores at both ends. The payer denies on hho-03 and hho-04 regardless. This is the appeal demo: the rebuttal quotes the medication table and the therapy dates back at the payer's own policy language.",
+  "intake": {
+    "payer": "Highmark Health Options",
+    "plan": "Medicaid",
+    "service": "Transcranial magnetic stimulation for major depressive disorder",
+    "cpt_codes": ["90867", "90868", "90869"],
+    "primary_diagnosis_code": "F33.2"
+  },
+  "pa_required": "required",
+  "verdicts": {
+    "hho-01": "met",
+    "hho-02": "met",
+    "hho-03": "met",
+    "hho-04": "met",
+    "hho-05": "met",
+    "hho-06": "met",
+    "hho-07": "met",
+    "hho-08": "met",
+    "hho-09": "met",
+    "hho-10": "met"
+  },
+  "expected_gaps": [],
+  "denial": {
+    "denial_date": "2026-08-03",
+    "expected_contested": ["hho-03", "hho-04"],
+    "expected_unmapped_reason_count": 1,
+    "unmapped_reason_note": "The site-of-service reason maps to no criterion in the pack. It must be surfaced in Denial.unmapped_reasons, never silently dropped - a practice needs to know the payer raised something the policy criteria do not cover."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "case_id": "SYNTH-002",
+  "note_file": "notes/gap.md",
+  "pack_id": "pacificsource-commercial-tms",
+  "description": "PacificSource commercial case with one real documentation gap. The note asserts that an augmentation trial happened but names no agent, no dose, and no duration, so criterion ps-04b cannot be evaluated against the policy's 8-week and therapeutic-dose bar. The correct behaviour is INSUFFICIENT plus a question to the practice - not a guess, and not a refusal of the whole request.",
+  "intake": {
+    "payer": "PacificSource",
+    "plan": "Commercial",
+    "service": "Transcranial magnetic stimulation for major depressive disorder",
+    "cpt_codes": ["90867", "90868", "90869"],
+    "primary_diagnosis_code": "F33.2"
+  },
+  "pa_required": "required",
+  "verdicts": {
+    "ps-01": "met",
+    "ps-02": "met",
+    "ps-03": "met",
+    "ps-04a": "met",
+    "ps-04b": "insufficient",
+    "ps-05a": "met",
+    "ps-05b": "met",
+    "ps-05c": "met",
+    "ps-06": "met",
+    "ps-07": "met"
+  },
+  "expected_gaps": ["ps-04b"]
+}

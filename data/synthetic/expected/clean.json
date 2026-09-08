@@ -1,0 +1,27 @@
+{
+  "case_id": "SYNTH-001",
+  "note_file": "notes/clean.md",
+  "pack_id": "pacificsource-commercial-tms",
+  "description": "Fully documented PacificSource commercial case. Every criterion is supported by an explicit statement in the note. This is the happy path and the packet demo.",
+  "intake": {
+    "payer": "PacificSource",
+    "plan": "Commercial",
+    "service": "Transcranial magnetic stimulation for major depressive disorder",
+    "cpt_codes": ["90867", "90868", "90869"],
+    "primary_diagnosis_code": "F33.2"
+  },
+  "pa_required": "required",
+  "verdicts": {
+    "ps-01": "met",
+    "ps-02": "met",
+    "ps-03": "met",
+    "ps-04a": "met",
+    "ps-04b": "met",
+    "ps-05a": "met",
+    "ps-05b": "met",
+    "ps-05c": "met",
+    "ps-06": "met",
+    "ps-07": "met"
+  },
+  "expected_gaps": []
+}
