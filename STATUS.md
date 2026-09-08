@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0, P1, P2, P3-S1..S3 complete. **P3-S4 is next.** |
-| **Next step** | `P3-S4` — verifier enforcement. Decide the Markdown-markup question in DECISIONS.md first. |
+| **Phase** | P0, P1, P2, P3-S1..S4 complete. **P3-S5 is next — it finishes P3.** |
+| **Next step** | `P3-S5` — gap list. Deterministic apart from one cassette-replayed test; no quota. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -47,7 +47,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P3-S1 | Policy ingestion to draft criteria         | DONE   | Atharv| e0f07e4  | 09-08 |
 | P3-S2 | Per-criterion evidence matching            | DONE   | Atharv| a1358d9  | 09-08 |
 | P3-S3 | Evidence-span verifier                     | DONE   | Atharv| 67c6b21  | 09-08 |
-| P3-S4 | Verifier enforcement in the pipeline       | IN_PROGRESS | Atharv | —   | 09-08 |
+| P3-S4 | Verifier enforcement in the pipeline       | DONE   | Atharv| f80d422  | 09-08 |
 | P3-S5 | Gap list                                   | TODO   | —     | —        | —     |
 | P4-S1 | Justification from verified evidence only  | TODO   | —     | —        | —     |
 | P4-S2 | Gate 1 — approval before submission        | TODO   | —     | —        | —     |
