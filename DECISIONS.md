@@ -456,3 +456,42 @@ is to demo a fully-documented approval.
 Deliberately NOT decided inside P3-S3: the step's DoD says "whitespace normalisation", and
 widening the definition of verbatim is a change to the product's central claim. It belongs in the
 step that owns enforcement, with the 100%-verification gate to prove it.
+
+---
+
+## 2026-09-08 · Markdown markup is syntax, not content — and the verifier is now binding
+
+**Resolves the question left open by P3-S3.** The verifier drops Markdown emphasis characters
+(`*`, `_`) from both the note and the quote before comparing.
+
+**The evidence that settled it.** Every `*` run in all three notes is exactly two characters long —
+always `**`, never a single or a triple — and `_` does not occur anywhere in the corpus. So the
+rule is precise rather than speculative: it addresses the observed failure and nothing else.
+
+**Why this is not the first step down a slope.** It is a *lexical* rule about markup characters,
+not a semantic one about meaning. It cannot forgive a changed word, a changed number or a changed
+case, because none of those are markup — `test_markup_tolerance_does_not_admit_paraphrase` pins
+exactly that, using the same bolded line with one substituted word and one altered number.
+**Known limit:** a literal underscore inside a word would also be dropped. No note contains one.
+
+Offsets still bracket only the matched run. For `**PHQ-9:** 21` the match starts at the `P`, so
+the leading `**` falls outside the offsets while the closing `**` sits inside them, and
+`matched_text` reports that honestly rather than pretending the note is clean prose.
+
+**Enforcement (P3-S4).** `enforce_verification(coverage, note) -> VerifiedCoverage` makes the
+check binding. Any criterion carrying even one unverifiable span drops to `INSUFFICIENT` —
+partly fabricated evidence is not partly trustworthy, and INSUFFICIENT is the honest verdict,
+because it is a question for the practice rather than an argument with the payer.
+
+A rejected span is removed from the returned coverage so nothing downstream can cite it, but it is
+never *silently* dropped: it is written to the `attest.audit` logger with its quote and criterion
+id, and stays reachable on `report.rejected`.
+
+**Result: 39/39 spans verify verbatim (100%), across all three cases, with zero criteria
+downgraded.** The 30/30 ground-truth verdict accuracy from P3-S2 is therefore untouched — nothing
+was traded away to reach 100%. The one rejection P3-S3 measured was the false positive this
+decision removed, not a real catch.
+
+**Marker note.** `test_no_unverified_span_survives` is marked `needs_model`, not `live`, although
+PLAN.md's DoD says `live`. It replays from cassettes, and the recorded decision reserves `live`
+for calls that genuinely cannot be replayed. Same precedent as every P3-S2 test.
