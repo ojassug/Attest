@@ -41,7 +41,7 @@ criteria:
 
 def write(tmp_path, body: str, name: str = "pack.yaml"):
     p = tmp_path / name
-    p.write_text(textwrap.dedent(body))
+    p.write_text(textwrap.dedent(body), encoding="utf-8")
     return p
 
 

@@ -32,15 +32,15 @@ REQUIRED_DEPS = (
 
 
 def plan_steps() -> list[str]:
-    return STEP_HEADING.findall((REPO / "PLAN.md").read_text())
+    return STEP_HEADING.findall((REPO / "PLAN.md").read_text(encoding="utf-8"))
 
 
 def status_steps() -> list[str]:
-    return STATUS_ROW.findall((REPO / "STATUS.md").read_text())
+    return STATUS_ROW.findall((REPO / "STATUS.md").read_text(encoding="utf-8"))
 
 
 def declared_markers() -> list[str]:
-    cfg = tomllib.loads((REPO / "pyproject.toml").read_text())
+    cfg = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
     raw = cfg["tool"]["pytest"]["ini_options"]["markers"]
     return [m.split(":", 1)[0].strip() for m in raw]
 
@@ -79,7 +79,7 @@ def test_every_step_has_a_marker():
 
 
 def test_required_dependencies_declared():
-    cfg = tomllib.loads((REPO / "pyproject.toml").read_text())
+    cfg = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
     declared = " ".join(
         cfg["project"]["dependencies"]
         + [d for group in cfg["project"].get("optional-dependencies", {}).values() for d in group]
@@ -90,7 +90,7 @@ def test_required_dependencies_declared():
 
 def test_license_is_apache():
     """The rules accept MIT or Apache. PR #1 chose Apache 2.0."""
-    head = (REPO / "LICENSE").read_text()[:400]
+    head = (REPO / "LICENSE").read_text(encoding="utf-8")[:400]
     assert "Apache License" in head, "LICENSE is not Apache 2.0"
 
 
@@ -116,5 +116,5 @@ def test_synthetic_data_is_never_real_phi():
     if not data.exists():
         pytest.skip("no synthetic corpus yet — created in P1-S4")
     for note in data.rglob("*.md"):
-        head = note.read_text()[:200]
+        head = note.read_text(encoding="utf-8")[:200]
         assert "SYNTHETIC" in head.upper(), f"{note} lacks a synthetic-data banner"

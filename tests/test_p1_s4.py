@@ -23,7 +23,7 @@ def test_all_expected_cases_exist():
 @pytest.mark.parametrize("path", sorted(DATA_DIR.rglob("*.md")), ids=lambda p: p.name)
 def test_all_notes_carry_synthetic_banner(path):
     """§7 of the product spec: synthetic data only. Enforced, not just promised."""
-    head = path.read_text()[:200].upper()
+    head = path.read_text(encoding="utf-8")[:200].upper()
     assert "SYNTHETIC" in head, f"{path.name} lacks a synthetic-data banner"
     assert "NOT REAL PATIENT DATA" in head, f"{path.name} banner is incomplete"
 

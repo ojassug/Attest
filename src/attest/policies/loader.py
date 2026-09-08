@@ -16,7 +16,7 @@ def load_pack(path: str | Path) -> PolicyPack:
     """Load and validate one pack. Raises on any schema violation — a malformed pack must
     fail loudly at load time rather than produce a half-cited appeal later."""
     path = Path(path)
-    data = yaml.safe_load(path.read_text())
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError(f"{path} does not contain a YAML mapping")
     return PolicyPack.model_validate(data)
