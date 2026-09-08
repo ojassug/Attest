@@ -624,3 +624,50 @@ behaviour, no quota, no cassette. The full agent loop is left to P7's orchestrat
 **Note on scope.** `src/attest/packet/emit.py` exists now because Gate 1 is meaningless without
 something to gate. It writes Markdown; **P4-S3 adds the PDF and the artifact-content
 requirements.**
+
+---
+
+## 2026-09-08 · The artifact renders from one block list, and refuses rather than mangles
+
+**Decision (P4-S3).** `emit_submission_artifact` builds a single ordered list of content blocks and
+renders it twice — Markdown and PDF. There are not two templates.
+
+**Why.** A payer reads the PDF; a machine checks the Markdown. If the two were written separately
+they would drift, and the checkable artifact would stop being the one that was sent.
+
+**Nothing is written until both render.** Documents are built in memory first, so a refused or
+unrenderable emit leaves no directory, no empty file, and nothing that could be mistaken for a
+partial submission.
+
+### The latin-1 limit, and why it fails loudly
+
+fpdf2's core fonts cover latin-1 only, fpdf2 ships no Unicode font, and **all four synthetic
+documents contain em-dashes**. Verified against fpdf2 2.8.8: an em-dash raises
+`FPDFUnicodeEncodingException` rather than degrading.
+
+Substituting a character *inside a quoted passage* would make the PDF disagree with the note it
+claims to quote — reintroducing, at the very last step, the exact failure the verifier exists to
+prevent. So an unrenderable character raises `ArtifactRenderError` and writes nothing.
+
+- Every string this module writes itself is ASCII, so the failure can only ever come from evidence
+  or payer criteria, never from our own chrome.
+- **No verified quote in the corpus currently contains a non-latin-1 character** (0 of 39), so this
+  does not fire today.
+- **P5 is where it likely bites**, because the appeal quotes the denial letter, which has em-dashes.
+  The fix is `FPDF.add_font` with a Unicode TTF plus the font file — a few lines here, deliberately
+  not done speculatively, and the error message names it.
+
+### Evidence on unclaimed criteria
+
+A test failure on real data caught this: `ps-04b` in the gap case is INSUFFICIENT but still carries
+verified evidence — the note *does* say an augmentation trial happened, just not with what, at what
+dose, or for how long. Only MET criteria become claims, so that quote reached no section of the
+document.
+
+Omitting it would make the record look thinner than it is. The coverage ledger now renders evidence
+for any criterion no claim argued, and `test_each_verified_quote_appears_exactly_once` keeps it from
+being printed twice. The result is that the gap case's artifact shows, in one place, that the
+practice documented something, that it was not enough, and precisely what to send — which is the
+product's whole thesis on one page.
+
+**P4 is complete.** `./scripts/verify.sh P4` exits zero at 223 tests.
