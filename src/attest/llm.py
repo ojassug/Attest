@@ -35,7 +35,7 @@ Tier = Literal["fast", "reasoning"]
 # If billing is ever enabled, point ATTEST_MODEL_REASONING at a Pro model and re-run the P3 gate.
 DEFAULT_MODELS: dict[str, str] = {
     "fast": "gemini-3.5-flash-lite",
-    "reasoning": "gemini-3.6-flash",
+    "reasoning": "gemini-3.8-flash",
 }
 
 KEY_VARS = ("GOOGLE_API_KEY", "GEMINI_API_KEY")

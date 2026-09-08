@@ -1,0 +1,91 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-08T10:27:40.871882+00:00",
+  "value": {
+    "verdicts": [
+      {
+        "criterion_id": "ps-01",
+        "verdict": "met",
+        "quotes": [
+          "Evaluating provider: Dr. R. Okonkwo, MD, board-certified psychiatrist",
+          "TMS is ordered and will be supervised by Dr. R. Okonkwo, MD, a qualified psychiatrist."
+        ],
+        "reasoning": "The note confirms that TMS is ordered and supervised by Dr. R. Okonkwo, MD, a board-certified psychiatrist."
+      },
+      {
+        "criterion_id": "ps-02",
+        "verdict": "insufficient",
+        "quotes": [],
+        "reasoning": "The note does not document the patient's age or date of birth."
+      },
+      {
+        "criterion_id": "ps-03",
+        "verdict": "met",
+        "quotes": [
+          "Major depressive disorder, recurrent, severe, without psychotic features (ICD-10 F33.2).",
+          "PHQ-9 administered 2026-08-24: score of 24, consistent with severe depression."
+        ],
+        "reasoning": "The note documents a diagnosis of severe major depressive disorder, recurrent, without psychotic features, supported by a PHQ-9 score of 24 (severe)."
+      },
+      {
+        "criterion_id": "ps-04a",
+        "verdict": "met",
+        "quotes": [
+          "| Sertraline | SSRI | 200 mg daily | 2024-12-02 to 2025-03-14 (14 weeks) | No response. Tolerated well at maximum labeled dose. |",
+          "| Venlafaxine XR | SNRI | 225 mg daily | 2025-04-01 to 2025-07-18 (15 weeks) | No response. Dose titrated to therapeutic range and maintained. |",
+          "Both trials were conducted at or above the minimal effective therapeutic dose for the respective agent, and each was sustained for longer than eight weeks."
+        ],
+        "reasoning": "The patient failed trials of two antidepressants from different classes (Sertraline, an SSRI, for 14 weeks at max dose; Venlafaxine XR, an SNRI, for 15 weeks at therapeutic dose), both exceeding the required 8-week duration at or above therapeutic dose."
+      },
+      {
+        "criterion_id": "ps-04b",
+        "verdict": "met",
+        "quotes": [
+          "Aripiprazole 5 mg daily was added to venlafaxine XR on 2025-05-05 and continued through 2025-07-18, a total of 11 weeks at or above the minimal labeled dose."
+        ],
+        "reasoning": "The note documents augmentation therapy using Aripiprazole 5 mg daily along with Venlafaxine XR for 11 weeks (exceeding the 8-week requirement) at or above the minimal labeled dose without adequate response."
+      },
+      {
+        "criterion_id": "ps-05a",
+        "verdict": "met",
+        "quotes": [
+          "No acute or chronic psychotic symptoms; no schizophrenia, schizophreniform, or schizoaffective disorder."
+        ],
+        "reasoning": "The note explicitly confirms the absence of acute or chronic psychotic symptoms or disorders, satisfying the exclusion requirement."
+      },
+      {
+        "criterion_id": "ps-05b",
+        "verdict": "met",
+        "quotes": [
+          "No implanted devices in or around the head, and no metallic implants within 30 cm of the intended coil position."
+        ],
+        "reasoning": "The note explicitly confirms there are no implanted devices in or around the head, satisfying the exclusion requirement."
+      },
+      {
+        "criterion_id": "ps-05c",
+        "verdict": "met",
+        "quotes": [
+          "No history of seizure disorder and no condition conferring increased seizure risk."
+        ],
+        "reasoning": "The note explicitly confirms the absence of a seizure disorder or condition conferring increased seizure risk, satisfying the exclusion requirement."
+      },
+      {
+        "criterion_id": "ps-06",
+        "verdict": "met",
+        "quotes": [
+          "Proposed course: 1 unit of 90867 for treatment planning and cortical mapping, 36 units of 90868 for treatment delivery, and 2 units of 90869 for motor threshold redetermination."
+        ],
+        "reasoning": "The proposed treatment plan consists of 1 unit of 90867, 36 units of 90868, and 2 units of 90869, which fits exactly within the standard course limits."
+      },
+      {
+        "criterion_id": "ps-07",
+        "verdict": "met",
+        "quotes": [
+          "Treatment will be delivered on a NeuroStar Advanced Therapy system, an FDA-cleared TMS device, used in accordance with its FDA labeled indications."
+        ],
+        "reasoning": "The treatment will use a NeuroStar Advanced Therapy system, an FDA-cleared device, administered according to its FDA-labeled indications."
+      }
+    ]
+  }
+}

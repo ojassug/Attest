@@ -1,0 +1,90 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-08T10:28:51.661941+00:00",
+  "value": {
+    "verdicts": [
+      {
+        "criterion_id": "hho-01",
+        "verdict": "met",
+        "quotes": [
+          "Patient is 41 years of age."
+        ],
+        "reasoning": "The patient is 41 years old, satisfying the requirement of age 18 or older."
+      },
+      {
+        "criterion_id": "hho-02",
+        "verdict": "met",
+        "quotes": [
+          "Major depressive disorder, recurrent, severe, without psychotic features (ICD-10 F33.2).",
+          "Montgomery-Asberg Depression Rating Scale (MADRS) administered 2026-07-15: score of 34,\nconsistent with severe depression."
+        ],
+        "reasoning": "The note documents a diagnosis of severe recurrent major depressive disorder confirmed by standardized rating scales (MADRS score of 34 on 2026-07-15 and 36 on 2026-01-20)."
+      },
+      {
+        "criterion_id": "hho-03",
+        "verdict": "met",
+        "quotes": [
+          "Four psychopharmacologic trials have been completed during the current episode, spanning two\ndifferent antidepressant classes, and including two augmentation trials."
+        ],
+        "reasoning": "The note documents failure of four psychopharmacologic trials across two agent classes (SSRI, SNRI) including two augmentation trials (Lithium, Quetiapine XR), satisfying the first option of the criterion."
+      },
+      {
+        "criterion_id": "hho-04",
+        "verdict": "met",
+        "quotes": [
+          "The patient completed a trial of cognitive behavioural therapy with a licensed clinical\npsychologist, attending weekly 50-minute sessions from 2025-09-08 to 2026-02-16, a total of\n22 sessions. MADRS was 35 at the start of therapy and 36 at its conclusion, showing no\nsignificant improvement in depressive symptoms across an adequate frequency and duration of\nan evidence-based psychotherapy."
+        ],
+        "reasoning": "The note documents completion of 22 sessions of cognitive behavioural therapy over 5 months without significant improvement, tracked via MADRS scores (35 at start, 36 at conclusion)."
+      },
+      {
+        "criterion_id": "hho-05",
+        "verdict": "met",
+        "quotes": [
+          "No seizure disorder and no history of seizure of any kind."
+        ],
+        "reasoning": "The note explicitly confirms the absence of seizure disorder or any history of seizure."
+      },
+      {
+        "criterion_id": "hho-06",
+        "verdict": "met",
+        "quotes": [
+          "No acute or chronic psychotic\nsymptoms and no schizophrenia, schizophreniform, or schizoaffective disorder."
+        ],
+        "reasoning": "The note explicitly documents no acute or chronic psychotic symptoms, schizophrenia, schizophreniform, or schizoaffective disorder."
+      },
+      {
+        "criterion_id": "hho-07",
+        "verdict": "met",
+        "quotes": [
+          "No epilepsy,\ncerebrovascular disease, dementia, increased intracranial pressure, history of repetitive or\nsevere head trauma, or central nervous system tumour."
+        ],
+        "reasoning": "The note explicitly confirms the absence of qualifying neurologic conditions including epilepsy, cerebrovascular disease, dementia, increased intracranial pressure, head trauma history, or CNS tumors."
+      },
+      {
+        "criterion_id": "hho-08",
+        "verdict": "met",
+        "quotes": [
+          "No implanted magnetic-sensitive medical\ndevice and no implanted metal within 30 centimetres of the intended coil position."
+        ],
+        "reasoning": "The note explicitly confirms there are no implanted magnetic-sensitive medical devices or metal within 30 centimeters of the intended coil position."
+      },
+      {
+        "criterion_id": "hho-09",
+        "verdict": "met",
+        "quotes": [
+          "Treatment will be delivered on a NeuroStar Advanced Therapy system, an FDA-cleared TMS device,\nby a physician adequately trained and experienced in the specific techniques used."
+        ],
+        "reasoning": "The note confirms treatment will be administered using an FDA-cleared device (NeuroStar Advanced Therapy system) by an adequately trained and experienced physician."
+      },
+      {
+        "criterion_id": "hho-10",
+        "verdict": "met",
+        "quotes": [
+          "Proposed course does not exceed five\ndays a week for six weeks, for a total of 30 sessions, followed by a three-week taper."
+        ],
+        "reasoning": "The treatment plan specifies a course not exceeding 5 days per week for 6 weeks (30 sessions), followed by a 3-week taper."
+      }
+    ]
+  }
+}
