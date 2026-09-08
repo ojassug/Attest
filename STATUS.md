@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0 and P1 complete. **P2-S1 is next.** |
-| **Next step** | `P2-S1` — note to structured Case. Nothing is blocked. |
+| **Phase** | P0, P1, P2 complete. **P3-S1 is next — the core phase.** |
+| **Next step** | `P3-S1` — policy ingestion. Watch the Gemini daily quota. |
 | **Blocking deadline** | AWS $50 credit request — **Sep 11, 2026, 12:00pm PT** (now a P8-S5 item, not a build blocker) |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -43,7 +43,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P1-S4 | Synthetic corpus and ground truth          | DONE   | Atharv| 335ac1a  | 09-08 |
 | P2-S1 | Note to structured Case                    | DONE   | Atharv| c84581b  | 09-08 |
 | P2-S2 | PA-required determination                  | DONE   | Atharv| cb28e44  | 09-08 |
-| P2-S3 | Intake agent wiring                        | IN_PROGRESS | Atharv | —        | 09-08 |
+| P2-S3 | Intake agent wiring                        | DONE   | Atharv| 1b99b51  | 09-08 |
 | P3-S1 | Policy ingestion to draft criteria         | TODO   | —     | —        | —     |
 | P3-S2 | Per-criterion evidence matching            | TODO   | —     | —        | —     |
 | P3-S3 | Evidence-span verifier                     | TODO   | —     | —        | —     |
