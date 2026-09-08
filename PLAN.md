@@ -101,15 +101,17 @@ git push
 
 # P0 — Foundation & protocol
 
-## P0-S1 — AWS account, Bedrock access, credits, Builder ID
+## P0-S1 — Model provider access
 
-Human-driven setup. Do this first; the credit deadline is Sep 11.
+Human-driven. A free Gemini key from https://aistudio.google.com/apikey — no credit card, no
+account provisioning. Bedrock is deferred to P7; see DECISIONS.md.
 
 **DoD**
-- [ ] **Command** `aws sts get-caller-identity` returns a valid account id
-- [ ] **Command** `aws bedrock list-foundation-models --region <REGION> --query "modelSummaries[?contains(modelId,'anthropic')].modelId" --output text` includes the model id chosen in `DECISIONS.md`
-- [ ] **File** `docs/aws-setup.md` exists and records: region, model id, Builder ID email, credit-request submission timestamp
-- [ ] **File** `DECISIONS.md` contains an entry naming the chosen Bedrock model id and region
+- [ ] **File** `.env` exists at the repo root containing a working `GOOGLE_API_KEY`, and is
+      gitignored (never committed)
+- [ ] **Command** `.venv/bin/python -c "from attest.llm import have_credentials; assert have_credentials()"` exits zero
+- [ ] **File** `docs/setup.md` records the provider, both tier model ids, and how to obtain a key
+- [ ] **File** `DECISIONS.md` names the provider and the reason
 
 ## P0-S2 — Protocol documents
 
@@ -130,11 +132,14 @@ Human-driven setup. Do this first; the credit deadline is Sep 11.
 - [ ] **Test** `tests/test_p0_s3.py::test_status_covers_all_plan_steps` — parses `PLAN.md` and `STATUS.md` and asserts every step id in the plan has exactly one row in the status board, and no orphan rows exist
 - [ ] **Test** `tests/test_p0_s3.py::test_every_step_has_a_marker` — asserts every step id is a registered pytest marker
 
-## P0-S4 — Bedrock smoke test
+## P0-S4 — Model provider smoke test
 
 **DoD**
-- [ ] **File** `src/attest/llm.py` exposes `build_model()` returning a configured `BedrockModel`
-- [ ] **Test** `tests/test_p0_s4.py::test_bedrock_tool_roundtrip` (marker `live`) — a trivial `@tool` agent returns a non-empty response and the tool was actually invoked
+- [ ] **File** `src/attest/llm.py` exposes `build_model(tier)` returning a configured Strands model
+- [ ] **Test** `tests/test_p0_s4.py::test_model_tool_roundtrip` (marker `live`) — a trivial `@tool`
+      agent returns a non-empty response and the tool was actually invoked
+- [ ] **Test** `tests/test_p0_s4.py::test_structured_output_roundtrip` (marker `live`) — a Pydantic
+      model comes back populated, since every later phase depends on structured output working
 - [ ] **Command** `./scripts/verify.sh P0` exits zero
 
 ---
@@ -429,4 +434,7 @@ These are scored as heavily as the code. Two of the five judging criteria — Pr
 **DoD**
 - [ ] **File** `docs/submission-checklist.md` with every `Attest-PRODUCT.md` §1.4 requirement ticked: text description, public repo, README, architecture diagram, video, AWS Builder ID, Apache 2.0 licence visible in the repo About section, optional live demo link
 - [ ] Submitted on Devpost before **Sep 14, 2026, 5:00pm PT**
+- [ ] **File** `docs/setup.md` records the AWS Builder ID (a required Devpost submission field)
+- [ ] AWS $50 credit requested (form closes **Sep 11, 12:00pm PT** — request it even if Bedrock
+      is never used, since P7 deployment would consume it)
 - [ ] Optional: builder.aws blog post, title containing "Agents for Humans" (+0.2 each, max +0.6)

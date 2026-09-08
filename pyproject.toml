@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 license = "Apache-2.0"
 dependencies = [
-  "strands-agents",
+  "strands-agents[gemini]",
   "strands-agents-tools",
   "bedrock-agentcore",
   "pydantic>=2",

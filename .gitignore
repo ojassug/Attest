@@ -8,3 +8,6 @@ __pycache__/
 # Runtime output — artifacts are regenerated, never committed
 out/
 sessions/
+
+# Secrets — never commit
+.env
