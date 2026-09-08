@@ -1,0 +1,105 @@
+# Criteria quoted from Highmark Health Options medical policy HHO-DE-MP-1147 for the purpose
+# of checking a clinical note against the payer's own published requirements and citing them
+# back in an appeal. Source URL and section references are recorded on every criterion.
+pack_id: highmark-hho-de-mp-1147
+payer: Highmark Health Options
+plan: Medicaid
+service: Transcranial magnetic stimulation for major depressive disorder
+cpt_codes: ["90867", "90868", "90869"]
+
+source_url: https://www.highmarkhealthoptions.com/content/dam/digital-marketing/en/highmark/highmarkhealthoptions/providers/medical-payment-policies/medical-policies/hho-de-mp-1147-transcranialmagneticstimulation(TMS)_02222023.pdf
+source_title: "Transcranial Magnetic Stimulation (TMS) — Medical Policy HHO-DE-MP-1147"
+retrieved_date: 2026-09-08
+
+pa_required: true
+appeal_window_days: 60
+appeal_window_source: >-
+  NOT STATED in policy HHO-DE-MP-1147. Placeholder pending confirmation against the Delaware
+  Medicaid member handbook. Must be verified before any real filing.
+
+criteria:
+  - id: hho-01
+    category: eligibility
+    source_section: "POLICY POSITION, medical necessity list, bullet 1"
+    polarity: present
+    text: "Age 18 or older"
+
+  - id: hho-02
+    category: diagnosis
+    source_section: "POLICY POSITION, medical necessity list, bullet 2"
+    polarity: present
+    text: >-
+      Confirmed diagnosis of severe major depressive disorder (single or recurrent) documented
+      by standardized rating scales that reliably measure depressive symptoms
+
+  - id: hho-03
+    category: treatment_resistance
+    source_section: "POLICY POSITION, medical necessity list, bullet 3"
+    polarity: present
+    text: >-
+      ANY ONE of the following: Failure of four (4) trials of psychopharmacologic agents
+      including two (2) different agent classes and two (2) augmentation trials; or Inability
+      to tolerate a therapeutic dose of medications as evidenced by four (4) trials of
+      psychopharmacologic agents with distinct side effects; or History of response to TMS in
+      a previous depressive episode [at least three (3) months since the prior episode]; or Is
+      a candidate for electroconvulsive therapy (ECT) and ECT would not be clinically superior
+      to TMS
+
+  - id: hho-04
+    category: psychotherapy
+    source_section: "POLICY POSITION, medical necessity list, bullet 4"
+    polarity: present
+    text: >-
+      Failure of a trial of a psychotherapy known to be effective in the treatment of major
+      depressive disorder of an adequate frequency and duration, without significant
+      improvement in depressive symptoms, as documented by standardized rating scales that
+      reliably measure depressive symptoms
+
+  - id: hho-05
+    category: contraindication
+    source_section: "POLICY POSITION, medical necessity list, bullet 5, sub-bullet 1"
+    polarity: absent
+    text: "Seizure disorder or any history of seizure with increased risk of future seizure"
+
+  - id: hho-06
+    category: contraindication
+    source_section: "POLICY POSITION, medical necessity list, bullet 5, sub-bullet 2"
+    polarity: absent
+    text: >-
+      Presence of acute or chronic psychotic symptoms or disorders (such as schizophrenia,
+      schizophreniform or schizoaffective disorder) in the current depressive episode
+
+  - id: hho-07
+    category: contraindication
+    source_section: "POLICY POSITION, medical necessity list, bullet 5, sub-bullet 3"
+    polarity: absent
+    text: >-
+      Neurologic conditions that include epilepsy, cerebrovascular disease, dementia,
+      increased intracranial pressure, having a history of repetitive or severe head trauma,
+      or with primary or secondary tumors in the central nervous system (CNS)
+
+  - id: hho-08
+    category: contraindication
+    source_section: "POLICY POSITION, medical necessity list, bullet 5, sub-bullet 4"
+    polarity: absent
+    text: >-
+      Presence of an implanted magnetic-sensitive medical device located 30 centimeters or
+      less from the TMS magnetic coil or other implanted metal items, including but not
+      limited to a cochlear implant, implanted cardioverter defibrillator (ICD), pacemaker,
+      vagus nerve stimulator, or metal aneurysm clips or coils, staples, or stents
+
+  - id: hho-09
+    category: device
+    source_section: "POLICY POSITION, paragraph following the medical necessity list"
+    polarity: present
+    text: >-
+      TMS should be performed using an FDA-cleared device in appropriately selected patients,
+      by a physician who is adequately trained and experienced in the specific techniques used
+
+  - id: hho-10
+    category: treatment_plan
+    source_section: "POLICY POSITION, treatment course paragraph"
+    polarity: present
+    text: >-
+      A treatment course should not exceed five (5) days a week for six (6) weeks (total of 30
+      sessions), followed by a three-week taper

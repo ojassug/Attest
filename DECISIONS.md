@@ -153,3 +153,38 @@ collaborator's choice and there is no reason to churn it.
 
 **Action still outstanding.** The rules require the licence to be **visible in the GitHub repo's About section**,
 which is a repo setting, not just a file. Tracked in P8-S5.
+
+---
+
+## 2026-09-08 · Criteria carry a polarity; appeal windows must state their source
+
+**Decision.** Two additions made during P1-S3, after authoring packs against real policies:
+
+- `Criterion.polarity` (`present` / `absent`). A contraindication like "seizure disorder" is
+  satisfied when the finding is **absent**. Without the distinction the matcher would report every
+  healthy patient as failing every contraindication.
+- `PolicyPack.appeal_window_source` is **required**. Neither retrieved policy PDF states an appeal
+  window, so both packs currently record theirs as an unconfirmed placeholder.
+
+**Why.** An invented filing deadline on a real appeal is worse than no deadline — it looks
+authoritative and it is wrong. Making the provenance a required field means the gap stays visible
+instead of decaying into an assumed fact. `test_appeal_window_states_its_source` holds it there.
+
+**Outstanding.** Both windows (Highmark 60d, PacificSource 180d) are placeholders and must be
+confirmed against the member appeal policy before any real filing. Not blocking for the demo,
+which is synthetic throughout.
+
+---
+
+## 2026-09-08 · Packs are sourced from two payers on purpose
+
+**Decision.** `highmark-hho-de-mp-1147` (Medicaid) and `pacificsource-commercial-tms` (Commercial).
+
+**Why.** They set a materially different bar for the same service and diagnosis: Highmark requires
+**four** psychopharmacologic trials plus a documented psychotherapy failure; PacificSource requires
+**two** antidepressants of ≥8 weeks at therapeutic dose **plus** an augmentation trial, and has no
+psychotherapy criterion at all. The same patient can clear one and fail the other.
+
+That is the product's whole thesis — criteria are payer-specific, and matching them is the work.
+Two packs that agreed would make the claim untestable. `test_packs_impose_materially_different_criteria`
+and `test_highmark_requires_psychotherapy_failure_and_pacificsource_does_not` pin the difference.
