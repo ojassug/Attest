@@ -83,11 +83,24 @@ class PADetermination(Base):
 # ------------------------------------------------------------------------- criteria
 
 
+class Polarity(str, Enum):
+    """Whether the criterion is satisfied by presence or by absence.
+
+    Contraindications ("no seizure disorder") are satisfied when the note shows the
+    condition is *absent*. Collapsing both senses into one would make every
+    contraindication read as unmet, so the distinction is explicit.
+    """
+
+    PRESENT = "present"
+    ABSENT = "absent"
+
+
 class Criterion(Base):
     id: str
     text: str = Field(description="Verbatim criterion text from the payer policy.")
     category: str
     source_section: str = Field(description="Where in the policy this criterion appears.")
+    polarity: Polarity = Polarity.PRESENT
 
 
 class EvidenceSpan(Base):

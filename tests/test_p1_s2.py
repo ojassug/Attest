@@ -26,6 +26,7 @@ source_title: Transcranial Magnetic Stimulation Policy
 retrieved_date: 2026-09-08
 pa_required: true
 appeal_window_days: 180
+appeal_window_source: Member handbook, appeals section.
 criteria:
   - id: c-01
     text: Patient is 18 years of age or older.

@@ -33,6 +33,12 @@ class PolicyPack(Base):
 
     pa_required: bool
     appeal_window_days: int = Field(gt=0, description="Days from denial to appeal deadline.")
+    appeal_window_source: str = Field(
+        description=(
+            "Where the appeal window came from. Required because payer policy PDFs often "
+            "omit it, and an invented deadline on an appeal is worse than no deadline."
+        )
+    )
 
     criteria: list[Criterion] = Field(min_length=1)
 
