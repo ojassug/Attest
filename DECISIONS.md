@@ -413,3 +413,46 @@ satisfies it; no request is made). So one non-`live` test still needs a credenti
 contradicts the rule that `live` is the only marker allowed to require one. Left open deliberately:
 the obvious fix — letting `build_model()` construct without a key — contradicts the recorded
 decision that it should fail early with an actionable message rather than deep inside an agent run.
+
+---
+
+## 2026-09-08 · The verifier forgives whitespace and nothing else — and Markdown markup is the open question
+
+**Decision (P3-S3).** `verify_span` matches a quote against the note verbatim, treating any run of
+whitespace as equivalent to any other, and forgiving nothing else. Case differences, changed
+numbers, substituted words and paraphrase all fail. Offsets are returned into the *original* note,
+not the normalised copy, so a reviewer can land on the exact characters matched.
+
+**Why whitespace specifically.** A model quoting honestly still flattens the note's line wrapping
+and the double space after a full stop. Rejecting that would reject true evidence and make the
+verifier useless. Whitespace is the only difference that carries no clinical content.
+
+**Why nothing else.** A verifier that forgives case has started forgiving things, and the next
+thing it forgives is a dose. `test_case_difference_is_rejected` and `test_paraphrase_is_rejected`
+are tripwires against a future session deciding the verifier is "too strict".
+
+**Measured on real matcher output: 38 of 39 spans verify (97.4%).** `gap` and `denial` are 100%.
+The single rejection is on the `clean` case, and it is worth understanding before P3-S4:
+
+    note:  **Evaluating provider:** Dr. R. Okonkwo, MD, board-certified psychiatrist
+    model:   Evaluating provider:  Dr. R. Okonkwo, MD, board-certified psychiatrist
+
+The model quoted the *rendered* text and dropped the Markdown emphasis markers. That is not a
+paraphrase and not a fabrication — the clinical content is identical. But the notes are Markdown,
+every bolded label in every note will hit this, and it lands on the one case whose entire purpose
+is to demo a fully-documented approval.
+
+**Open, to be decided in P3-S4** (which is the step that requires 100% of spans to verify):
+
+- *Preferred:* treat Markdown emphasis markers as markup rather than content, and strip `**`/`*`/`_`
+  when building the haystack, keeping offsets into the raw note. This is a lexical rule about
+  syntax, not a semantic one about meaning, which is exactly the line that stops it being a
+  slippery slope. It leaves every anti-fabrication guarantee intact.
+- *Rejected:* re-prompting the model to include the markers. It costs quota to re-record every
+  cassette and pushes a formatting concern into the model, where it will drift.
+- *Rejected:* leaving it. `ps-01` would downgrade to INSUFFICIENT on the clean case, which is
+  false — the note does document the criterion.
+
+Deliberately NOT decided inside P3-S3: the step's DoD says "whitespace normalisation", and
+widening the definition of verbatim is a change to the product's central claim. It belongs in the
+step that owns enforcement, with the 100%-verification gate to prove it.
