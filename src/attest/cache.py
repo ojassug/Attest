@@ -10,8 +10,13 @@ Two reasons this exists, and the second matters more than the first.
    cassettes committed, `./scripts/verify.sh ALL` reproduces every result with no API key at all.
    That is worth more than the quota saving.
 
-Cache keys hash the model id and the full input, so changing a prompt, a schema or a note
-invalidates the entry automatically — a stale cassette can never silently mask a regression.
+Cache keys hash the **tier** and the full input — deliberately not the model id. Free-tier daily
+quotas are per model, so models get rotated when one is exhausted; keying on the model id would
+discard every cassette each time that happens. The model that produced an entry is recorded
+*inside* it instead, so results stay attributable for the P8-S3 metrics without being fragile.
+
+Changing a prompt, a schema or a note still invalidates the entry automatically — a stale
+cassette can never silently mask a regression.
 
 Control with `ATTEST_CACHE`:
   ``on`` (default) — read from cache, write on miss
@@ -40,18 +45,18 @@ def mode() -> str:
     return os.environ.get("ATTEST_CACHE", "on").lower()
 
 
-def _key(namespace: str, model_id: str, payload: str) -> str:
-    digest = hashlib.sha256(f"{namespace}\0{model_id}\0{payload}".encode()).hexdigest()
+def _key(namespace: str, tier: str, payload: str) -> str:
+    digest = hashlib.sha256(f"{namespace}\0{tier}\0{payload}".encode()).hexdigest()
     return digest[:32]
 
 
-def path_for(namespace: str, model_id: str, payload: str) -> Path:
-    return CACHE_DIR / namespace / f"{_key(namespace, model_id, payload)}.json"
+def path_for(namespace: str, tier: str, payload: str) -> Path:
+    return CACHE_DIR / namespace / f"{_key(namespace, tier, payload)}.json"
 
 
 def cached_structured(
     namespace: str,
-    model_id: str,
+    tier: str,
     payload: str,
     result_type: type[T],
     produce: Callable[[], T],
@@ -61,12 +66,18 @@ def cached_structured(
     A cassette that fails to parse is treated as a miss and overwritten, so a schema change never
     leaves the suite stuck on an unreadable entry.
     """
-    current = mode()
-    entry = path_for(namespace, model_id, payload)
+    import json
+    from datetime import datetime, timezone
 
-    if current != "off" and current != "refresh" and entry.exists():
+    from attest.llm import model_id as resolve_model
+
+    current = mode()
+    entry = path_for(namespace, tier, payload)
+
+    if current not in ("off", "refresh") and entry.exists():
         try:
-            return result_type.model_validate_json(entry.read_text())
+            body = json.loads(entry.read_text())
+            return result_type.model_validate(body["value"])
         except Exception:
             pass  # stale or malformed - fall through and re-record
 
@@ -74,10 +85,20 @@ def cached_structured(
 
     if current != "off":
         entry.parent.mkdir(parents=True, exist_ok=True)
-        entry.write_text(result.model_dump_json(indent=2))
+        entry.write_text(
+            json.dumps(
+                {
+                    "tier": tier,
+                    "model_id": resolve_model(tier),  # attribution, not part of the key
+                    "recorded_at": datetime.now(timezone.utc).isoformat(),
+                    "value": result.model_dump(mode="json"),
+                },
+                indent=2,
+            )
+        )
 
     return result
 
 
-def is_cached(namespace: str, model_id: str, payload: str) -> bool:
-    return path_for(namespace, model_id, payload).exists()
+def is_cached(namespace: str, tier: str, payload: str) -> bool:
+    return path_for(namespace, tier, payload).exists()

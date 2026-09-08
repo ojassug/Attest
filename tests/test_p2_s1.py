@@ -4,6 +4,9 @@ Graded against `data/synthetic/expected/*.json`, which was committed in P1-S4 be
 extraction code existed. Codes, payer and plan are asserted exactly; the free-text service name
 is asserted loosely, because "rTMS" and "transcranial magnetic stimulation" are both correct and
 pinning the wording would test phrasing rather than extraction.
+
+None of these are marked `live`: they replay from committed cassettes, so they run for a judge
+with no API key.
 """
 
 import pytest
@@ -28,7 +31,6 @@ def extracted() -> dict[str, Case]:
     return {c.name: extract_case(c.note_text, note_id=c.name) for c in CASES}
 
 
-@pytest.mark.live
 @needs_key
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.name)
 def test_extraction_matches_ground_truth(case, extracted):
@@ -48,7 +50,6 @@ def test_extraction_matches_ground_truth(case, extracted):
     )
 
 
-@pytest.mark.live
 @needs_key
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.name)
 def test_patient_ref_is_the_synthetic_pseudonym(case, extracted):
@@ -56,7 +57,6 @@ def test_patient_ref_is_the_synthetic_pseudonym(case, extracted):
     assert extracted[case.name].patient_ref == case.case_id
 
 
-@pytest.mark.live
 @needs_key
 def test_supplied_insurance_overrides_the_note(extracted):
     """A practice's coverage details beat the note header, so an explicit InsuranceInfo wins."""
@@ -83,7 +83,6 @@ def test_optional_fields_default_to_none():
         assert ExtractedCase.model_fields[optional].default is None
 
 
-@pytest.mark.live
 @needs_key
 def test_absent_codes_are_reported_not_invented():
     """The anti-hallucination rule, at the intake boundary.

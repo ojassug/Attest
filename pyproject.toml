@@ -31,7 +31,7 @@ testpaths = ["tests"]
 # Markers are generated from the step headings in PLAN.md. PLAN.md is the contract;
 # tests/test_p0_s3.py::test_every_step_has_a_marker fails if the two ever drift.
 markers = [
-  "live: hits Amazon Bedrock. Costs money and needs AWS credentials. Skipped by --offline, which is NOT a valid gate pass.",
+  "live: cannot be replayed from a cassette - needs a real API call. Provider-connectivity checks only.",
   "p0_s1: gate for step P0-S1",
   "p0_s2: gate for step P0-S2",
   "p0_s3: gate for step P0-S3",

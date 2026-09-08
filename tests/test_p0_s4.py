@@ -1,9 +1,10 @@
 """Gate for P0-S4 — the model provider actually works.
 
-Marked `live`: these call the real API, so `--offline` skips them and says the result is not a
-valid gate pass. The structured-output test is the load-bearing one — every later phase produces
-typed verdicts through `structured_output_model`, so if that path is broken nothing downstream
-can work, and the failure would surface as bad matching rather than as a broken provider.
+Two tests carry the `live` marker, which means precisely one thing in this repo: **the assertion
+cannot be replayed from a cassette**. Both check provider connectivity itself — that tool calling
+and structured output work against the real API. A recorded response would prove neither.
+
+Everything else here is pure logic and runs offline.
 """
 
 import pytest
@@ -18,7 +19,7 @@ from attest.llm import (
     with_retry,
 )
 
-pytestmark = [pytest.mark.p0_s4, pytest.mark.live]
+pytestmark = pytest.mark.p0_s4
 
 needs_key = pytest.mark.skipif(
     not have_credentials(), reason="no GOOGLE_API_KEY - see P0-S1"
@@ -33,6 +34,7 @@ class MedTrial(BaseModel):
     weeks: int = Field(description="Duration of the trial in weeks")
 
 
+@pytest.mark.live
 @needs_key
 def test_model_tool_roundtrip():
     from strands import Agent, tool
@@ -52,6 +54,7 @@ def test_model_tool_roundtrip():
     assert calls, "the tool was never invoked - tool calling is not working"
 
 
+@pytest.mark.live
 @needs_key
 def test_structured_output_roundtrip():
     """Typed extraction is the mechanism every later phase depends on."""

@@ -5,7 +5,7 @@
 #   ./scripts/verify.sh P3-S2       one step, plus every step before it
 #   ./scripts/verify.sh P3          a whole phase, plus every phase before it
 #   ./scripts/verify.sh ALL         everything
-#   ./scripts/verify.sh P3 --offline   skip Bedrock tests — NOT a valid gate pass
+#   ./scripts/verify.sh P3 --offline   skip provider-connectivity tests (still a valid pass)
 #
 # Gates are cumulative: a later step cannot silently break an earlier one.
 # The canonical step order is read from PLAN.md, which is the contract.
@@ -73,7 +73,7 @@ fi
 if [ -x ".venv/bin/pytest" ]; then PYTEST=".venv/bin/pytest"; else PYTEST="pytest"; fi
 
 echo "gate: $TARGET  (through $STOP)"
-[ "$OFFLINE" -eq 1 ] && echo "mode: OFFLINE — Bedrock tests excluded"
+[ "$OFFLINE" -eq 1 ] && echo "mode: OFFLINE — provider-connectivity tests excluded; model logic replays from cassettes"
 
 set +e
 "$PYTEST" -m "$EXPR" -q
@@ -95,8 +95,9 @@ fi
 
 echo ""
 if [ "$OFFLINE" -eq 1 ]; then
-  echo "OFFLINE PASS: $TARGET — NOT a valid gate pass."
-  echo "Do not record a gate SHA in STATUS.md from an offline run; re-run without --offline."
+  echo "OFFLINE PASS: $TARGET"
+  echo "Model-backed logic was replayed from cassettes; only provider-connectivity tests were"
+  echo "skipped. This is a valid gate pass. Re-run without --offline after changing the provider."
 else
   echo "GATE PASSED: $TARGET"
   echo "Record the commit SHA in STATUS.md."

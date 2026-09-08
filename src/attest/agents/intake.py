@@ -85,7 +85,7 @@ def _extract(note_text: str, attempts: int = 3) -> ExtractedCase:
         ) from last
 
     return cached_structured(
-        "intake", model_id("fast"), SYSTEM_PROMPT + prompt, ExtractedCase, produce
+        "intake", "fast", SYSTEM_PROMPT + prompt, ExtractedCase, produce
     )
 
 
