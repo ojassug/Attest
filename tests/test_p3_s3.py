@@ -111,6 +111,63 @@ def test_quote_longer_than_the_note_is_rejected():
     assert not result.verified
 
 
+# --------------------------------------------------------------------------- Markdown markup
+
+# The real corpus is Markdown, and every label in it is bolded. A model quoting such a line
+# reproduces the rendered text, not the markup. See DECISIONS.md — this is the P3-S4 decision.
+MARKDOWN_NOTE = """## Psychiatric Evaluation
+
+**Evaluating provider:** Dr. R. Okonkwo, MD, board-certified psychiatrist
+**PHQ-9:** 21, consistent with severe major depression
+"""
+
+
+def test_markdown_emphasis_markers_are_markup_not_content():
+    """The model drops `**` when quoting a bolded label. That is not a paraphrase."""
+    result = verify_span(
+        span("Evaluating provider: Dr. R. Okonkwo, MD, board-certified psychiatrist"),
+        MARKDOWN_NOTE,
+    )
+
+    assert result.verified
+
+
+def test_quote_that_keeps_the_markers_also_verifies():
+    """Tolerance has to be symmetric, or it just moves the failure to the other model."""
+    result = verify_span(
+        span("**Evaluating provider:** Dr. R. Okonkwo, MD, board-certified psychiatrist"),
+        MARKDOWN_NOTE,
+    )
+
+    assert result.verified
+
+
+def test_markup_tolerance_does_not_admit_paraphrase():
+    """Guard: relaxing markup must not relax anything else.
+
+    Same bolded line, one substituted word and one changed number. Both must still fail.
+    """
+    assert not verify_span(
+        span("Evaluating provider: Dr. R. Okonkwo, MD, licensed psychiatrist"), MARKDOWN_NOTE
+    ).verified
+    assert not verify_span(span("PHQ-9: 22"), MARKDOWN_NOTE).verified
+
+
+def test_markup_match_still_offsets_into_the_raw_note():
+    """Offsets bracket exactly the matched run of the raw note, interior markup included.
+
+    The match starts at the `P`, so the *leading* `**` falls outside it — the offsets cover the
+    matched content and no more. The closing `**` sits between the first and last matched
+    characters, so it is inside the slice, and `matched_text` reports that honestly rather than
+    pretending the note is clean prose.
+    """
+    result = verify_span(span("PHQ-9: 21"), MARKDOWN_NOTE)
+
+    assert MARKDOWN_NOTE[result.start : result.end] == result.matched_text
+    assert result.matched_text == "PHQ-9:** 21"
+    assert MARKDOWN_NOTE[result.start] == "P", "offsets must not swallow the leading markup"
+
+
 # --------------------------------------------------------------------------- rejection reporting
 
 

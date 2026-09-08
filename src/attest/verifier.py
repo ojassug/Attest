@@ -17,14 +17,34 @@ module: normalisation changes lengths, so each surviving character carries its s
 
 from __future__ import annotations
 
+import logging
+
 from pydantic import Field
 
-from attest.models import Base, CriteriaCoverage, EvidenceSpan
+from attest.models import Base, CriteriaCoverage, CriterionVerdict, EvidenceSpan, Verdict
+
+
+_MARKUP_CHARS = "*_"
+
+
+def _strip_markup(text: str) -> str:
+    """Drop Markdown emphasis characters.
+
+    The corpus is Markdown and every label in it is bolded, so a model quoting a labelled line
+    reproduces the rendered text and omits the `**`. That is a difference in *syntax*, not in
+    content, and rejecting it would reject true evidence — see DECISIONS.md.
+
+    This is a lexical rule about markup characters, which is what keeps it from being the first
+    step down a slope: it cannot forgive a changed word, a changed number, or a changed case,
+    because none of those are markup. The known limit is that a literal underscore inside a word
+    would also be dropped; no note in the corpus contains one.
+    """
+    return text.translate(str.maketrans("", "", _MARKUP_CHARS))
 
 
 def _normalise(text: str) -> str:
-    """Collapse every run of whitespace to a single space, and strip the ends."""
-    return " ".join(text.split())
+    """Collapse every run of whitespace to a single space, drop markup, strip the ends."""
+    return " ".join(_strip_markup(text).split())
 
 
 def _normalise_with_offsets(note: str) -> tuple[str, list[int]]:
@@ -40,6 +60,8 @@ def _normalise_with_offsets(note: str) -> tuple[str, list[int]]:
     in_whitespace = True  # leading whitespace is dropped, matching str.split()
 
     for i, ch in enumerate(note):
+        if ch in _MARKUP_CHARS:
+            continue  # markup carries no content, and occupies no position in the comparison
         if ch.isspace():
             if not in_whitespace:
                 chars.append(" ")
@@ -143,4 +165,76 @@ def verify_coverage(coverage: CriteriaCoverage, note: str) -> VerificationReport
         results=[
             verify_span(span, note) for verdict in coverage.verdicts for span in verdict.spans
         ],
+    )
+
+
+# --------------------------------------------------------------------------- enforcement (P3-S4)
+
+AUDIT = logging.getLogger("attest.audit")
+
+
+class VerifiedCoverage(Base):
+    """A coverage that has been through the verifier, plus the evidence of what happened."""
+
+    coverage: CriteriaCoverage = Field(
+        description="Downgraded and annotated. Only verified spans survive here."
+    )
+    report: VerificationReport = Field(
+        description="Every span checked, including the rejected ones."
+    )
+
+
+def enforce_verification(coverage: CriteriaCoverage, note: str) -> VerifiedCoverage:
+    """Make the verifier binding: unverifiable evidence costs its criterion the verdict.
+
+    Any criterion carrying even one unverifiable span drops to ``INSUFFICIENT``. Partly
+    fabricated evidence is not partly trustworthy, and INSUFFICIENT is the honest verdict —
+    we no longer know, which is a question for the practice rather than an argument with the
+    payer.
+
+    A rejected span is removed from the returned coverage, so nothing downstream can cite it,
+    but it is never *silently* dropped: it is written to the ``attest.audit`` log with its
+    quote, and it stays reachable on ``report.rejected``.
+    """
+    results: list[SpanVerification] = []
+    verdicts: list[CriterionVerdict] = []
+
+    for verdict in coverage.verdicts:
+        kept: list[EvidenceSpan] = []
+        rejected = 0
+
+        for span in verdict.spans:
+            result = verify_span(span, note)
+            results.append(result)
+
+            if result.verified:
+                kept.append(
+                    span.model_copy(
+                        update={"verified": True, "start": result.start, "end": result.end}
+                    )
+                )
+            else:
+                rejected += 1
+                AUDIT.warning(
+                    "REJECTED span %s on criterion %s (note %s): %s — quote: %r",
+                    span.span_id,
+                    verdict.criterion_id,
+                    span.note_id,
+                    result.reason,
+                    span.quote,
+                )
+
+        update: dict = {"spans": kept}
+        if rejected:
+            update["verdict"] = Verdict.INSUFFICIENT
+            update["reasoning"] = (
+                f"{verdict.reasoning} [verifier: downgraded to INSUFFICIENT — "
+                f"{rejected} span(s) did not appear verbatim in the note]"
+            )
+
+        verdicts.append(verdict.model_copy(update=update))
+
+    return VerifiedCoverage(
+        coverage=coverage.model_copy(update={"verdicts": verdicts}),
+        report=VerificationReport(case_id=coverage.case_id, results=results),
     )
