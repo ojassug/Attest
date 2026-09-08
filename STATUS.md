@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0 — Foundation & protocol |
-| **Next step** | `P0-S1` (AWS setup — deadline-driven), then `P0-S4` (Bedrock smoke test) |
+| **Phase** | P1 complete. P2 next, but blocked on AWS. |
+| **Next step** | `P0-S1` (AWS setup) — everything else is blocked behind it |
 | **Blocking deadline** | AWS $50 credit request — **Sep 11, 2026, 12:00pm PT** |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -40,7 +40,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P1-S1 | Pydantic domain models                     | DONE   | Atharv| d666605  | 09-08 |
 | P1-S2 | Policy pack format and loader              | DONE   | Atharv| 8e9bc2d  | 09-08 |
 | P1-S3 | Two TMS policy packs                       | DONE   | Atharv| 0dba1ff  | 09-08 |
-| P1-S4 | Synthetic corpus and ground truth          | IN_PROGRESS | Atharv | —        | 09-08 |
+| P1-S4 | Synthetic corpus and ground truth          | DONE   | Atharv| 335ac1a  | 09-08 |
 | P2-S1 | Note to structured Case                    | TODO   | —     | —        | —     |
 | P2-S2 | PA-required determination                  | TODO   | —     | —        | —     |
 | P2-S3 | Intake agent wiring                        | TODO   | —     | —        | —     |
@@ -82,30 +82,35 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 **2026-09-08 — Atharv** *(session 1)*
 
-`P0-S2` and `P0-S3` are done. The protocol is live and self-enforcing.
+**P0-S2, P0-S3 and all of P1 are DONE.** Full `./scripts/verify.sh P1` is green: 82 tests.
 
-`./scripts/verify.sh` is the gate runner everything depends on. It reads the canonical step
-order from `PLAN.md`, so `PLAN.md` really is the single contract — adding a step there without
-adding a `STATUS.md` row and a pytest marker makes the gate fail. That was tested by deliberately
-desyncing the files; both invariant tests fired and the gate exited 1.
+What exists: the handoff protocol, the gate runner, Pydantic domain models, the policy-pack
+schema and loader, two real TMS policy packs, and three synthetic cases with committed ground
+truth.
 
-Two behaviours worth knowing before you use it:
+**The project is now blocked on `P0-S1` (AWS).** P0-S4 and everything in P2 onward calls a model,
+and the Bedrock model id comes out of P0-S1. Do not guess it — run
+`aws bedrock list-foundation-models` as the DoD says; regional availability varies.
 
-- **No tests is not a pass.** pytest exits 5 when nothing is collected; the gate converts that to
-  a failure. A step with no test cannot be marked DONE. (`P0-S2` is the one exception, recorded as
-  `pre-gate` — it predates the runner and is covered by `test_status_covers_all_plan_steps`.)
-- **`--offline` skips the Bedrock tests and says so.** It prints that its result is NOT a valid
-  gate pass. Never record a gate SHA from an offline run.
+Things worth knowing before you touch this:
 
-Environment: Python 3.12 in `.venv` (3.14 is the system default but is too new for the Strands
-dependency tree). Set up with `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
-`verify.sh` prefers `.venv/bin/pytest` automatically, so you do not need to activate anything.
+- **Ground truth is the standard, and it is deliberately written ahead of the code.**
+  `data/synthetic/expected/*.json` says exactly what verdict every criterion must receive for
+  every case. When P3's matcher disagrees, the matcher is wrong until proven otherwise. Do not
+  edit ground truth to make a test pass without saying so in DECISIONS.md.
+- **The gap case's gap is subtle on purpose.** `gap.md` asserts "An augmentation trial was
+  attempted" with no agent, no dose and no duration. Correct behaviour is `INSUFFICIENT` on
+  `ps-04b` plus a question to the practice — not a guess, and not failing the whole request.
+- **The denial case is fully documented and denied anyway.** That is the point: the payer is
+  wrong, and the appeal quotes the medication table and CBT dates back at Highmark's own policy
+  language. If someone "fixes" that note to be genuinely deficient, the appeal demo dies.
+- **Schema changed mid-phase.** `Criterion.polarity` and a required `PolicyPack.appeal_window_source`
+  were added during P1-S3 — see DECISIONS.md. The cumulative gate caught the resulting fixture
+  breakage in P1-S2 immediately, which is the protocol working.
+- **Both appeal windows are unconfirmed placeholders.** Neither payer PDF states one. Fine for a
+  synthetic demo; must be verified before any real filing.
 
-**Next.** `P0-S1` is the priority — it is human-driven and the **$50 AWS credit form closes
-Sep 11, 12:00pm PT**. It also picks the Bedrock model id, which `P0-S4` needs, so `P0-S4` is
-blocked until someone with console access finishes `P0-S1`. Do not guess the model id; confirm it
-with `aws bedrock list-foundation-models` as the DoD says — regional availability varies.
-
-`P1` needs no AWS at all and can be started in parallel if `P0-S1` is stuck.
+Environment: Python 3.12 in `.venv`. `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
+`verify.sh` finds `.venv/bin/pytest` on its own.
 
 Nothing is mid-flight. Working tree is clean.
