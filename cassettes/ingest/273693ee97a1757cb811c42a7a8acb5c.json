@@ -1,0 +1,107 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-08T10:25:38.329687+00:00",
+  "value": {
+    "criteria": [
+      {
+        "id": "criterion_1",
+        "text": "Age 18 or older",
+        "category": "eligibility",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_2",
+        "text": "Confirmed diagnosis of severe major depressive disorder (single or recurrent) documented by standardized rating scales that reliably measure depressive symptoms",
+        "category": "diagnosis",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_3",
+        "text": "ANY ONE of the following:\no Failure of four (4) trials of psychopharmacologic agents including two (2) different agent classes and two (2) augmentation trials; or\no Inability to tolerate a therapeutic dose of medications as evidenced by four (4) trials of psychopharmacologic agents with distinct side effects; or\no History of response to TMS in a previous depressive episode [at least three (3) months since the prior episode]; or\no Is a candidate for electroconvulsive therapy (ECT) and ECT would not be clinically superior to TMS (e.g., in cases with psychosis, acute suicidal risk, catatonia or life-threatening inanition TMS should NOT be utilized)",
+        "category": "treatment_resistance",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_4",
+        "text": "Failure of a trial of a psychotherapy known to be effective in the treatment of major depressive disorder of an adequate frequency and duration, without significant improvement in depressive symptoms, as documented by standardized rating scales that reliably measure depressive symptoms",
+        "category": "psychotherapy",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_5",
+        "text": "Seizure disorder or any history of seizure with increased risk of future seizure",
+        "category": "contraindication",
+        "source_section": "POLICY POSITION",
+        "polarity": "absent"
+      },
+      {
+        "id": "criterion_6",
+        "text": "Presence of acute or chronic psychotic symptoms or disorders (such as schizophrenia, schizophreniform or schizoaffective disorder) in the current depressive episode",
+        "category": "contraindication",
+        "source_section": "POLICY POSITION",
+        "polarity": "absent"
+      },
+      {
+        "id": "criterion_7",
+        "text": "Neurologic conditions that include epilepsy, cerebrovascular disease, dementia, increased intracranial pressure, having a history of repetitive or severe head trauma, or with primary or secondary tumors in the central nervous system (CNS)",
+        "category": "contraindication",
+        "source_section": "POLICY POSITION",
+        "polarity": "absent"
+      },
+      {
+        "id": "criterion_8",
+        "text": "Presence of an implanted magnetic-sensitive medical device located 30 centimeters or less from the TMS magnetic coil or other implanted metal items, including but not limited to a cochlear implant, implanted cardioverter defibrillator (ICD), pacemaker, vagus nerve stimulator, or metal aneurysm clips or coils, staples, or stents.",
+        "category": "contraindication",
+        "source_section": "POLICY POSITION",
+        "polarity": "absent"
+      },
+      {
+        "id": "criterion_9",
+        "text": "TMS should be performed using an FDA-cleared device in appropriately selected patients, by a physician who is adequately trained and experienced in the specific techniques used.",
+        "category": "device",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_10",
+        "text": "A treatment course should not exceed five (5) days a week for six (6) weeks (total of 30 sessions), followed by a three-week taper of three (3) TMS treatments in week one (1), two (2) TMS treatments the next week, and one (1) TMS treatment in the last week.",
+        "category": "treatment_plan",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_11",
+        "text": "An attendant trained in basic cardiac life support and the management of complications such as seizures, as well as the use of the equipment must be present at all times",
+        "category": "provider_qualification",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_12",
+        "text": "Adequate resuscitation equipment including, for example, suction and oxygen",
+        "category": "facility",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_13",
+        "text": "The facility must maintain awareness of response times of emergency services (either fire/ambulance or \u201ccode team\u201d), which should be available within five (5) minutes. These relationships are reviewed on at least a one (1) year basis and include mock drills.",
+        "category": "facility",
+        "source_section": "POLICY POSITION",
+        "polarity": "present"
+      },
+      {
+        "id": "criterion_14",
+        "text": "Continued treatment with TMS of the brain as maintenance therapy is considered experimental/investigational and therefore noncovered.",
+        "category": "treatment_plan",
+        "source_section": "POLICY POSITION",
+        "polarity": "absent"
+      }
+    ]
+  }
+}

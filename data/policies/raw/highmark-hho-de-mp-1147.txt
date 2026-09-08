@@ -1,0 +1,70 @@
+# Source: Highmark Health Options medical policy HHO-DE-MP-1147
+# https://www.highmarkhealthoptions.com/.../hho-de-mp-1147-transcranialmagneticstimulation(TMS)_02222023.pdf
+# Retrieved 2026-09-08. Excerpt: POLICY POSITION section only, for ingestion testing.
+
+POLICY POSITION 
+Prior authorization is required. 
+Transcranial magnetic stimulation (TMS) of the brain may be considered medically necessary as a 
+treatment of major depressive disorder when ALL of the following conditions have been met: 
+Policy ID: HHO-DE-MP-1147 
+Approved By: Highmark Health Options – Market Leadership 
+Provider Notice Date: 12/15/2021; 03/01/2023 
+Original Effective Date: 01/15/2022; 04/01/2023 
+Annual Approval Date: 10/27/2021; 08/24/2022 
+Last Revision Date: 10/27/2021; 08/24/2022 
+Products: Medicaid 
+Application: All participating hospitals and providers 
+Page Number(s): 1 of 4 
+Medical Policy 
+Highmark Health Options is an independent licensee of the Blue Cross Blue Shield Association, 2 
+an association of independent Blue Cross Blue Shield Plans. 
+• Age 18 or older; and 
+• Confirmed diagnosis of severe major depressive disorder (single or recurrent) documented by 
+standardized rating scales that reliably measure depressive symptoms; and 
+• ANY ONE of the following: 
+o Failure of four (4) trials of psychopharmacologic agents including two (2) different agent 
+classes and two (2) augmentation trials; or 
+o Inability to tolerate a therapeutic dose of medications as evidenced by four (4) trials of 
+psychopharmacologic agents with distinct side effects; or 
+o History of response to TMS in a previous depressive episode [at least three (3) months 
+since the prior episode]; or 
+o Is a candidate for electroconvulsive therapy (ECT) and ECT would not be clinically 
+superior to TMS (e.g., in cases with psychosis, acute suicidal risk, catatonia or life-
+threatening inanition TMS should NOT be utilized); AND 
+• Failure of a trial of a psychotherapy known to be effective in the treatment of major depressive 
+disorder of an adequate frequency and duration, without significant improvement in depressive 
+symptoms, as documented by standardized rating scales that reliably measure depressive 
+symptoms; and 
+• None of the following conditions are present: 
+o Seizure disorder or any history of seizure with increased risk of future seizure; or 
+o Presence of acute or chronic psychotic symptoms or disorders (such as schizophrenia, 
+schizophreniform or schizoaffective disorder) in the current depressive episode; or 
+o Neurologic conditions that include epilepsy, cerebrovascular disease, dementia, 
+increased intracranial pressure, having a history of repetitive or severe head trauma, or 
+with primary or secondary tumors in the central nervous system (CNS); or 
+o Presence of an implanted magnetic-sensitive medical device located 30 centimeters or 
+less from the TMS magnetic coil or other implanted metal items, including but not limited 
+to a cochlear implant, implanted cardioverter defibrillator (ICD), pacemaker, vagus nerve 
+stimulator, or metal aneurysm clips or coils, staples, or stents. 
+TMS should be performed using an FDA-cleared device in appropriately selected patients, by a physician 
+who is adequately trained and experienced in the specific techniques used. 
+A treatment course should not exceed five (5) days a week for six (6) weeks (total of 30 sessions), 
+followed by a three-week taper of three (3) TMS treatments in week one (1), two (2) TMS treatments the 
+next week, and one (1) TMS treatment in the last week. 
+All of the following must be present for the administration of TMS and documented in the medical record 
+and available upon request: 
+• An attendant trained in basic cardiac life support and the management of complications such as 
+seizures, as well as the use of the equipment must be present at all times; and 
+• Adequate resuscitation equipment including, for example, suction and oxygen; and 
+• The facility must maintain awareness of response times of emergency services (either 
+fire/ambulance or “code team”), which should be available within five (5) minutes. These 
+relationships are reviewed on at least a one (1) year basis and include mock drills. 
+TMS for major depressive disorder that does not meet the criteria listed above is considered 
+experimental/investigational and therefore noncovered. The safety and/or effectiveness of this service 
+cannot be established by the available published peer-reviewed literature. 
+Continued treatment with TMS of the brain as maintenance therapy is considered 
+experimental/investigational and therefore noncovered. The safety and/or effectiveness of this service 
+cannot be established by the available published peer-reviewed literature. 
+Medical Policy 
+Highmark Health Options is an independent licensee of the Blue Cross Blue Shield Association, 3 
+an association of independent Blue Cross Blue Shield Plans.

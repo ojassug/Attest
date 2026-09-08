@@ -310,3 +310,26 @@ and keying on the model id discarded every cassette each time. The producing mod
 inside each cassette instead, keeping results attributable for the P8-S3 metrics.
 
 **Re-run live** after changing provider or model, and once before submission.
+
+---
+
+## 2026-09-08 · Not every policy requirement is checkable from a clinical note
+
+**Observed during P3-S1.** Ingestion recovered all ten hand-authored Highmark criteria and found
+four more the human pack omitted: an attendant trained in cardiac life support, resuscitation
+equipment on site, emergency response times, and the maintenance-therapy exclusion.
+
+**Decision.** They stay out of the shipped pack.
+
+**Why.** They are real policy requirements but they are **facility attestations, not clinical
+facts** — nothing in a patient's note could ever evidence them, so the matcher could only ever
+return INSUFFICIENT and the gap list would ask the practice a question the note was never going
+to answer.
+
+This is a genuine product distinction worth naming in the pitch: a criterion the agent can check
+against a note, versus one the practice attests to separately. Conflating them would make the
+coverage checklist look permanently incomplete on cases that are in fact fully documented.
+
+**Consequence for P3.** Ingestion recall is measured against note-checkable criteria only. If
+facility criteria are ever added to a pack they need a separate attestation path, not evidence
+matching.
