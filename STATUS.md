@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0, P1, P2, **P3 complete**. **P4-S1 is next.** |
-| **Next step** | `P4-S1` — justification from verified evidence only. |
+| **Phase** | P0–P3 complete, P4-S1 done. **P4-S2 is next.** |
+| **Next step** | `P4-S2` — Gate 1, human approval before submission. `BeforeToolCallEvent` + `interrupt` confirmed present in the installed Strands. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -49,7 +49,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P3-S3 | Evidence-span verifier                     | DONE   | Atharv| 67c6b21  | 09-08 |
 | P3-S4 | Verifier enforcement in the pipeline       | DONE   | Atharv| f80d422  | 09-08 |
 | P3-S5 | Gap list                                   | DONE   | Atharv| 7385449  | 09-08 |
-| P4-S1 | Justification from verified evidence only  | IN_PROGRESS | Atharv | —   | 09-08 |
+| P4-S1 | Justification from verified evidence only  | DONE   | Atharv| 86eb7d0  | 09-08 |
 | P4-S2 | Gate 1 — approval before submission        | TODO   | —     | —        | —     |
 | P4-S3 | Submission artifact                        | TODO   | —     | —        | —     |
 | P5-S1 | Denial parsing                             | TODO   | —     | —        | —     |
