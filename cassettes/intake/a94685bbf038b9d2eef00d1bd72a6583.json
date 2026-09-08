@@ -1,0 +1,17 @@
+{
+  "patient_ref": "SYNTH-003",
+  "payer": "Highmark Health Options",
+  "plan": "Medicaid",
+  "member_id": "HHO-2291-0043",
+  "group_number": null,
+  "service": "repetitive transcranial magnetic stimulation",
+  "cpt_codes": [
+    "90867",
+    "90868",
+    "90869"
+  ],
+  "units_requested": 33,
+  "duration_weeks": 9,
+  "primary_diagnosis_code": "F33.2",
+  "primary_diagnosis_text": "Major depressive disorder, recurrent, severe, without psychotic features"
+}

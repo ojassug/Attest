@@ -229,3 +229,56 @@ installing and enumerating `strands.models`, where `google` does not exist at al
 
 **How to apply.** When a Strands API detail matters, verify it against the installed package
 rather than the index page. Do not spend a debugging cycle rediscovering this one.
+
+---
+
+## 2026-09-08 · Gemini free tier is 20 requests per DAY per model — hence cassettes
+
+**Discovered.** Not 20/minute. `GenerateRequestsPerDayPerProjectPerModel-FreeTier`, quotaValue 20.
+A single full pipeline run over three cases makes roughly thirty calls, so the suite could not
+otherwise be run even once a day.
+
+**Decision.** `src/attest/cache.py` records every structured model response to `cassettes/`,
+keyed by a hash of model id + full input. Cassettes are **committed**.
+
+**Why this is a feature, not a workaround.** The rules require the project to be testable by
+judges for free (`Attest-PRODUCT.md:42`). With cassettes committed, `./scripts/verify.sh ALL`
+reproduces every result with no API key at all — verified by hiding `.env` and running the P2-S1
+gate, which passed in 0.21s. Tests skip only when a call can be served neither by a key nor a
+cassette; see `tests/conftest.py::model_available`.
+
+Keys hash the full prompt and schema, so changing a prompt, a note, or a model invalidates the
+entry automatically. A stale cassette cannot silently mask a regression.
+
+`ATTEST_CACHE=off` bypasses; `ATTEST_CACHE=refresh` re-records.
+
+**Model rotation.** Each model has its own daily quota, so `fast` moved to `gemini-3.7-flash`
+after `gemini-3.5-flash` was exhausted. If quota becomes the bottleneck again, enabling billing on
+the Google AI Studio key is the real fix — at flash pricing the entire project is a few dollars.
+
+---
+
+## 2026-09-08 · Never constrain a schema in a way that forces the model to invent
+
+**What happened.** Intake extraction was intermittently returning an empty `cpt_codes`, so a
+`min_length=1` constraint was added to force the model to fill it. The P2-S1 gate then failed on
+the denial case — and the cause was not the model. `denial.md` contained **no CPT codes at all**,
+and the constraint had forced the model to fabricate `90867` and `90868` from general knowledge of
+TMS billing.
+
+**Decision.** The constraint is removed. `cpt_codes` may be empty, its description explicitly
+tells the model to return an empty list rather than supply codes typical for the service, and
+`extract_case` raises `MissingFactError` when none are found.
+
+**Why.** This is the precise failure the product exists to prevent, reproduced inside our own
+code by a well-intentioned reliability fix. §6 of the spec requires the agent to *ask* when
+evidence is missing, never assume. A schema constraint that makes absence unrepresentable
+converts every missing fact into a confident fabrication.
+
+Two tests hold the line: `test_absent_codes_are_reported_not_invented` (behaviour) and
+`test_cpt_codes_are_not_forced_to_be_nonempty` (the schema itself, so the constraint cannot creep
+back in as another flakiness fix).
+
+**Ground truth was also wrong** and has been corrected — `denial.md` now states its requested
+codes, as a real prior-authorization referral would. Flagged here because the protocol forbids
+editing ground truth to make a test pass without saying so.
