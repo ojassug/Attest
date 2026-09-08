@@ -46,7 +46,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P2-S3 | Intake agent wiring                        | TODO   | —     | —        | —     |
 | P3-S1 | Policy ingestion to draft criteria         | TODO   | —     | —        | —     |
 | P3-S2 | Per-criterion evidence matching            | TODO   | —     | —        | —     |
-| P3-S3 | Evidence-span verifier                     | TODO   | —     | —        | —     |
+| P3-S3 | Evidence-span verifier                     | IN_PROGRESS | Atharv | —        | 09-08 |
 | P3-S4 | Verifier enforcement in the pipeline       | TODO   | —     | —        | —     |
 | P3-S5 | Gap list                                   | TODO   | —     | —        | —     |
 | P4-S1 | Justification from verified evidence only  | TODO   | —     | —        | —     |
