@@ -495,3 +495,40 @@ decision removed, not a real catch.
 **Marker note.** `test_no_unverified_span_survives` is marked `needs_model`, not `live`, although
 PLAN.md's DoD says `live`. It replays from cassettes, and the recorded decision reserves `live`
 for calls that genuinely cannot be replayed. Same precedent as every P3-S2 test.
+
+---
+
+## 2026-09-08 · A gap is an INSUFFICIENT criterion, and it is built without a model
+
+**Decision (P3-S5).** `build_gap_list(coverage)` emits one `GapItem` per criterion whose verdict is
+`INSUFFICIENT`. `UNMET` is deliberately **not** a gap.
+
+**Why the distinction decides who gets asked.** INSUFFICIENT means the note does not say enough to
+tell — a question for the practice. UNMET means the note shows the requirement is genuinely not
+satisfied — an argument to have with the payer. Asking a practice to document something the record
+shows is absent sends them chasing a document that cannot exist. `test_unmet_is_not_a_gap` pins it.
+
+**No model call.** `missing` is the matcher's own reasoning, carried straight through. The matcher
+already worked out exactly what the note failed to establish — for `ps-04b` it names the agent, the
+dose, the therapeutic-dose threshold and the 8-week duration — so a template could only be vaguer.
+It is also free, which matters against a 20-request-per-day ceiling. The whole of P3-S3 through
+P3-S5 therefore costs no quota at all.
+
+**The question quotes the requirement verbatim** rather than summarising it. The practice is being
+asked to satisfy the payer's words, and a paraphrased payer requirement is how the wrong document
+gets pulled from the chart.
+
+**Ordered by the pack, not by the coverage**, because the practice reads a gap list as a checklist
+against the policy.
+
+**Fails loudly** on an unknown pack or a criterion absent from it. A gap list built against the
+wrong pack would quote one payer's requirements at another.
+
+**Integration worth noting:** a criterion that P3-S4 downgraded for unverifiable evidence is
+INSUFFICIENT, so it automatically becomes a gap. That closes the loop the verifier opened — a
+criterion cannot be quietly stripped of its evidence and then never asked about.
+`test_a_verifier_downgraded_criterion_becomes_a_gap` holds that door shut.
+
+**Result: gap ids match ground truth exactly on all three cases** — `["ps-04b"]` for `gap`, empty
+for `clean` and `denial`. `./scripts/verify.sh P3` exits zero at 185 tests. **P3, the phase the
+product lives or dies on, is complete.**
