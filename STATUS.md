@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | P0 — Foundation & protocol |
-| **Next step** | `P0-S1` (AWS setup — deadline-driven) and `P0-S3` (repo skeleton) |
+| **Next step** | `P0-S1` (AWS setup — deadline-driven), then `P0-S4` (Bedrock smoke test) |
 | **Blocking deadline** | AWS $50 credit request — **Sep 11, 2026, 12:00pm PT** |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -35,7 +35,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 |-------|--------------------------------------------|--------|-------|----------|-------|
 | P0-S1 | AWS account, Bedrock access, credits, ID   | TODO   | —     | —        | —     |
 | P0-S2 | Protocol documents                         | DONE   | Atharv| pre-gate | 09-08 |
-| P0-S3 | Repo skeleton, tooling, gate runner        | IN_PROGRESS | Atharv | —        | 09-08 |
+| P0-S3 | Repo skeleton, tooling, gate runner        | DONE   | Atharv| 93c3aa3  | 09-08 |
 | P0-S4 | Bedrock smoke test                         | TODO   | —     | —        | —     |
 | P1-S1 | Pydantic domain models                     | TODO   | —     | —        | —     |
 | P1-S2 | Policy pack format and loader              | TODO   | —     | —        | —     |
@@ -80,15 +80,32 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 ---
 
-**2026-09-08 — Atharv**
+**2026-09-08 — Atharv** *(session 1)*
 
-Planning session. Nothing built yet — `PLAN.md`, `STATUS.md`, and `DECISIONS.md` are the only artifacts, plus the pre-existing `Attest-PRODUCT.md`.
+`P0-S2` and `P0-S3` are done. The protocol is live and self-enforcing.
 
-Two steps are unblocked and independent, so whoever picks up next can take either:
+`./scripts/verify.sh` is the gate runner everything depends on. It reads the canonical step
+order from `PLAN.md`, so `PLAN.md` really is the single contract — adding a step there without
+adding a `STATUS.md` row and a pytest marker makes the gate fail. That was tested by deliberately
+desyncing the files; both invariant tests fired and the gate exited 1.
 
-- **`P0-S1`** is human-driven (AWS console, forms) and **time-critical** — the $50 credit form closes Sep 11, 12:00pm PT. Do this one first if you have AWS console access.
-- **`P0-S3`** is pure code and needs no AWS. Note it introduces `scripts/verify.sh`, which every later step depends on, so the whole project is gated behind it.
+Two behaviours worth knowing before you use it:
 
-`P0-S2` is marked DONE with gate `pre-gate` because `verify.sh` does not exist yet — it is created in `P0-S3`. Once `P0-S3` lands, its `test_status_covers_all_plan_steps` test retroactively validates this file.
+- **No tests is not a pass.** pytest exits 5 when nothing is collected; the gate converts that to
+  a failure. A step with no test cannot be marked DONE. (`P0-S2` is the one exception, recorded as
+  `pre-gate` — it predates the runner and is covered by `test_status_covers_all_plan_steps`.)
+- **`--offline` skips the Bedrock tests and says so.** It prints that its result is NOT a valid
+  gate pass. Never record a gate SHA from an offline run.
 
-Nothing is mid-flight. The repo is clean.
+Environment: Python 3.12 in `.venv` (3.14 is the system default but is too new for the Strands
+dependency tree). Set up with `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
+`verify.sh` prefers `.venv/bin/pytest` automatically, so you do not need to activate anything.
+
+**Next.** `P0-S1` is the priority — it is human-driven and the **$50 AWS credit form closes
+Sep 11, 12:00pm PT**. It also picks the Bedrock model id, which `P0-S4` needs, so `P0-S4` is
+blocked until someone with console access finishes `P0-S1`. Do not guess the model id; confirm it
+with `aws bedrock list-foundation-models` as the DoD says — regional availability varies.
+
+`P1` needs no AWS at all and can be started in parallel if `P0-S1` is stuck.
+
+Nothing is mid-flight. Working tree is clean.
