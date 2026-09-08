@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "attest"
+version = "0.1.0"
+description = "An AI agent that handles the prior authorization lifecycle for small specialty practices."
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = "Apache-2.0"
+dependencies = [
+  "strands-agents",
+  "strands-agents-tools",
+  "bedrock-agentcore",
+  "pydantic>=2",
+  "pyyaml",
+  "streamlit",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Markers are generated from the step headings in PLAN.md. PLAN.md is the contract;
+# tests/test_p0_s3.py::test_every_step_has_a_marker fails if the two ever drift.
+markers = [
+  "live: hits Amazon Bedrock. Costs money and needs AWS credentials. Skipped by --offline, which is NOT a valid gate pass.",
+  "p0_s1: gate for step P0-S1",
+  "p0_s2: gate for step P0-S2",
+  "p0_s3: gate for step P0-S3",
+  "p0_s4: gate for step P0-S4",
+  "p1_s1: gate for step P1-S1",
+  "p1_s2: gate for step P1-S2",
+  "p1_s3: gate for step P1-S3",
+  "p1_s4: gate for step P1-S4",
+  "p2_s1: gate for step P2-S1",
+  "p2_s2: gate for step P2-S2",
+  "p2_s3: gate for step P2-S3",
+  "p3_s1: gate for step P3-S1",
+  "p3_s2: gate for step P3-S2",
+  "p3_s3: gate for step P3-S3",
+  "p3_s4: gate for step P3-S4",
+  "p3_s5: gate for step P3-S5",
+  "p4_s1: gate for step P4-S1",
+  "p4_s2: gate for step P4-S2",
+  "p4_s3: gate for step P4-S3",
+  "p5_s1: gate for step P5-S1",
+  "p5_s2: gate for step P5-S2",
+  "p5_s3: gate for step P5-S3",
+  "p5_s4: gate for step P5-S4",
+  "p6_s1: gate for step P6-S1",
+  "p6_s2: gate for step P6-S2",
+  "p6_s3: gate for step P6-S3",
+  "p6_s4: gate for step P6-S4",
+  "p7_s1: gate for step P7-S1",
+  "p7_s2: gate for step P7-S2",
+  "p7_s3: gate for step P7-S3",
+  "p7_s4: gate for step P7-S4",
+  "p8_s1: gate for step P8-S1",
+  "p8_s2: gate for step P8-S2",
+  "p8_s3: gate for step P8-S3",
+  "p8_s4: gate for step P8-S4",
+  "p8_s5: gate for step P8-S5",
+]
