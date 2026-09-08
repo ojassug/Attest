@@ -10,7 +10,7 @@
 ## Diagnosis
 
 Major depressive disorder, recurrent, severe, without psychotic features (ICD-10 F33.2).
-Current episode onset 2025-02.
+Patient is 29 years of age. Current episode onset 2025-02.
 
 ## Severity
 

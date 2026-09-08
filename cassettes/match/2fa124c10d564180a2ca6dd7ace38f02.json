@@ -1,0 +1,91 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-08T10:28:15.167967+00:00",
+  "value": {
+    "verdicts": [
+      {
+        "criterion_id": "ps-01",
+        "verdict": "met",
+        "quotes": [
+          "Dr. L. Marchetti, MD, board-certified psychiatrist",
+          "Ordered and supervised by Dr. L. Marchetti, MD, a qualified psychiatrist."
+        ],
+        "reasoning": "The note documents that TMS is ordered and supervised by Dr. L. Marchetti, MD, a qualified board-certified psychiatrist."
+      },
+      {
+        "criterion_id": "ps-02",
+        "verdict": "insufficient",
+        "quotes": [],
+        "reasoning": "The clinical note does not state the patient's age or date of birth."
+      },
+      {
+        "criterion_id": "ps-03",
+        "verdict": "met",
+        "quotes": [
+          "Major depressive disorder, recurrent, severe, without psychotic features (ICD-10 F33.2).",
+          "PHQ-9 administered 2026-08-27: score of 21, consistent with severe depression."
+        ],
+        "reasoning": "The note confirms a diagnosis of severe major depressive disorder, recurrent, without psychotic features, supported by a standardized rating scale score (PHQ-9 score of 21)."
+      },
+      {
+        "criterion_id": "ps-04a",
+        "verdict": "met",
+        "quotes": [
+          "| Escitalopram | SSRI | 20 mg daily | 2025-03-10 to 2025-06-02 (12 weeks) | No response. Maintained at therapeutic dose. |",
+          "| Bupropion XL | NDRI | 300 mg daily | 2025-06-16 to 2025-09-08 (12 weeks) | No response. Maintained at therapeutic dose. |",
+          "Both agents were dosed at or above the minimal effective therapeutic dose and each trial exceeded eight weeks."
+        ],
+        "reasoning": "The patient failed two trials of antidepressants from different classes (Escitalopram [SSRI] and Bupropion XL [NDRI]), each at therapeutic doses for 12 weeks (exceeding the required 8 weeks)."
+      },
+      {
+        "criterion_id": "ps-04b",
+        "verdict": "insufficient",
+        "quotes": [
+          "An augmentation trial was attempted during the current episode."
+        ],
+        "reasoning": "The note states an augmentation trial was attempted during the current episode, but does not identify the augmenting agent, dose, or duration to confirm an 8-week trial at or above minimal effective therapeutic dose."
+      },
+      {
+        "criterion_id": "ps-05a",
+        "verdict": "met",
+        "quotes": [
+          "No psychotic symptoms and no psychotic-spectrum diagnosis."
+        ],
+        "reasoning": "The note explicitly states that the patient has no psychotic symptoms and no psychotic-spectrum diagnosis, meeting the requirement that this contraindication be absent."
+      },
+      {
+        "criterion_id": "ps-05b",
+        "verdict": "met",
+        "quotes": [
+          "No implanted devices in or around the head."
+        ],
+        "reasoning": "The note explicitly states there are no implanted devices in or around the head, meeting the requirement that this contraindication be absent."
+      },
+      {
+        "criterion_id": "ps-05c",
+        "verdict": "met",
+        "quotes": [
+          "No seizure disorder and no history of seizure."
+        ],
+        "reasoning": "The note explicitly states there is no seizure disorder and no history of seizure, meeting the requirement that this contraindication be absent."
+      },
+      {
+        "criterion_id": "ps-06",
+        "verdict": "met",
+        "quotes": [
+          "Proposed course: 1 unit of 90867, 36 units of 90868, and 2 units of 90869."
+        ],
+        "reasoning": "The proposed course (1 unit of 90867, 36 units of 90868, and 2 units of 90869) matches the allowed standard course of treatment."
+      },
+      {
+        "criterion_id": "ps-07",
+        "verdict": "met",
+        "quotes": [
+          "Treatment will be delivered on a MagVenture TMS Therapy system, an FDA-cleared device, in accordance with its labeled indications."
+        ],
+        "reasoning": "The note specifies that treatment will be delivered using a MagVenture TMS Therapy system, which is an FDA-cleared device, in accordance with its labeled indications."
+      }
+    ]
+  }
+}

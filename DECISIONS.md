@@ -333,3 +333,45 @@ coverage checklist look permanently incomplete on cases that are in fact fully d
 **Consequence for P3.** Ingestion recall is measured against note-checkable criteria only. If
 facility criteria are ever added to a pack they need a separate attestation path, not evidence
 matching.
+
+---
+
+## 2026-09-08 · Ground truth was wrong twice; the model was right both times
+
+**What happened.** Two P1-S4 expectations failed against the matcher, and in both cases the data
+was wrong, not the model:
+
+1. `denial.md` listed no CPT codes at all, yet ground truth expected three (P2-S1).
+2. Neither `clean.md` nor `gap.md` stated the patient's age, yet both expected `ps-02` (the
+   18-or-older criterion) to be MET. The matcher correctly returned INSUFFICIENT.
+
+**Decision.** Both notes were corrected — the denial note now states its requested codes and both
+PacificSource notes state an age, as any real psychiatric evaluation would. The expectations were
+**not** relaxed to match the output.
+
+**Why this direction matters.** Editing ground truth to make a test pass converts the gate from a
+standard into a mirror. The protocol requires saying so out loud when ground truth changes, which
+is why both are recorded here. In each case the fix restored a *realistic* note rather than a
+convenient one.
+
+**Worth noting for the pitch.** The agent caught two documentation gaps that a human author
+(me) had missed while deliberately trying to write complete notes. That is the product's actual
+value proposition demonstrated against its own author.
+
+**Result.** 30/30 criterion verdicts match ground truth across all three cases and both payers.
+
+---
+
+## 2026-09-08 · One batched call per case, not one call per criterion
+
+**Decision.** `match_all` judges every criterion in a pack in a single model call.
+
+**Why, beyond quota.** Highmark's `hho-03` is "ANY ONE of the following" across four alternatives.
+A model shown one branch at a time cannot judge that correctly — it would have to decide whether
+an alternative is satisfied without seeing the alternatives. Batching also lets the model reconcile
+facts that bear on several criteria at once, which is how a human reviewer reads a note.
+
+It happens to cut a full run from ~30 calls to 3, which is what makes the free tier survivable.
+
+`match_criterion` remains for re-checking a single criterion after a practice answers a gap
+question.
