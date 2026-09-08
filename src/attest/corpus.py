@@ -42,12 +42,12 @@ class ExpectedCase:
 
     @property
     def note_text(self) -> str:
-        return (DATA_DIR / self.raw["note_file"]).read_text()
+        return (DATA_DIR / self.raw["note_file"]).read_text(encoding="utf-8")
 
     @property
     def denial_text(self) -> str | None:
         f = self.raw.get("denial_file")
-        return (DATA_DIR / f).read_text() if f else None
+        return (DATA_DIR / f).read_text(encoding="utf-8") if f else None
 
     @property
     def verdicts(self) -> dict[str, Verdict]:
@@ -67,7 +67,7 @@ class ExpectedCase:
 
 @lru_cache(maxsize=None)
 def load_case(name: str) -> ExpectedCase:
-    return ExpectedCase(name, json.loads((EXPECTED_DIR / f"{name}.json").read_text()))
+    return ExpectedCase(name, json.loads((EXPECTED_DIR / f"{name}.json").read_text(encoding="utf-8")))
 
 
 def all_cases() -> list[ExpectedCase]:

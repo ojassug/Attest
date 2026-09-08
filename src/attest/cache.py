@@ -76,7 +76,7 @@ def cached_structured(
 
     if current not in ("off", "refresh") and entry.exists():
         try:
-            body = json.loads(entry.read_text())
+            body = json.loads(entry.read_text(encoding="utf-8"))
             return result_type.model_validate(body["value"])
         except Exception:
             pass  # stale or malformed - fall through and re-record
@@ -94,7 +94,8 @@ def cached_structured(
                     "value": result.model_dump(mode="json"),
                 },
                 indent=2,
-            )
+            ),
+            encoding="utf-8",
         )
 
     return result

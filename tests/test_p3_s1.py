@@ -42,13 +42,13 @@ RECOVERY_THRESHOLD = 0.70
 
 @pytest.fixture(scope="module")
 def drafted():
-    return ingest_policy(POLICY.read_text())
+    return ingest_policy(POLICY.read_text(encoding="utf-8"))
 
 
 def test_policy_source_text_is_committed():
     """The ingestion test must be reproducible by a judge, so the source text lives in the repo."""
     assert POLICY.exists()
-    assert "HHO-DE-MP-1147" in POLICY.read_text()
+    assert "HHO-DE-MP-1147" in POLICY.read_text(encoding="utf-8")
 
 
 @needs_model
@@ -91,7 +91,7 @@ def test_ingest_keeps_alternatives_as_one_criterion(drafted):
 @needs_model
 def test_ingest_quotes_rather_than_paraphrases(drafted):
     """Criteria are quoted back at the payer, so wording must come from their document."""
-    source = POLICY.read_text().lower()
+    source = POLICY.read_text(encoding="utf-8").lower()
     anchored = [
         c for c in drafted
         if any(term in source for term in c.text.lower().split()[:6] if len(term) > 5)

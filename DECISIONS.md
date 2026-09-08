@@ -375,3 +375,41 @@ It happens to cut a full run from ~30 calls to 3, which is what makes the free t
 
 `match_criterion` remains for re-checking a single criterion after a practice answers a gap
 question.
+
+---
+
+## 2026-09-08 · Every file read names its encoding; the offline gate was Linux-only
+
+**What happened.** The P3-S2 baseline was recorded green offline — 146 tests, no API key. On the
+Windows machine the same gate returned 5 failures and 28 errors. The claim was not false; it was
+platform-specific, and nothing in the protocol could detect that.
+
+**Root cause, single and shared.** Every `read_text()` in the project omitted `encoding=`. Python
+uses the locale default, which is UTF-8 on Linux and cp1252 on Windows. Two failure modes followed
+from that one omission:
+
+1. **Hard crash.** `data/policies/raw/highmark-hho-de-mp-1147.txt` contains byte `0x9d`, which is
+   undefined in cp1252 — `UnicodeDecodeError`. That was P3-S1.
+2. **Silent corruption defeating the cassettes.** A note's `—` decoded as `â€"`, changing the
+   SHA-256 payload in `cache._key()`. The cassette path no longer existed, so `cached_structured`
+   fell through to `produce()`, which called `build_model()`, which demanded an API key. Every
+   model-backed test therefore failed *as if uncached* on a machine that had every cassette.
+
+**Decision.** All 16 reads and both writes now pass `encoding="utf-8"` explicitly. `.gitattributes`
+pins `*.sh` to LF, because `core.autocrlf=true` on the Windows machine would smudge `verify.sh`
+to CRLF and break its shebang.
+
+**Why it mattered more than portability.** Rules §1.4 requires the project to install and run
+consistently and be testable by judges for free. A judge on Windows got 33 errors and a demand for
+an API key. This was a Stage One viability risk, not a convenience bug.
+
+**Consequence.** Never rely on a locale default for any file this project reads. The cassette key
+is a hash of decoded text, so *any* decoding difference silently converts a cache hit into a live
+API call — the one thing the 20-request/day quota cannot absorb.
+
+**Known and still open:** `test_p2_s3.py::test_pa_tool_is_registered` says "No API call" but calls
+`build_intake_agent()` -> `build_model()`, which raises when no key is *present* (a dummy string
+satisfies it; no request is made). So one non-`live` test still needs a credential to pass, which
+contradicts the rule that `live` is the only marker allowed to require one. Left open deliberately:
+the obvious fix — letting `build_model()` construct without a key — contradicts the recorded
+decision that it should fail early with an actionable message rather than deep inside an agent run.
