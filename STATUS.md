@@ -41,8 +41,8 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P1-S2 | Policy pack format and loader              | DONE   | Atharv| 8e9bc2d  | 09-08 |
 | P1-S3 | Two TMS policy packs                       | DONE   | Atharv| 0dba1ff  | 09-08 |
 | P1-S4 | Synthetic corpus and ground truth          | DONE   | Atharv| 335ac1a  | 09-08 |
-| P2-S1 | Note to structured Case                    | IN_PROGRESS | Atharv | —        | 09-08 |
-| P2-S2 | PA-required determination                  | TODO   | —     | —        | —     |
+| P2-S1 | Note to structured Case                    | DONE   | Atharv| c84581b  | 09-08 |
+| P2-S2 | PA-required determination                  | IN_PROGRESS | Atharv | —        | 09-08 |
 | P2-S3 | Intake agent wiring                        | TODO   | —     | —        | —     |
 | P3-S1 | Policy ingestion to draft criteria         | TODO   | —     | —        | —     |
 | P3-S2 | Per-criterion evidence matching            | TODO   | —     | —        | —     |
