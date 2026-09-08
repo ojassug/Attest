@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | P0, P1, P2, P3-S1..S4 complete. **P3-S5 is next — it finishes P3.** |
-| **Next step** | `P3-S5` — gap list. Deterministic apart from one cassette-replayed test; no quota. |
+| **Phase** | P0, P1, P2, **P3 complete**. **P4-S1 is next.** |
+| **Next step** | `P4-S1` — justification from verified evidence only. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -48,7 +48,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P3-S2 | Per-criterion evidence matching            | DONE   | Atharv| a1358d9  | 09-08 |
 | P3-S3 | Evidence-span verifier                     | DONE   | Atharv| 67c6b21  | 09-08 |
 | P3-S4 | Verifier enforcement in the pipeline       | DONE   | Atharv| f80d422  | 09-08 |
-| P3-S5 | Gap list                                   | IN_PROGRESS | Atharv | —   | 09-08 |
+| P3-S5 | Gap list                                   | DONE   | Atharv| 7385449  | 09-08 |
 | P4-S1 | Justification from verified evidence only  | TODO   | —     | —        | —     |
 | P4-S2 | Gate 1 — approval before submission        | TODO   | —     | —        | —     |
 | P4-S3 | Submission artifact                        | TODO   | —     | —        | —     |
@@ -77,6 +77,37 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-08 — Atharv** *(session 2)*
+
+**P3 is complete.** `./scripts/verify.sh P3 --offline` exits zero at **185 tests**. The session-1
+notes below are still worth reading, but two of their specifics are superseded: the count is no
+longer 146, and P3-S3 is no longer next.
+
+**Two platform bugs were found and fixed before any feature work**, because the recorded baseline
+did not reproduce on Windows:
+
+1. `verify.sh` probed only `.venv/bin/pytest` (POSIX) and exited **127** while printing
+   `GATE FAILED`. A missing runner now exits 2; `GATE FAILED` again means only that tests failed.
+2. Every `read_text()` omitted `encoding=`, so Windows used cp1252. That crashed on the policy
+   text and, worse, silently changed the cassette cache key — so a machine holding every cassette
+   demanded a live API key for every model-backed test. The offline gate was Linux-only.
+
+**Known and still open:** `test_p2_s3.py::test_pa_tool_is_registered` is not marked `live` but
+still needs a key to be *present* (any dummy string works — no request is made). A keyless run is
+184/185. Fixing it means either letting `build_model()` construct without a key, which contradicts
+a recorded decision, or skipping the test without credentials, which weakens the gate. Not yet
+decided.
+
+**P3 outcome:** span verification is **39/39 (100%)** across all three cases with **zero criteria
+downgraded**, so P3-S2's 30/30 ground-truth accuracy is intact. Gap ids match ground truth exactly.
+P3-S3 through P3-S5 cost **no quota at all** — all deterministic or cassette-replayed.
+
+**Next: `P4-S1`.** Note that P4-S3 requires PDF output and `pyproject.toml` still declares no PDF
+library. Pick one that ships Windows wheels (`fpdf2` or `reportlab`); `weasyprint` needs GTK system
+libraries and would break the "judges clone and run" requirement.
 
 ---
 
