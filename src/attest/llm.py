@@ -23,9 +23,19 @@ ENV_FILE = REPO_ROOT / ".env"
 
 Tier = Literal["fast", "reasoning"]
 
+# Chosen by probing the live API on 2026-09-08, not from the Strands docs, which still name
+# gemini-2.5-* — those are retired for new keys and 404.
+#
+# Pro-class models (gemini-3.1-pro-preview, gemini-pro-latest) return 429 RESOURCE_EXHAUSTED on
+# the free tier: there is effectively no free Pro quota. Flash-class is what a free key can
+# actually run, and Gemini 3.x flash is materially stronger than the 2.5 flash the docs assume.
+# gemini-3.8-flash is newer but returned 503 on every attempt - persistently capacity-constrained
+# on the free tier. 3.6 and 3.5 both work and both handle structured output correctly.
+#
+# If billing is ever enabled, point ATTEST_MODEL_REASONING at a Pro model and re-run the P3 gate.
 DEFAULT_MODELS: dict[str, str] = {
-    "fast": "gemini-2.5-flash",
-    "reasoning": "gemini-2.5-pro",
+    "fast": "gemini-3.5-flash",
+    "reasoning": "gemini-3.6-flash",
 }
 
 KEY_VARS = ("GOOGLE_API_KEY", "GEMINI_API_KEY")
@@ -89,3 +99,41 @@ def build_model(tier: Tier = "reasoning", **params):
         model_id=model_id(tier),
         params=params or None,
     )
+
+
+# --------------------------------------------------------------------------- resilience
+
+RETRYABLE_MARKERS = ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "INTERNAL", "500")
+
+
+def is_retryable(exc: BaseException) -> bool:
+    """Transient free-tier failures: capacity 503s and quota 429s.
+
+    Matched on message content because the Google SDK raises the same exception classes for
+    permanent and transient conditions, so the class alone does not distinguish them.
+    """
+    return any(m in str(exc) for m in RETRYABLE_MARKERS)
+
+
+def with_retry(call, *, attempts: int = 4, base_delay: float = 2.0):
+    """Run a model call, retrying transient failures with exponential backoff.
+
+    The free tier returns 503 "high demand" unpredictably. A full P3 run makes roughly thirty
+    model calls, so without this a single blip fails the gate and looks like a real regression.
+    Permanent errors (bad key, retired model) are re-raised immediately rather than retried.
+    """
+    import time
+
+    last: BaseException | None = None
+    for attempt in range(attempts):
+        try:
+            return call()
+        except BaseException as exc:  # noqa: BLE001 - re-raised below
+            if not is_retryable(exc):
+                raise
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(base_delay * (2**attempt))
+    raise RuntimeError(
+        f"model call failed after {attempts} attempts; last error: {last}"
+    ) from last
