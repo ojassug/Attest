@@ -93,7 +93,22 @@ in about eleven seconds, with no API key and no network. This session added the 
 precedent reuse, and the Streamlit console — all three deterministic, **no quota spent at all.**
 
 **P6-S4 landed too — the console is live at <https://attest.streamlit.app>, public, no key
-needed. Every required phase (P0–P6) is complete and the product is submittable.** What remains is
+needed. Every required phase (P0–P6) is complete and the product is submittable.**
+
+**P7-S1 through P7-S3 are also done** — the `agent.as_tool()` orchestrator, the physical-therapy
+extensibility pack, and the AgentCore entrypoint. 340 tests. Both P7-S1 live tests pass.
+
+**P7-S4 is BLOCKED and not on anything in this repo.** `agentcore configure/launch/invoke` needs,
+on one machine: AWS credentials, Docker, `bedrock-agentcore-starter-toolkit` (which provides the
+`agentcore` CLI and is deliberately *not* a declared dependency), **and** Bedrock model access,
+which was last seen `authorizationStatus: NOT_AUTHORIZED` account-wide pending AWS verification.
+This machine has no AWS credentials at all. `agent_runtime.py` is ready and verified locally
+against the DoD's own curl command, so P7-S4 is a deployment errand, not a coding one.
+
+**Quota, if you pick up model work.** `gemini-3.6-flash` and `gemini-3.5-flash-lite` were exhausted
+on 09-09. Parity passed on `ATTEST_MODEL_REASONING=gemini-3.7-flash` /
+`ATTEST_MODEL_FAST=gemini-3.1-flash-lite`. Still unused: `gemini-omni-1.1-flash`, `gemini-3.8-flash`
+(the 503-prone one). Everything is cassetted, so only *new* prompts cost anything. What remains is
 mandatory but not code: **the demo video (P8-S4) and the Devpost submission (P8-S5)**, which needs
 an AWS Builder ID nobody has obtained yet.
 
