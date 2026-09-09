@@ -42,9 +42,15 @@ def _render(appeal: Appeal) -> str:
         f"- **Approved at:** {approval.approved_at.isoformat()}",
         f"- **Content hash (SHA-256):** {approval.content_hash}",
         "",
-        "## Grounds for appeal",
-        "",
     ]
+
+    # The deadline's provenance sits with the deadline, not in a footnote. Neither payer's policy
+    # states an appeal window, and an invented deadline is worse than no deadline - so a reader
+    # has to be able to tell a policy-stated date from our placeholder without opening the pack.
+    if appeal.deadline_source:
+        lines += [f"> **Appeal window source:** {appeal.deadline_source}", ""]
+
+    lines += ["## Grounds for appeal", ""]
 
     for rebuttal in appeal.rebuttals:
         lines += [
@@ -55,6 +61,19 @@ def _render(appeal: Appeal) -> str:
             f"*Supporting evidence: {', '.join(rebuttal.supporting_span_ids)}*",
             "",
         ]
+
+    # Objections that map to no clinical criterion are not rebutted - nothing in the record speaks
+    # to them - but the practice has to be told they were raised, or it will fix the clinical
+    # objections and be denied again for the same administrative one.
+    if appeal.unmapped_reasons:
+        lines += [
+            "## Payer objections outside the clinical criteria",
+            "",
+            "These were raised in the determination but map to no criterion in the policy, so they "
+            "are not answered above. They need a separate response from the practice.",
+            "",
+        ]
+        lines += [f"- {reason}" for reason in appeal.unmapped_reasons] + [""]
 
     return "\n".join(lines).rstrip() + "\n"
 

@@ -794,3 +794,41 @@ type change, not a behaviour change.
 **Verified end to end:** an unapproved appeal writes nothing at all, and an approved one emits
 `appeal.md` plus `approval.json` carrying the approver, an ISO timestamp and the content hash.
 `./scripts/verify.sh P5-S3 --offline` exits zero at 257 tests.
+
+---
+
+## 2026-09-09 · A deadline travels with its provenance, and an unanswerable objection still travels
+
+**Decision (P5-S4).** `appeal_deadline(denial_date, pack)` is the determination date plus
+`pack.appeal_window_days`, read from the pack rather than assumed. The two shipped packs disagree —
+Highmark 60 days, PacificSource 180 — so a constant would be wrong half the time and silently so.
+`test_deadline_reads_the_window_from_the_pack_not_a_constant` compares the two packs so the
+constant can never creep back in.
+
+**`build_appeal` raises if any contested criterion has no rebuttal.** A partial appeal is the
+dangerous shape: it looks complete, it is sent, and it is denied again on the objection nobody
+answered — and the practice does not find out until the second denial.
+
+### Two additions beyond the written DoD, both closing holes the product's own claims opened
+
+**1. `Appeal.deadline_source`.** Neither payer's policy states an appeal window; both packs say so
+in `appeal_window_source`, and `PolicyPack` gives the reason: *an invented deadline on an appeal is
+worse than no deadline*. That warning was worthless while it lived only in the pack — the artifact
+showed a confident date with no way to tell a policy-stated deadline from our placeholder. The
+appeal now carries the source and prints it directly beneath the date. It also makes the artifact
+renderable from the `Appeal` alone, which a document should be.
+
+**2. `Appeal.unmapped_reasons`.** P5-S1 surfaces payer reasons that map to no criterion, on the
+stated grounds that such a reason "is the one most likely to sink a resubmission, because the
+practice never learns it was raised." But `Appeal` had nowhere to carry them, so they died at the
+`Denial` and reached no document. A reason surfaced at parse time and dropped before the artifact
+is still dropped — just later, and somewhere nobody is looking. They now appear under their own
+heading, explicitly *not* rebutted, with a note that they need a separate response.
+
+Both are additive fields with defaults, so nothing existing broke; `test_p1_s1` and the Gate 2
+suite passed unchanged. Recorded here rather than done quietly because they are schema changes to a
+P1 model made during P5.
+
+**P5 is complete.** `./scripts/verify.sh P5 --offline` exits zero at 268 tests. The full loop runs:
+note -> criteria -> verified evidence -> packet -> Gate 1 -> denial -> contested criteria ->
+rebuttals -> Gate 2 -> appeal with a deadline.
