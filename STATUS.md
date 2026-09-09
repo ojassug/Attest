@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P4 complete.** **P5-S1 is next.** |
-| **Next step** | `P5-S1` — denial parsing. IN PROGRESS. |
+| **Phase** | **P0–P4 complete, P5-S1 done.** **P5-S2 is next.** |
+| **Next step** | `P5-S2` — rebuttal drafting. Model-backed; Gemini for now, re-record on Bedrock when the account clears. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -52,7 +52,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P4-S1 | Justification from verified evidence only  | DONE   | Atharv| 86eb7d0  | 09-08 |
 | P4-S2 | Gate 1 — approval before submission        | DONE   | Atharv| 6ae10bd  | 09-08 |
 | P4-S3 | Submission artifact                        | DONE   | Atharv| 7a69618  | 09-08 |
-| P5-S1 | Denial parsing                             | IN_PROGRESS | Atharv | —   | 09-09 |
+| P5-S1 | Denial parsing                             | DONE   | Atharv| 1948ff8  | 09-09 |
 | P5-S2 | Rebuttal drafting                          | TODO   | —     | —        | —     |
 | P5-S3 | Gate 2 — approval before appeal            | TODO   | —     | —        | —     |
 | P5-S4 | Appeal artifact and deadline               | TODO   | —     | —        | —     |
