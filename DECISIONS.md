@@ -710,3 +710,53 @@ zero at 234 tests.
 **Provider note.** This cassette was recorded against Gemini. The AWS account is still under
 verification (`authorizationStatus: NOT_AUTHORIZED` account-wide), so Bedrock could not be used.
 When it clears, `ATTEST_CACHE=refresh` re-records and re-asserts this against Claude in one command.
+
+---
+
+## 2026-09-09 · The model writes the argument; code supplies everything checkable
+
+**Decision (P5-S2).** In `draft_rebuttals` the model produces one thing — the argument prose.
+Both fields a payer could check are supplied by code:
+
+* `policy_citation` comes from the criterion in the pack, so "every citation resolves to a real
+  `source_section`" is true by construction rather than by instruction.
+* `supporting_span_ids` come from the verified coverage. `Rebuttal` carries `min_length=1` on that
+  field, and handing that to a model reproduces the failure already recorded here, where a
+  `min_length` on `cpt_codes` taught it to invent procedure codes. Here it would invent a span id —
+  the worst thing an appeal could contain, because a payer who checks one citation and finds
+  nothing dismisses the whole letter.
+
+**A contested criterion with no verified evidence raises rather than drafting.** You cannot argue a
+point you cannot evidence. If the payer contests something our own matcher found INSUFFICIENT, that
+is a conversation with the practice, not an argument with the payer.
+
+### Disclosed case changes in quoted prose are allowed; nothing else is
+
+`test_the_argument_quotes_nothing_it_cannot_support` initially failed on three quotes. They were
+not fabrications — every one resolved to **exactly verbatim** source text once a bracketed leading
+capital was undone:
+
+    argument: "[f]our psychopharmacologic trials have been completed during the current episode..."
+    note:     "Four psychopharmacologic trials have been completed during the current episode..."
+
+That is the standard convention for lowering a capital to embed a quote mid-sentence. The brackets
+*announce* the alteration, which makes it the opposite of a silent paraphrase, and the words are
+untouched. The test now resolves a disclosed leading case change and nothing else: an elision, an
+inserted word, a changed number, or an *undisclosed* case change all still fail, and
+`test_an_undisclosed_alteration_would_still_fail` guards the guard.
+
+Same shape as the Markdown-markup decision in P3-S4 — a narrow lexical rule about a marked
+convention, not a relaxation about meaning. It also leaves the structural guarantee untouched,
+because the cited spans are code-supplied and independently verified.
+
+### The reasoning tier moved to `gemini-3.6-flash`
+
+`gemini-3.8-flash` returned `503 high demand` on every structured-output attempt. This was already
+recorded in `docs/setup.md` ("`3.6` and `3.5` both work and both handle structured output
+correctly") — the note existed and the default still pointed at the constrained model. Rotating
+costs nothing: **cassettes are keyed on tier, not model id**, so no recording was discarded.
+
+**Quota hazard worth knowing:** a module-scoped pytest fixture that raises is re-executed for every
+test that depends on it. Six tests times four retries burned roughly two dozen calls on a failure
+that a single call would have diagnosed. Reproduce a failing model call directly, with retries off,
+before re-running a suite.

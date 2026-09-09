@@ -1,0 +1,17 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-09T14:18:23.344027+00:00",
+  "value": {
+    "arguments": [
+      {
+        "criterion_id": "hho-03",
+        "argument": "The payer states that the submitted documentation does not establish four trials of psychopharmacologic agents including two different agent classes and two augmentation trials. However, the record directly refutes this assertion, explicitly documenting that \"[f]our psychopharmacologic trials have been completed during the current episode, spanning two different antidepressant classes, and including two augmentation trials.\" This evidence directly meets the policy requirement under HHO-DE-MP-1147 for \"[f]ailure of four (4) trials of psychopharmacologic agents including two (2) different agent classes and two (2) augmentation trials\"."
+      },
+      {
+        "criterion_id": "hho-04",
+        "argument": "The payer's denial indicates that the documentation does not establish failure of an effective psychotherapy trial of adequate frequency and duration. To the contrary, the clinical record confirms that \"[t]he patient completed a trial of cognitive behavioural therapy with a licensed clinical psychologist, attending weekly 50-minute sessions from 2025-09-08 to 2026-02-16, a total of 22 sessions.\" Furthermore, objective measurement using standardized rating scales shows that \"MADRS was 35 at the start of therapy and 36 at its conclusion, showing no significant improvement in depressive symptoms across an adequate frequency and duration of an evidence-based psychotherapy.\" This documentation establishes both adequate frequency and duration (22 weekly sessions over five months) and failure to achieve significant clinical improvement."
+      }
+    ]
+  }
+}

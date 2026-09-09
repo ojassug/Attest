@@ -73,7 +73,7 @@ Verify:
 | Tier | Model | Used for |
 |---|---|---|
 | `fast` | `gemini-3.5-flash-lite` | Intake extraction, denial parsing |
-| `reasoning` | `gemini-3.8-flash` | Criterion matching, appeal drafting |
+| `reasoning` | `gemini-3.6-flash` | Criterion matching, appeal drafting |
 
 These rotate as daily quotas are exhausted. Cassettes are keyed on **tier**, not model id, so
 rotating a model does not discard recorded responses.
