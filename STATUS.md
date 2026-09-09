@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P4 complete, P5-S1..S2 done.** **P5-S3 is next.** |
-| **Next step** | `P5-S3` — Gate 2, approval before appeal. Deterministic; mirrors P4-S2. **No model-calling steps remain.** |
+| **Phase** | **P0–P4 complete, P5-S1..S3 done.** **P5-S4 is next — it finishes P5.** |
+| **Next step** | `P5-S4` — appeal artifact and deadline. Finishes P5. Deterministic. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -54,7 +54,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P4-S3 | Submission artifact                        | DONE   | Atharv| 7a69618  | 09-08 |
 | P5-S1 | Denial parsing                             | DONE   | Atharv| 1948ff8  | 09-09 |
 | P5-S2 | Rebuttal drafting                          | DONE   | Atharv| f211ce8  | 09-09 |
-| P5-S3 | Gate 2 — approval before appeal            | IN_PROGRESS | Atharv | —   | 09-09 |
+| P5-S3 | Gate 2 — approval before appeal            | DONE   | Atharv| d1ef57e  | 09-09 |
 | P5-S4 | Appeal artifact and deadline               | TODO   | —     | —        | —     |
 | P6-S1 | Case store                                 | TODO   | —     | —        | —     |
 | P6-S2 | Precedent reuse                            | TODO   | —     | —        | —     |
