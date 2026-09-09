@@ -1145,3 +1145,58 @@ deployment surface. Unknown cases, empty payloads and bad modes come back as `{"
 than a 500.
 
 `./scripts/verify.sh P7-S3 --offline` exits zero at **340 tests**.
+
+---
+
+## 2026-09-09 · HTTP 200 was the wrong check, and the repo root is now found rather than counted
+
+**What happened.** P6-S4 was marked done on a `curl` that returned 200. The hosted console then
+raised `FileNotFoundError` on the synthetic corpus. A 200 proves Streamlit's *shell* booted; the
+traceback renders inside a page the server is perfectly happy to serve. The checklist step that
+would have caught it — walk `docs/ui-checklist.md` **against the deployed app** — had not been done.
+
+**Root cause.** `requirements.txt` said `.`, a plain install, so `attest` landed in site-packages.
+Four modules located repo assets with `Path(__file__).resolve().parents[2]`, which is the repo root
+only under an **editable** install — the layout every test and every developer runs. Installed
+normally it points at a directory inside the virtualenv that has never contained anything.
+
+Not a crash at import: a wrong path that fails later, at whatever read touches data first. Every
+test stayed green because every test runs editable.
+
+**Two more failures were queued behind it.** Building the wheel and looking inside showed 35 files,
+all `.py`: the policy packs, the synthetic corpus and the cassettes were *all* absent. Fixing only
+the reported error would have surfaced the next one on the next click — a cassette-less deploy
+would have demanded an API key, breaking the "judges reproduce it for free" claim outright.
+
+**The fix has two halves, because the assets are two kinds.**
+
+*Package assets* — the YAML packs live inside `src/attest/` and must ship with the package.
+`[tool.setuptools.package-data]` now declares them; a rebuilt wheel carries all three.
+
+*Repo assets* — `data/` and `cassettes/` sit outside `src/` and are not installable. `attest.paths`
+now **searches** for the root instead of computing it: `$ATTEST_REPO_ROOT`, then upward from
+`__file__` (editable install, source checkout), then upward from the working directory (an ordinary
+install with the repo checked out around it — the hosted case, where Streamlit runs `app.py` from
+`/mount/src/<repo>`). The marker is `data/synthetic` itself rather than something incidental like
+`.git`, which a deployment checkout or a Docker image may not have.
+
+**`requirements.txt` is now `-e .`**, which supersedes the P7-S3 entry above. Editable keeps the
+deployed layout identical to the tested one. The resolver alone would have sufficed — verified by
+installing the wheel into a separate directory and importing it with `src/` off `sys.path`, where
+the corpus, the packs and the cassettes all resolved — but a deployment that matches what the tests
+exercise is worth more than a fallback that happens to work.
+
+**Four tests hold it**, in `tests/test_p6_s4.py`:
+
+- `test_no_module_computes_the_repo_root_by_counting_parents` walks the AST of every engine module
+  and fails on `parents[...]` anywhere but `paths.py`. This is the tripwire for the actual bug.
+- `test_repo_root_is_found_from_the_working_directory` reproduces the deployed shape — package
+  somewhere else, repo around the process — which is the exact path that broke.
+- `test_the_policy_packs_are_declared_as_package_data` and
+  `test_requirements_installs_editable_so_repo_assets_resolve` hold the packaging half.
+
+**The wider lesson, and it is the second time this session.** The cookie-jar false alarm and this
+one are the same error in opposite directions: trusting a proxy signal (a redirect chain; an HTTP
+status) instead of the thing the DoD actually claims. A step whose DoD is "judges can use it" is
+not done until someone has used it. `docs/deploy.md` now says the `curl` check is necessary and not
+sufficient.

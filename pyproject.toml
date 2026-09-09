@@ -27,6 +27,13 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# The policy packs live inside the package and must ship with it. Without this the built wheel
+# contains only .py files - verified by inspecting one - so `load_pack` fails on any non-editable
+# install while every editable install stays green. The synthetic corpus and the cassettes are
+# repo assets rather than package assets and are located at runtime by `attest.paths`.
+[tool.setuptools.package-data]
+attest = ["policies/packs/*.yaml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # Puts the repo root on sys.path so tests can import root-level modules - `agent_runtime.py`,

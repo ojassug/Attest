@@ -49,9 +49,14 @@ def test_requirements_txt_installs_the_runtime_from_one_declaration():
     that omits `streamlit` — as the original correctly did, since the UI is not part of the runtime
     image — would break the public demo to satisfy a word in the plan.
 
-    So the file is one line: `.` installs this package from `pyproject.toml` and brings its declared
-    dependencies with it. If reproducible image builds are ever needed, the mechanism is a generated
-    lockfile, not a second hand-edited list.
+    So the file is one line, and it is `-e .`. It installs this package from `pyproject.toml` and
+    brings its declared dependencies with it. If reproducible image builds are ever needed, the
+    mechanism is a generated lockfile, not a second hand-edited list.
+
+    **Editable, and that is load-bearing rather than stylistic.** A plain `.` installs into
+    site-packages and leaves the synthetic corpus and the cassettes behind — they are repo assets
+    outside `src/` — which is precisely how the live P6-S4 deploy came to raise `FileNotFoundError`
+    while every local test stayed green. `tests/test_p6_s4.py` owns that regression.
     """
     from pathlib import Path
 
@@ -62,7 +67,7 @@ def test_requirements_txt_installs_the_runtime_from_one_declaration():
         if line.strip() and not line.strip().startswith("#")
     ]
 
-    assert lines == ["."], f"requirements.txt should install the local package only, got {lines}"
+    assert lines == ["-e ."], f"requirements.txt should install the package editable, got {lines}"
 
     # The single declaration must actually carry what the runtime imports.
     pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
