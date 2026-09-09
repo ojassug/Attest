@@ -24,8 +24,18 @@ pytestmark = pytest.mark.p2_s3
 CASES = all_cases()
 
 
-def test_pa_tool_is_registered():
-    """No API call. Catches the tool silently falling off the agent."""
+def test_pa_tool_is_registered(monkeypatch):
+    """No API call. Catches the tool silently falling off the agent.
+
+    A placeholder credential is injected because `build_model` refuses to construct without one -
+    deliberately, so that a missing key surfaces as a setup problem rather than as an auth error
+    deep inside an agent run. Constructing the agent makes no request, so any string will do.
+
+    Without this the test needed a real key to be *present* despite calling nothing, which made a
+    keyless clone fail 1 of 268 and left the "judges can clone and run it" claim untrue.
+    """
+    monkeypatch.setenv("GOOGLE_API_KEY", "placeholder-no-request-is-made")
+
     assert "check_prior_authorization" in build_intake_agent().tool_names
 
 

@@ -832,3 +832,40 @@ P1 model made during P5.
 **P5 is complete.** `./scripts/verify.sh P5 --offline` exits zero at 268 tests. The full loop runs:
 note -> criteria -> verified evidence -> packet -> Gate 1 -> denial -> contested criteria ->
 rebuttals -> Gate 2 -> appeal with a deadline.
+
+---
+
+## 2026-09-09 · A keyless clone now passes 268/268, and CI proves it on a second platform
+
+**The open item is closed.** `test_p2_s3.py::test_pa_tool_is_registered` said "No API call" but
+needed a credential to be *present*, because `build_model` refuses to construct without one. A
+keyless clone therefore failed 1 of 268, which quietly made the "judges can clone and run it" claim
+untrue.
+
+The fix injects a placeholder credential in the test via `monkeypatch`. That keeps the test's
+actual coverage — catching the tool silently falling off the agent — without weakening
+`build_model`'s deliberate fail-early behaviour, which exists so a missing key reads as a setup
+problem rather than as an auth error deep inside an agent run. Constructing an agent makes no
+request, so any string does. The two alternatives were both worse: relaxing `build_model`
+contradicts a recorded decision, and skipping the test without credentials removes the coverage
+exactly where CI would need it.
+
+**CI added: `.github/workflows/gate.yml`.** Fresh Linux checkout, Python 3.12, `pip install -e
+".[dev]"`, then `./scripts/verify.sh ALL --offline`, with **no credentials configured for the job**.
+
+That combination is the point. It is the judge's scenario rather than ours, and it makes rules
+§1.4 — "must install and run consistently" — a check instead of a claim. It would also have caught
+the encoding bug that opened this session: the baseline was green on Linux while every file read
+omitted `encoding=`, which crashed on Windows and silently changed the cassette cache key. A single
+developer machine could not see that; two platforms can.
+
+If that CI step ever needs a key added to pass, the offline claim has stopped being true and the
+cause should be found rather than the key added.
+
+**PLAN.md marker annotations corrected.** Eight DoD items said `(marker live)` where the code uses
+`needs_model`, and one uses `needs_key`. They were written before the distinction existed. PLAN is
+the contract and changes rarely, but a contract that disagrees with the code is worse than one that
+is edited — this is a refinement to match reality, recorded rather than done quietly. A new section
+in PLAN's rules now states what the three markers mean and that exactly three tests carry `live`.
+P7's annotations are deliberately untouched: those tests do not exist yet, and guessing their
+marker would be inventing contract rather than recording it.

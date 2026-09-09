@@ -37,6 +37,18 @@ Not when it looks right. Not when it seems finished.
 
 Each step maps to a pytest marker. The gate runs that step's tests **plus every prior step's tests**, so a later step cannot silently break an earlier one.
 
+### 1b. What the test markers mean
+
+- **`live`** — genuinely cannot be replayed from a cassette. Provider connectivity and tool
+  invocation only; exactly **three** tests carry it, and `--offline` deselects them.
+- **`needs_model`** — needs a model *result*, which a cassette can serve. Runs offline.
+- **`needs_key`** — needs a credential to be present, not a request to be made.
+
+`--offline` is therefore a valid gate pass. Several DoD items below were written before this
+distinction existed and said `live` where the code uses `needs_model`; they were corrected on
+2026-09-09 to match the code. P7's are left alone - those tests do not exist yet, and guessing
+their marker would be inventing contract rather than recording it.
+
 ### 2. Every DoD item must be machine-checkable
 
 Exactly three permitted forms:
@@ -193,7 +205,7 @@ The ground-truth files are what make every later phase's DoD objective. Without 
 
 **DoD**
 - [ ] **File** `src/attest/agents/intake.py` exposes `extract_case(note_text, insurance) -> Case` using `structured_output_model`
-- [ ] **Test** `test_p2_s1.py::test_extraction_matches_ground_truth` (marker `live`) — all three synthetic notes produce a `Case` whose service, CPT, payer, and primary diagnosis match `expected/*.json`
+- [ ] **Test** `test_p2_s1.py::test_extraction_matches_ground_truth` (marker `needs_key`) — all three synthetic notes produce a `Case` whose service, CPT, payer, and primary diagnosis match `expected/*.json`
 
 ## P2-S2 — PA-required determination (deterministic, no LLM)
 
@@ -223,7 +235,7 @@ Automated decomposition, whose output is human-reviewed into a pack. The shipped
 
 **DoD**
 - [ ] **File** `src/attest/criteria/ingest.py` exposes `ingest_policy(text) -> list[Criterion]`
-- [ ] **Test** `test_p3_s1.py::test_ingest_recovers_known_criteria` (marker `live`) — run against the source text of an existing pack, recovers ≥ 70% of its criterion topics
+- [ ] **Test** `test_p3_s1.py::test_ingest_recovers_known_criteria` (marker `needs_model`) — run against the source text of an existing pack, recovers ≥ 70% of its criterion topics
 - [ ] **Test** `test_p3_s1.py::test_ingest_output_is_not_auto_shipped` — asserts no file under `policies/packs/` is written by `ingest_policy`
 
 ## P3-S2 — Per-criterion evidence matching
@@ -231,8 +243,8 @@ Automated decomposition, whose output is human-reviewed into a pack. The shipped
 **DoD**
 - [ ] **File** `src/attest/criteria/match.py` exposes `match_criterion(criterion, note) -> CriterionVerdict` returning verdict, `spans[]`, and reasoning, via `structured_output_model`
 - [ ] **File** `src/attest/criteria/match.py` exposes `match_all(pack, note) -> CriteriaCoverage`
-- [ ] **Test** `test_p3_s2.py::test_clean_case_all_criteria_met` (marker `live`)
-- [ ] **Test** `test_p3_s2.py::test_gap_case_flags_the_expected_criterion` (marker `live`) — the criterion id flagged matches ground truth exactly. Flagging *a* gap is not enough; it must be the right one.
+- [ ] **Test** `test_p3_s2.py::test_clean_case_all_criteria_met` (marker `needs_model`)
+- [ ] **Test** `test_p3_s2.py::test_gap_case_flags_the_expected_criterion` (marker `needs_model`) — the criterion id flagged matches ground truth exactly. Flagging *a* gap is not enough; it must be the right one.
 
 ## P3-S3 — The evidence-span verifier (deterministic, no LLM)
 
@@ -251,13 +263,13 @@ This is what makes "evidence-traceable by design" a guarantee rather than a prom
 **DoD**
 - [ ] **Test** `test_p3_s4.py::test_unverifiable_span_downgrades_criterion` — injecting a fabricated span downgrades that criterion to `INSUFFICIENT`; it is never silently dropped
 - [ ] **Test** `test_p3_s4.py::test_rejection_is_logged` — the rejection appears in the audit log with the offending quote
-- [ ] **Test** `test_p3_s4.py::test_no_unverified_span_survives` (marker `live`) — across all three cases, 100% of spans in the final coverage verify verbatim
+- [ ] **Test** `test_p3_s4.py::test_no_unverified_span_survives` (marker `needs_model`) — across all three cases, 100% of spans in the final coverage verify verbatim
 
 ## P3-S5 — Gap list
 
 **DoD**
 - [ ] **File** `src/attest/criteria/gaps.py` exposes `build_gap_list(coverage) -> list[GapItem]`, each carrying `criterion_id`, what is missing, and a question addressed to the practice
-- [ ] **Test** `test_p3_s5.py::test_gap_case_produces_expected_gap` (marker `live`) — criterion id matches ground truth
+- [ ] **Test** `test_p3_s5.py::test_gap_case_produces_expected_gap` (marker `needs_model`) — criterion id matches ground truth
 - [ ] **Test** `test_p3_s5.py::test_every_gap_asks_a_question` — each gap's `question` field is non-empty and ends in `?`
 - [ ] **Command** `./scripts/verify.sh P3` exits zero
 
@@ -298,14 +310,14 @@ This is what makes "evidence-traceable by design" a guarantee rather than a prom
 
 **DoD**
 - [ ] **File** `src/attest/appeal/parse.py` exposes `parse_denial(text, pack) -> Denial` with `contested[]` mapped to real criterion ids
-- [ ] **Test** `test_p5_s1.py::test_contested_ids_match_ground_truth` (marker `live`)
+- [ ] **Test** `test_p5_s1.py::test_contested_ids_match_ground_truth` (marker `needs_model`)
 - [ ] **Test** `test_p5_s1.py::test_unmappable_reason_is_surfaced_not_dropped` — a denial reason that maps to no criterion appears in `Denial.unmapped_reasons`
 
 ## P5-S2 — Rebuttal drafting
 
 **DoD**
 - [ ] **File** `src/attest/appeal/draft.py` exposes `draft_rebuttal(contested, coverage, pack) -> Rebuttal`
-- [ ] **Test** `test_p5_s2.py::test_rebuttal_cites_real_policy_section` (marker `live`) — every citation resolves to a `source_section` present in the pack
+- [ ] **Test** `test_p5_s2.py::test_rebuttal_cites_real_policy_section` (marker `needs_model`) — every citation resolves to a `source_section` present in the pack
 - [ ] **Test** `test_p5_s2.py::test_rebuttal_cites_verified_spans_only`
 - [ ] **Test** `test_p5_s2.py::test_every_contested_criterion_is_addressed` — no contested criterion is left unrebutted
 
