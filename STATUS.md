@@ -60,9 +60,9 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
 | P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
 | P6-S4 | Public deploy for judges                   | DONE   | ojassug| 1593eb7 | 09-09 |
-| P7-S1 | Orchestrator with specialist subagents     | DONE   | Atharv| pending  | 09-09 |
-| P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| pending  | 09-09 |
-| P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| pending  | 09-09 |
+| P7-S1 | Orchestrator with specialist subagents     | DONE   | Atharv| f8e50fb  | 09-09 |
+| P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| f8e50fb  | 09-09 |
+| P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S4 | Deploy to AgentCore Runtime                | BLOCKED| —     | —        | —     |
 | P8-S1 | README                                     | TODO   | —     | —        | —     |
 | P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
