@@ -30,7 +30,7 @@ from strands import Agent
 from strands.session import SnapshotSessionManager
 from strands.storage import LocalFileStorage
 
-from attest.models import Case
+from attest.models import Appeal, Case
 
 # `sessions/` is gitignored: stored cases are runtime state, never committed. Synthetic though the
 # corpus is, a case store that lands in version control is the wrong habit to build into a product
@@ -45,8 +45,11 @@ AGENT_ID = "attest-case"
 # `list_cases` can read the case ids back off the keys.
 SESSION_PREFIX = "case-"
 
-# Where the case sits in agent state.
+# Where each record sits in the session's agent state. A case and its appeal share one session,
+# because they are one case: partitioning is per case, and an appeal filed against a different
+# session would be an appeal about a patient the session does not hold.
 STATE_KEY = "case"
+APPEAL_KEY = "appeal"
 
 
 class CaseIdError(ValueError):
@@ -84,20 +87,55 @@ def _manager(case_id: str, store_dir: Path | str) -> SnapshotSessionManager:
     return SnapshotSessionManager(session_id_for(case_id), storage=_storage(store_dir))
 
 
+def _read_state(case_id: str, store_dir: Path | str) -> dict | None:
+    """The session's whole state dict, or `None` if the session has never been written."""
+    manager = _manager(case_id, store_dir)
+
+    # Deliberately constructed without `session_manager=`. Passing it restores implicitly and
+    # returns nothing, so there would be no way to tell "never saved" from "saved and empty".
+    agent = Agent(agent_id=AGENT_ID)
+
+    if not asyncio.run(manager.restore_snapshot(agent)):
+        return None
+    return dict(agent.state.get())
+
+
+def _write_state(case_id: str, store_dir: Path | str, state: dict) -> str:
+    """Replace the session's state. Returns the session id written to."""
+    manager = _manager(case_id, store_dir)
+    agent = Agent(agent_id=AGENT_ID, state=state)
+    asyncio.run(manager.save_snapshot(agent, is_latest=True))
+    return manager.session_id
+
+
 def save_case(case: Case, store_dir: Path | str = STORE_DIR) -> str:
     """Persist a case, overwriting any earlier version of that same case.
 
+    Read-modify-write, so re-saving an edited case does not discard the appeal stored beside it.
     Returns the session id it was written under, so a caller can log or display where a case
     actually lives rather than reconstructing the mapping itself.
     """
-    manager = _manager(case.case_id, store_dir)
+    state = _read_state(case.case_id, store_dir) or {}
+    state[STATE_KEY] = case.model_dump(mode="json")
+    return _write_state(case.case_id, store_dir, state)
 
-    # Deliberately constructed without `session_manager=`. Passing it would restore the *stored*
-    # snapshot over the state we just set, so saving a case would write back the previous one.
-    agent = Agent(agent_id=AGENT_ID, state={STATE_KEY: case.model_dump(mode="json")})
 
-    asyncio.run(manager.save_snapshot(agent, is_latest=True))
-    return manager.session_id
+def save_appeal(appeal: Appeal, store_dir: Path | str = STORE_DIR) -> str:
+    """Persist an appeal alongside the case it argues.
+
+    Raises if that case is not in the store. An appeal filed against a case that does not exist is
+    an orphan: `find_precedents` would offer its language as precedent with no case behind it, and
+    nothing downstream could answer "which patient was this?".
+    """
+    state = _read_state(appeal.case_id, store_dir)
+    if state is None or STATE_KEY not in state:
+        raise ValueError(
+            f"appeal {appeal.appeal_id!r}: case {appeal.case_id!r} is not in the store. Save the "
+            "case before the appeal that argues it."
+        )
+
+    state[APPEAL_KEY] = appeal.model_dump(mode="json")
+    return _write_state(appeal.case_id, store_dir, state)
 
 
 def load_case(case_id: str, store_dir: Path | str = STORE_DIR) -> Case | None:
@@ -108,18 +146,16 @@ def load_case(case_id: str, store_dir: Path | str = STORE_DIR) -> Case | None:
     a snapshot whose contents no longer satisfy `Case`, or that holds a different case id than the
     one it was filed under, is a corrupted record and must not be handed back half-populated.
     """
-    manager = _manager(case_id, store_dir)
-    agent = Agent(agent_id=AGENT_ID)
-
-    if not asyncio.run(manager.restore_snapshot(agent)):
+    state = _read_state(case_id, store_dir)
+    if state is None:
         return None
 
-    stored = agent.state.get(STATE_KEY)
+    stored = state.get(STATE_KEY)
     if stored is None:
         raise ValueError(
-            f"case {case_id!r}: a snapshot exists at session {manager.session_id!r} but holds no "
-            f"case under state key {STATE_KEY!r}. The session was written by something other than "
-            "attest.store."
+            f"case {case_id!r}: a snapshot exists at session {session_id_for(case_id)!r} but holds "
+            f"no case under state key {STATE_KEY!r}. The session was written by something other "
+            "than attest.store."
         )
 
     # Validating through the model rather than returning the dict is what keeps a schema change or
@@ -131,11 +167,31 @@ def load_case(case_id: str, store_dir: Path | str = STORE_DIR) -> Case | None:
     # with another's case.
     if case.case_id != case_id:
         raise ValueError(
-            f"case {case_id!r}: the snapshot at session {manager.session_id!r} holds case "
+            f"case {case_id!r}: the snapshot at session {session_id_for(case_id)!r} holds case "
             f"{case.case_id!r}. One case, one session id — this store has been written to out of band."
         )
 
     return case
+
+
+def load_appeal(case_id: str, store_dir: Path | str = STORE_DIR) -> Appeal | None:
+    """Return the appeal stored for this case, or `None` if there is none.
+
+    Same split as `load_case`: absence is an ordinary answer, damage raises.
+    """
+    state = _read_state(case_id, store_dir)
+    if state is None or APPEAL_KEY not in state:
+        return None
+
+    appeal = Appeal.model_validate(state[APPEAL_KEY])
+
+    if appeal.case_id != case_id:
+        raise ValueError(
+            f"case {case_id!r}: the snapshot at session {session_id_for(case_id)!r} holds an "
+            f"appeal for case {appeal.case_id!r}. This store has been written to out of band."
+        )
+
+    return appeal
 
 
 def list_cases(store_dir: Path | str = STORE_DIR) -> list[str]:

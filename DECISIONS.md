@@ -923,3 +923,52 @@ inside a running event loop. Streamlit and the tests are synchronous, so this do
 an async caller needs the manager's coroutines directly.
 
 `./scripts/verify.sh P6-S1 --offline` exits zero at **277 tests**.
+
+---
+
+## 2026-09-09 · Precedent is what a clinician approved — enforced by the hash, not the record
+
+**Decision (P6-S2).** An appeal becomes precedent only when it carries an `ApprovalRecord` whose
+hash **still matches its content**. `is_precedent` is that rule, and `find_precedents` is a filter
+over the case store built on it.
+
+**Why presence of the record is not enough.** Approve an appeal, edit the argument, and the record
+is still attached — a presence check passes it, and language nobody signed is offered to the next
+case wearing a clinician's signature. That is the same laundering route the gates' `content_hash`
+closes at emit time, reopened at reuse time, and it deserved the same answer.
+`test_an_appeal_edited_after_approval_is_not_precedent` seeds exactly that shape.
+
+**"Approved" is not "successful", and the module says so rather than implying otherwise.**
+`Attest-PRODUCT.md` §4.9 promises reuse of *prior successful* appeals. We know a human signed the
+appeal; we do not know the payer overturned the denial, because nothing tracks outcomes. Precedent
+is therefore offered as **language a clinician has already approved for this criterion**, never as
+a winning template.
+
+An `Appeal.outcome` field is the obvious next move and is **deliberately not invented here**.
+Nothing in the demo could set it, and a field that is always `unknown` is worse than a stated
+limit: it looks like the gap is covered. When outcomes are tracked, that field lands and
+`find_precedents` prefers overturned appeals.
+
+**No precedent index.** `find_precedents` reads the case store directly rather than maintaining a
+second table. An index is a second source of truth that can disagree with the approved appeals it
+indexes, and here that disagreement surfaces as an appeal citing language nobody approved. Scanning
+is honest at the scale of a 1–10 provider practice; the day it is not, the fix is a cache derived
+from the store, not a table written beside it.
+
+**Ordering is most-recently-approved first**, with `appeal_id` breaking ties so the result is
+stable. Payer criteria churn constantly — the decision log opens with Evernorth dropping PA for TMS
+mid-build — so the newest approved language is the most likely to still fit.
+
+### Consequential change to P6-S1's store
+
+**An appeal is stored in its case's session, not a separate one.** They are one case, and
+partitioning is per case. That made `save_case` read-modify-write rather than write-whole: it
+previously replaced the session state outright, which would have discarded the appeal every time a
+case was edited. `test_saving_an_appeal_does_not_discard_the_case` pins it, and the P6-S1 suite
+passed unchanged through the refactor.
+
+**`save_appeal` refuses an appeal whose case is not stored.** An orphan appeal would have its
+language offered as precedent with no case behind it and nothing able to answer "which patient was
+this?". Same shape as the gap list failing loudly on an unknown pack.
+
+`./scripts/verify.sh P6-S2 --offline` exits zero at **287 tests**.
