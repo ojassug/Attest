@@ -101,9 +101,27 @@ extensibility pack, and the AgentCore entrypoint. 340 tests. Both P7-S1 live tes
 **P7-S4 is BLOCKED and not on anything in this repo.** `agentcore configure/launch/invoke` needs,
 on one machine: AWS credentials, Docker, `bedrock-agentcore-starter-toolkit` (which provides the
 `agentcore` CLI and is deliberately *not* a declared dependency), **and** Bedrock model access,
-which was last seen `authorizationStatus: NOT_AUTHORIZED` account-wide pending AWS verification.
-This machine has no AWS credentials at all. `agent_runtime.py` is ready and verified locally
-against the DoD's own curl command, so P7-S4 is a deployment errand, not a coding one.
+which is still `authorizationStatus: NOT_AUTHORIZED` account-wide pending AWS verification.
+`agent_runtime.py` is ready and verified locally against the DoD's own curl command, so P7-S4 is a
+deployment errand, not a coding one.
+
+**Session 5 (09-10) re-check.** AWS credentials now exist on Ojas's machine and authenticate —
+account `847169883477`, user `ojassugur`, us-west-2 — so the "no credentials" half of that
+blocker is gone; Docker and `bedrock-agentcore-starter-toolkit` are still unhandled. **Bedrock
+authorization has not moved.** `anthropic.claude-opus-5` and `anthropic.claude-sonnet-5` both still
+read `NOT_AUTHORIZED` / `agreementAvailability: NOT_AVAILABLE`, and a live `bedrock-runtime
+converse` on `us.anthropic.claude-sonnet-5` fails with `ValidationException: Operation not
+allowed`. The control plane is healthy (`list-foundation-models` returns 116), so this is AWS's
+gate, not our configuration. Poll it with one command — no venv, and note boto3 is **not**
+installed, so the `boto3` snippet further down will not run as written:
+
+```bash
+aws bedrock get-foundation-model-availability --model-id anthropic.claude-opus-5 --region us-west-2 --query authorizationStatus --output text
+```
+
+**The AWS credit came through on 09-10: $170 total, expiring Oct 31.** The Bedrock swap is no
+longer deadline-bound. Remember `AUTHORIZED` is only the first gate — model access still has to
+be enabled in the Bedrock console afterwards.
 
 **Quota, if you pick up model work.** `gemini-3.6-flash` and `gemini-3.5-flash-lite` were exhausted
 on 09-09. Parity passed on `ATTEST_MODEL_REASONING=gemini-3.7-flash` /
@@ -211,8 +229,10 @@ account did not exist. It exists now, but:
     entitlementAvailability: AVAILABLE      <- eligibility is fine
     regionAvailability: AVAILABLE           <- us-west-2 is fine
 
-The account is **still under AWS verification**. Nothing is misconfigured: credentials
-authenticate, IAM has `AmazonBedrockFullAccess`, the region is right. Check with one call:
+The account is **still under AWS verification** *(re-checked 09-10 — unchanged; see the top
+handoff note for the current reading and a CLI check that needs no boto3)*. Nothing is
+misconfigured: credentials authenticate, IAM has `AmazonBedrockFullAccess`, the region is right.
+Check with one call:
 
 ```python
 boto3.client('bedrock', region_name='us-west-2').get_foundation_model_availability(
@@ -345,5 +365,8 @@ If you hit 429:
 **Outstanding, not blocking:** AWS Builder ID (required Devpost field), $50 AWS credit
 (**Sep 11, 12:00pm PT**), and the Gemini API key should be rotated — it was pasted into a chat
 transcript. See `docs/setup.md`.
+
+*(Session 5 note: the credit was approved on 09-10 — $170 total, expiring Oct 31. That deadline is
+history. The Builder ID and the key rotation are still outstanding.)*
 
 Nothing is mid-flight. Working tree is clean.
