@@ -1,0 +1,102 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.7-flash",
+  "recorded_at": "2026-09-09T16:48:17.937400+00:00",
+  "value": {
+    "verdicts": [
+      {
+        "criterion_id": "pt-01",
+        "verdict": "met",
+        "quotes": [
+          "Referred by Dr. A. Whitfield, MD on 2026-07-21 for outpatient physical therapy."
+        ],
+        "reasoning": "The outpatient physical therapy was ordered by Dr. A. Whitfield, MD (orthopedic surgery)."
+      },
+      {
+        "criterion_id": "pt-02",
+        "verdict": "met",
+        "quotes": [
+          "Care is skilled and restorative in nature, directed at recovering function lost after surgery rather than maintaining a stable baseline."
+        ],
+        "reasoning": "The note explicitly states that physical therapy is skilled and restorative following a right total knee arthroplasty, aimed at recovering lost function."
+      },
+      {
+        "criterion_id": "pt-03",
+        "verdict": "met",
+        "quotes": [
+          "A written plan of care was established 2026-07-24 and certified by Dr. A. Whitfield, MD on 2026-07-26, within 30 days of the initial evaluation. The plan was reviewed and re-certified on 2026-08-21."
+        ],
+        "reasoning": "The written plan of care was established on 2026-07-24, certified on 2026-07-26, and reviewed/re-certified within 30 days on 2026-08-21."
+      },
+      {
+        "criterion_id": "pt-04",
+        "verdict": "met",
+        "quotes": [
+          "Standardized tools used: Berg Balance Scale and PROMIS Physical Function short form.",
+          "3. Berg Balance Scale to at least 50 by 2026-09-15."
+        ],
+        "reasoning": "The note documents objective baseline measurements and functional goals utilizing standardized tools, specifically the Berg Balance Scale and PROMIS Physical Function short form."
+      },
+      {
+        "criterion_id": "pt-05",
+        "verdict": "met",
+        "quotes": [
+          "- **Therapy rationale:** Restore knee range of motion, quadriceps strength, and independent ambulation following total knee arthroplasty, so the patient can return to independent community mobility and stair negotiation.",
+          "- **Frequency and duration:** 2x/week x 6 weeks.",
+          "- **Discharge criteria:** Right knee active flexion of at least 115 degrees, quadriceps strength of at least 4+/5, Berg Balance Scale of at least 50, and independent stair negotiation without an assistive device.",
+          "A written plan of care was established 2026-07-24 and certified by Dr. A. Whitfield, MD on 2026-07-26, within 30 days of the initial evaluation."
+        ],
+        "reasoning": "The plan of care contains the diagnosis, therapy rationale, SMART functional goals, frequency/duration (2x/week x 6 weeks), discharge criteria, and certification by the referring MD within 30 days."
+      },
+      {
+        "criterion_id": "pt-06",
+        "verdict": "met",
+        "quotes": [
+          "The member demonstrates meaningful functional progress across every tracked measure. Right knee active flexion has improved by 33 degrees, quadriceps strength by a full grade and a half, and the Berg Balance Scale by 13 points, which exceeds the established minimal detectable change for that instrument."
+        ],
+        "reasoning": "The note demonstrates meaningful functional progress across all tracked measures, including ROM, strength, and standardized scale improvements exceeding minimal detectable change."
+      },
+      {
+        "criterion_id": "pt-07",
+        "verdict": "met",
+        "quotes": [
+          "This is a request for continuation beyond 12 visits, up to a total of 24 visits, to complete the plan of care and achieve the stated discharge criteria.",
+          "Submitted with this request: this progress report, the updated objective measures tabulated above, and the justification for continued skilled therapy below."
+        ],
+        "reasoning": "The request for continuation (up to 24 visits) includes the progress report, updated objective measures, and justification for continued skilled therapy."
+      },
+      {
+        "criterion_id": "pt-08",
+        "verdict": "met",
+        "quotes": [
+          "Objective measures were re-assessed every fourth visit, on 2026-08-04, 2026-08-18 and 2026-09-02."
+        ],
+        "reasoning": "Objective measures covering ROM, strength, balance, and gait/ambulation were documented and re-assessed every 4 visits (Visit 4, Visit 8, Visit 12)."
+      },
+      {
+        "criterion_id": "pt-09",
+        "verdict": "met",
+        "quotes": [
+          "Care is skilled and restorative in nature, directed at recovering function lost after surgery rather than maintaining a stable baseline."
+        ],
+        "reasoning": "The note confirms that services are restorative and skilled rather than primarily for maintenance. Thus the contraindication is absent."
+      },
+      {
+        "criterion_id": "pt-10",
+        "verdict": "met",
+        "quotes": [
+          "This member is receiving physical therapy from this practice only. No other therapist or agency is providing overlapping services."
+        ],
+        "reasoning": "The note documents that no duplicative or overlapping therapy services are being provided and care with OT was coordinated. Thus the contraindication is absent."
+      },
+      {
+        "criterion_id": "pt-11",
+        "verdict": "met",
+        "quotes": [
+          "Measurable improvement was documented at the visit 4 re-assessment on 2026-08-04 and at every re-assessment since."
+        ],
+        "reasoning": "The note documents measurable improvement at visit 4 and subsequent visits, confirming there is no lack of improvement after 4-6 visits. Thus the contraindication is absent."
+      }
+    ]
+  }
+}

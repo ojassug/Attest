@@ -1,0 +1,11 @@
+{
+  "tier": "fast",
+  "model_id": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-09-09T16:47:34.959588+00:00",
+  "value": {
+    "requirement": "required",
+    "policy_id": "vnshealth-medicare-pt",
+    "citation": "Medicare and Medicaid Clinical Guideline: Outpatient Physical Therapy, Occupational Therapy, and Speech Therapy Utilization - VNS Health Plans (Version 1.0) \u2014 https://www.vnshealthplans.org/wp-content/uploads/2026/05/UM_PT_OT_Utilization_Guidelines.pdf",
+    "rationale": "VNS Health Plans (Medicare Advantage) requires prior authorization for Outpatient physical therapy. CPT 97110 is listed in that policy."
+  }
+}

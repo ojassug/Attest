@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete.** Every required phase is done; the product is submittable. |
-| **Next step** | `P8-S4` (demo video) and `P8-S5` (Devpost) — both mandatory. P7 / P8-S1..S3 are upside. |
+| **Phase** | **P0–P6 complete, plus P7-S1..S3.** Product is submittable; P7-S4 is blocked on AWS. |
+| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -60,10 +60,10 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
 | P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
 | P6-S4 | Public deploy for judges                   | DONE   | ojassug| 1593eb7 | 09-09 |
-| P7-S1 | Orchestrator with specialist subagents     | IN_PROGRESS | Atharv | —   | 09-09 |
-| P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
-| P7-S3 | AgentCore entrypoint                       | TODO   | —     | —        | —     |
-| P7-S4 | Deploy to AgentCore Runtime                | TODO   | —     | —        | —     |
+| P7-S1 | Orchestrator with specialist subagents     | DONE   | Atharv| pending  | 09-09 |
+| P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| pending  | 09-09 |
+| P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| pending  | 09-09 |
+| P7-S4 | Deploy to AgentCore Runtime                | BLOCKED| —     | —        | —     |
 | P8-S1 | README                                     | TODO   | —     | —        | —     |
 | P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |

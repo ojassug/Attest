@@ -29,6 +29,10 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Puts the repo root on sys.path so tests can import root-level modules - `agent_runtime.py`,
+# which AgentCore requires at the root of the image. Removed when P7-S3 was reverted, on the
+# stated grounds that it should return alongside the step whose module needs it. It has.
+pythonpath = ["."]
 # Markers are generated from the step headings in PLAN.md. PLAN.md is the contract;
 # tests/test_p0_s3.py::test_every_step_has_a_marker fails if the two ever drift.
 markers = [

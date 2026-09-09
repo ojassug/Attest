@@ -1,0 +1,23 @@
+{
+  "tier": "fast",
+  "model_id": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-09-09T16:47:32.905066+00:00",
+  "value": {
+    "patient_ref": "SYNTH-004",
+    "payer": "VNS Health Plans",
+    "plan": "Medicare Advantage",
+    "member_id": "VNS-4471-9082",
+    "group_number": null,
+    "service": "outpatient physical therapy",
+    "cpt_codes": [
+      "97110",
+      "97112",
+      "97116",
+      "97140"
+    ],
+    "units_requested": 24,
+    "duration_weeks": 6,
+    "primary_diagnosis_code": "M25.561",
+    "primary_diagnosis_text": "Post-surgical functional impairment of the right knee with reduced range of motion, quadriceps weakness, and antalgic gait"
+  }
+}
