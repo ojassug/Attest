@@ -35,11 +35,18 @@ finished from a terminal session.
 ## Then close the step
 
 ```bash
-curl -sf <PUBLIC_URL> -o /dev/null && echo ok      # must exit 0
+curl -sf -L -c /tmp/jar -b /tmp/jar https://attest.streamlit.app -o /dev/null && echo ok
 ```
 
-Run it from a machine with no local state — a phone on cellular is fine, and is the closest thing
-to a judge's first visit.
+**The cookie jar is not optional, and omitting it produces a convincing false alarm.** Streamlit
+Cloud bootstraps an anonymous session by redirecting to `/-/auth/app`, which sets a session cookie
+and redirects back. A browser stores it and completes the loop instantly. A cookie-less `curl -L`
+arrives back without it, gets redirected again, and loops until curl aborts with **exit 47** —
+which reads exactly like a login wall on a private app. It cost this project two rounds of
+"your deploy is broken" against an app that was public and working the whole time.
+
+Also run it from a machine with no local state — a phone on cellular is the closest thing to a
+judge's first visit, and unlike curl it exercises the JavaScript the page actually needs.
 
 - [ ] Record the URL in `README.md` and in `STATUS.md`'s **Public demo URL** row.
 - [ ] Walk `docs/ui-checklist.md` **against the deployed app**, not the local one. First-run
