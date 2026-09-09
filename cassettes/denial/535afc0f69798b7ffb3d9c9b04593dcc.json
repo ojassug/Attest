@@ -1,0 +1,22 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.8-flash",
+  "recorded_at": "2026-09-09T14:00:05.907177+00:00",
+  "value": {
+    "denial_date": "2026-08-03",
+    "reasons": [
+      {
+        "reason": "The submitted documentation does not establish that the member has completed four (4) trials of psychopharmacologic agents including two (2) different agent classes and two (2) augmentation trials, as required by medical policy HHO-DE-MP-1147.",
+        "criterion_id": "hho-03"
+      },
+      {
+        "reason": "The submitted documentation does not establish failure of a trial of a psychotherapy known to be effective in the treatment of major depressive disorder of an adequate frequency and duration, as required by medical policy HHO-DE-MP-1147.",
+        "criterion_id": "hho-04"
+      },
+      {
+        "reason": "The member has not satisfied the plan's site-of-service requirement for outpatient behavioral health procedures under the member's benefit agreement.",
+        "criterion_id": ""
+      }
+    ]
+  }
+}
