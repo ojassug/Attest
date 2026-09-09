@@ -208,4 +208,20 @@ class Appeal(Base):
     denial_id: str
     rebuttals: list[Rebuttal] = Field(default_factory=list)
     deadline: date
+    deadline_source: str = Field(
+        default="",
+        description=(
+            "Where the appeal window came from, copied from the pack. A deadline without its "
+            "provenance is what PolicyPack warns about: an invented deadline on an appeal is "
+            "worse than no deadline, and the artifact must let a reader tell them apart."
+        ),
+    )
+    unmapped_reasons: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Payer reasons that map to no criterion, carried through from the Denial. They live "
+            "here so they reach the artifact: a reason surfaced at parse time and then dropped "
+            "before the document is written is still dropped, just later."
+        ),
+    )
     approval: ApprovalRecord | None = None
