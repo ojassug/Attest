@@ -1,0 +1,7 @@
+# Streamlit Community Cloud installs from this file.
+#
+# One line on purpose. "." installs this package from pyproject.toml, which brings its
+# declared dependencies with it - so the deployed environment and the developer
+# environment can never drift. Do not paste a pinned dependency list here; pyproject.toml
+# is the single declaration.
+.
