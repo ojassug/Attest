@@ -671,3 +671,42 @@ practice documented something, that it was not enough, and precisely what to sen
 product's whole thesis on one page.
 
 **P4 is complete.** `./scripts/verify.sh P4` exits zero at 223 tests.
+
+---
+
+## 2026-09-09 · A criterion id the model proposes is not a criterion id until the pack agrees
+
+**Decision (P5-S1).** `parse_denial` asks the model to split a denial letter into reasons and to
+suggest which criterion each one disputes. `resolve_contested` then checks every suggestion against
+the pack and demotes anything it cannot find to an unmapped reason.
+
+**Why the check is code, not prompt.** This is the same discipline `attest.verifier` applies to
+quotes: the model may point, but only our data confirms. A fabricated criterion id is worse than an
+unmapped reason, because the appeal would then argue against something the payer never raised —
+and it would look confident doing it.
+
+**No reason is ever dropped.** `len(contested) + len(unmapped) == len(reasons)` always holds,
+except where two paragraphs dispute one criterion, which becomes one contested criterion carrying
+both. The unmapped reason is the important one: in the demo case it is a site-of-service
+requirement that maps to no clinical criterion, and a practice that never hears about it will fix
+the two clinical objections and be denied again for the same third thing.
+
+**Empty string, not a required or nullable id.** `DraftReason.criterion_id` defaults to `""` and
+the prompt says plainly that an empty string is a correct and expected answer. This is the lesson
+already recorded here about `min_length` on `cpt_codes`: a schema that makes "none" unrepresentable
+teaches the model to invent one. Making absence easy to express is what keeps the mapping honest.
+
+**One call per letter, not per paragraph.** A model shown one paragraph at a time cannot tell a
+second objection from a restatement of the first.
+
+**A missing or unreadable date raises.** The appeal deadline is computed from it in P5-S4, so a
+guessed date is a missed appeal.
+
+**Result:** contested ids match ground truth exactly (`hho-03`, `hho-04`), the site-of-service
+reason is surfaced as the single unmapped reason, and the determination date parses to 2026-08-03 —
+all on the first live run, with no prompt iteration. `./scripts/verify.sh P5-S1 --offline` exits
+zero at 234 tests.
+
+**Provider note.** This cassette was recorded against Gemini. The AWS account is still under
+verification (`authorizationStatus: NOT_AUTHORIZED` account-wide), so Bedrock could not be used.
+When it clears, `ATTEST_CACHE=refresh` re-records and re-asserts this against Claude in one command.
