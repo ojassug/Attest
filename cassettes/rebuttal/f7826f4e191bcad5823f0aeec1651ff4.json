@@ -1,0 +1,13 @@
+{
+  "tier": "reasoning",
+  "model_id": "gemini-3.6-flash",
+  "recorded_at": "2026-09-09T14:19:03.833462+00:00",
+  "value": {
+    "arguments": [
+      {
+        "criterion_id": "hho-03",
+        "argument": "The payer's denial indicates that the documentation does not establish that the member completed four trials of psychopharmacologic agents including two different agent classes and two augmentation trials. However, the patient's clinical record explicitly confirms that \"Four psychopharmacologic trials have been completed during the current episode, spanning two different antidepressant classes, and including two augmentation trials.\" This directly satisfies the policy requirement for \"Failure of four (4) trials of psychopharmacologic agents including two (2) different agent classes and two (2) augmentation trials\" under policy HHO-DE-MP-1147."
+      }
+    ]
+  }
+}
