@@ -58,7 +58,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P5-S4 | Appeal artifact and deadline               | DONE   | Atharv| bf62963  | 09-09 |
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
-| P6-S3 | Streamlit UI                               | DONE   | Atharv| pending  | 09-09 |
+| P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
 | P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
