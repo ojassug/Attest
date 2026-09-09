@@ -48,6 +48,12 @@ which reads exactly like a login wall on a private app. It cost this project two
 Also run it from a machine with no local state — a phone on cellular is the closest thing to a
 judge's first visit, and unlike curl it exercises the JavaScript the page actually needs.
 
+**A 200 is necessary and nowhere near sufficient.** It proves Streamlit's shell booted. A Python
+traceback renders *inside* a page the server returns 200 for, so the app can be completely broken
+and still pass this check — which is exactly what happened on the first deploy: `FileNotFoundError`
+on the corpus, behind a healthy 200. **Open the page and click through a case.** The step is not
+done until someone has actually used the deployed app.
+
 - [ ] Record the URL in `README.md` and in `STATUS.md`'s **Public demo URL** row.
 - [ ] Walk `docs/ui-checklist.md` **against the deployed app**, not the local one. First-run
       behaviour on a cold container is what a judge sees.

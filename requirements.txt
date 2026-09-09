@@ -1,7 +1,12 @@
-# Streamlit Community Cloud installs from this file.
+# Streamlit Community Cloud and the AgentCore image both install from this file.
 #
-# One line on purpose. "." installs this package from pyproject.toml, which brings its
-# declared dependencies with it - so the deployed environment and the developer
-# environment can never drift. Do not paste a pinned dependency list here; pyproject.toml
-# is the single declaration.
-.
+# EDITABLE on purpose, and not a stylistic choice. A plain "." installs the package into
+# site-packages, which leaves the synthetic corpus, the source policy texts and the cassettes
+# behind - they are repo assets that live outside src/ - and the hosted app then dies with
+# FileNotFoundError while every local test stays green. That is exactly what happened to the
+# P6-S4 deploy. "-e ." keeps the deployed layout identical to the tested one.
+#
+# One line on purpose too: it installs this package from pyproject.toml and brings its declared
+# dependencies with it, so the deployed environment cannot drift from the developer one. Do not
+# paste a pinned dependency list here; pyproject.toml is the single declaration.
+-e .
