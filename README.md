@@ -7,7 +7,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — the criteria engine works.** Phases **P0–P3 are complete and gated**: intake, PA determination, per-criterion evidence matching, the deterministic evidence verifier, and the gap list all run end to end against synthetic cases. The full suite replays offline from recorded model responses in about 1.5 seconds with no API key. Packet assembly (P4), the appeal loop (P5), and the reviewer UI (P6) are next. See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the full loop runs.** Phases **P0 through P5 are complete and gated**: a clinical note becomes a criteria-matched submission packet behind a clinician approval gate, and a payer denial becomes an evidence-backed appeal behind a second one. The whole suite — **268 tests** — replays offline from recorded model responses in about two seconds, **with no API key and no network**. Case tracking and the reviewer UI (P6) are what remain. See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -105,7 +105,7 @@ These are non-negotiable and encoded as tests, not aspirations:
 |---|---|
 | Language | Python |
 | Agent framework | `strands-agents`, `strands-agents-tools` |
-| Model | **Gemini** via Google AI Studio — `gemini-3.5-flash-lite` (fast) and `gemini-3.8-flash` (reasoning). Amazon Bedrock is deferred to P7; nothing outside `src/attest/llm.py` names a provider, so swapping it is one constructor. See [DECISIONS.md](DECISIONS.md). |
+| Model | **Gemini** via Google AI Studio — `gemini-3.5-flash-lite` (fast) and `gemini-3.6-flash` (reasoning). Amazon Bedrock is the intended provider and the swap is one constructor in `src/attest/llm.py` — nothing else names a provider. See [DECISIONS.md](DECISIONS.md). |
 | Structured output | Strands structured output → Pydantic models (typed verdicts, never parsed from prose) |
 | Human-in-the-loop | `BeforeToolCallEvent.interrupt(...)` |
 | Deployment | **Amazon Bedrock AgentCore Runtime** (`BedrockAgentCoreApp` + `@app.entrypoint`) — planned, P7 |
@@ -124,23 +124,26 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | **P1** | Domain models, policy-pack format, real public TMS policies, synthetic corpus + ground truth | ✅ done |
 | **P2** | Intake (note → structured case) and PA-required determination | ✅ done |
 | **P3** ▲ | Criteria engine — per-criterion evidence matching + the deterministic verifier *(the core)* | ✅ done |
-| **P4** ▲ | Packet assembly & Gate 1 (approval before submission) | 🟡 next |
-| **P5** ▲ | Denial → appeal loop & Gate 2 (approval before appeal) | ⬜ planned |
-| **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ⬜ planned |
+| **P4** ▲ | Packet assembly & Gate 1 (approval before submission) | ✅ done |
+| **P5** ▲ | Denial → appeal loop & Gate 2 (approval before appeal) | ✅ done |
+| **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | 🟡 next |
 | — | **Submittable product complete through here** | |
 | **P7** | Multi-agent orchestration depth + AgentCore deployment | ⬜ upside |
 | **P8** | Submission deliverables (README, architecture diagram, metrics, demo video, Devpost) | ⬜ planned |
 
 ▲ = required for a viable submission.
 
-**P3 — the phase the product lives or dies on — is complete**, and the numbers behind that claim are reproducible offline:
+**The submission and appeal loops both run end to end**, and every number below is reproducible from a clean clone with no credentials:
 
 | Measure | Result |
 |---|---|
 | Criterion verdicts vs. committed ground truth | **30/30** across three cases and two payers |
 | Evidence spans verifying verbatim against their note | **39/39 (100%)**, with zero criteria downgraded |
 | Gap list vs. ground truth | exact on all three cases |
-| `./scripts/verify.sh P3 --offline` | exits zero, **185 tests**, ~1.5s, no API key |
+| Contested criteria parsed from the denial letter | exact — plus the one objection that maps to no criterion, surfaced rather than dropped |
+| `./scripts/verify.sh ALL --offline` | exits zero, **268 tests**, ~2s, no API key |
+
+The same command runs in CI on every push, on Linux, with no credentials configured — the judge's scenario rather than ours.
 
 ## Repository layout
 
