@@ -869,3 +869,57 @@ is edited — this is a refinement to match reality, recorded rather than done q
 in PLAN's rules now states what the three markers mean and that exactly three tests carry `live`.
 P7's annotations are deliberately untouched: those tests do not exist yet, and guessing their
 marker would be inventing contract rather than recording it.
+
+---
+
+## 2026-09-09 · A case id that cannot be a session id is refused, never repaired
+
+**Decision (P6-S1).** `session_id_for(case_id)` raises `CaseIdError` on a case id carrying a path
+separator, surrounding whitespace, or a relative-path segment. It does not slugify it.
+
+**Why refusing beats repairing, here specifically.** Sanitising is the friendlier-looking option and
+it is the dangerous one. `SYNTH/001` and `SYNTH-001` both flatten to `SYNTH-001`, so the second case
+saved overwrites the first and the store then serves one patient's record for another's — with no
+error at any point. PLAN's own note for this step says why there is no other defence: Strands'
+session managers are not thread-safe and take no distributed lock, so *partitioning is the whole
+safety model*. A mapping that can collide has removed it.
+
+A refusal is recoverable in a way a collision is not. The same reasoning as `PARequirement.UNKNOWN`:
+when the honest answer is "this input cannot be represented", inventing a representation is worse
+than stopping.
+
+**The invariant is checked again on the way out.** `load_case` re-reads the stored case's `case_id`
+and raises if it disagrees with the id it was filed under. Only an out-of-band write can produce
+that, which is exactly when a store that answers anyway does the most damage.
+`test_a_misfiled_case_is_refused_not_served` holds it.
+
+**`load_case` returns `None` for an unknown case but raises for a damaged one.** "No such case" is
+an ordinary answer a UI must be able to get. A snapshot that no longer validates as a `Case`, or
+holds no case at all, is a corrupted record — returning it half-populated would put missing fields
+into a document downstream, where the failure surfaces far from its cause.
+
+**The `Agent` is a persistence vehicle, not a reasoning agent.** `SnapshotSessionManager` captures
+and restores *agents*, so the case rides in agent state. That agent is never invoked and sends no
+prompt, so it needs no credential — `test_store_needs_no_credentials` pins it, because a keyless
+clone must be able to open a case and a bare `Agent()` constructs a `BedrockModel` by default.
+
+It is deliberately built **without** `session_manager=`: passing it restores the stored snapshot
+over the state just set, so `save_case` would write back the *previous* case. The explicit
+`save_snapshot` / `restore_snapshot` pair also returns whether a snapshot existed, which is what
+distinguishes "never saved" from "saved and empty".
+
+**`list_cases` is an addition beyond the written DoD.** A case store that cannot be enumerated is
+not a case store — P6-S3's UI has to render a case list, and without this it would reach into the
+storage layout itself. It is the one place in the module coupled to Strands' session key layout, so
+`test_saved_cases_are_listed` pins that: an upgrade that changes the layout fails a test instead of
+quietly reporting that the practice has no open cases.
+
+**Durability is tested across two real subprocesses**, not by clearing a cache in one. Every
+in-memory store ever written passes a single-process round-trip; only a second interpreter tells
+durability from a dictionary that happened to still be there.
+
+**Known limit.** The store is a synchronous API built on `asyncio.run`, so it cannot be called from
+inside a running event loop. Streamlit and the tests are synchronous, so this does not bite today;
+an async caller needs the manager's coroutines directly.
+
+`./scripts/verify.sh P6-S1 --offline` exits zero at **277 tests**.
