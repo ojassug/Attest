@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | **P0–P5 complete, plus P6-S1..S3.** **P6-S4 is next — the last required step.** |
-| **Next step** | `P6-S4` — public deploy. Needs a Streamlit Community Cloud account. |
+| **Next step** | `P6-S4` — public deploy. **BLOCKED on a browser, not code.** See `docs/deploy.md`. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -59,7 +59,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
 | P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
-| P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
+| P6-S4 | Public deploy for judges                   | BLOCKED| —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
 | P7-S3 | AgentCore entrypoint                       | TODO   | —     | —        | —     |
@@ -77,6 +77,74 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-09 — Atharv** *(session 3)*
+
+**P0 through P6-S3 are complete.** `./scripts/verify.sh ALL --offline` exits zero at **297 tests**
+in about eleven seconds, with no API key and no network. This session added the case store,
+precedent reuse, and the Streamlit console — all three deterministic, **no quota spent at all.**
+
+**P6-S4 is the only required step left, and it is BLOCKED on a browser, not on code.**
+
+---
+
+### Do this first
+
+```bash
+git pull
+.venv/bin/pip install -e ".[dev]"      # see the venv note below
+./scripts/verify.sh ALL --offline      # expect 297 passed
+streamlit run app.py                   # then walk docs/ui-checklist.md
+```
+
+**The venv sync is not optional.** This session started with 15 failures on `verify.sh P4`, all
+`ModuleNotFoundError` from `packet/emit.py`. Nothing was wrong with the code — `fpdf2` was declared
+in `pyproject.toml` for P4-S3 but the local `.venv` predated it. Re-running the editable install
+fixed it. Any gate failure that is a `ModuleNotFoundError` is this, not a regression.
+
+---
+
+### Finishing P6-S4 — the last required step
+
+Full instructions in **`docs/deploy.md`**. Short version: push to GitHub, deploy `app.py` on
+[share.streamlit.io](https://share.streamlit.io), leave Secrets **empty**, then `curl -sf <URL>`
+and record the URL in `README.md` and in the Public demo URL row above.
+
+Everything code-side is ready: `requirements.txt` is one line (`.`) so the deployed environment
+installs from `pyproject.toml` and cannot drift, and the app needs no credentials because every
+model call replays from committed cassettes. If the deployed app ever asks for a key, a live call
+has crept back in — find it rather than adding a key.
+
+---
+
+### What P6 actually built
+
+- **`src/attest/store.py`** — one Strands session per case. A case id that cannot be a session id
+  is *refused, never slugified*: `SYNTH/001` and `SYNTH-001` would collapse onto one session and
+  silently serve one patient's record for another's. Partitioning is the whole safety model here,
+  because Strands session managers take no lock.
+- **`src/attest/appeal/precedent.py`** — an appeal becomes precedent only if its approval hash
+  still matches its content. Approve, edit, and a presence check would pass unapproved language to
+  the next case wearing a signature. Note "approved" is **not** "successful" — nothing tracks payer
+  outcomes, and `Appeal.outcome` was deliberately not invented.
+- **`app.py`** — the whole loop on one screen, driven in tests by Streamlit's `AppTest` rather than
+  smoke-imported. The UI cannot weaken a gate: approving builds a real `ApprovalRecord` and calls
+  the same emitters the tests use.
+
+---
+
+### Landmines added this session
+
+**`store_dir()` resolves per call, and must keep doing so.** It was a module-level constant bound
+at import, so the UI tests set `$ATTEST_STORE_DIR` too late and the app wrote cases into the repo —
+silently, because the data went somewhere real, just not where it was asked to. A hosted deploy
+redirecting the store would have failed the same way. `test_the_store_directory_is_read_per_call`
+sets the variable *after* import, which is the only ordering that reproduces it.
+
+**Do not style `PARequirement.UNKNOWN` as a success in the UI.** Green means "no authorization
+needed", which is the failure UNKNOWN exists to prevent, reintroduced in CSS.
 
 ---
 
@@ -101,6 +169,7 @@ git pull
 
 If that is green you have a working baseline and can start **P6-S1 (case store)**. Every remaining
 step in P6 is deterministic — **no model calls, no quota, no credentials needed.**
+*(Session 3 note: P6-S1 through P6-S3 are now done. This paragraph is history.)*
 
 ---
 
