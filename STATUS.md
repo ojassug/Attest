@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P5 complete, plus P6-S1 and P6-S2.** **P6-S3 is next. P6 is the last required phase.** |
-| **Next step** | `P6-S3` — Streamlit UI. Deterministic; no quota needed. |
+| **Phase** | **P0–P5 complete, plus P6-S1..S3.** **P6-S4 is next — the last required step.** |
+| **Next step** | `P6-S4` — public deploy. Needs a Streamlit Community Cloud account. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -58,7 +58,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P5-S4 | Appeal artifact and deadline               | DONE   | Atharv| bf62963  | 09-09 |
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
-| P6-S3 | Streamlit UI                               | TODO   | —     | —        | —     |
+| P6-S3 | Streamlit UI                               | DONE   | Atharv| pending  | 09-09 |
 | P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |

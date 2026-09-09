@@ -181,6 +181,24 @@ def test_a_foreign_session_is_refused_not_served(tmp_path):
         load_case("SYNTH-001", tmp_path)
 
 
+def test_the_store_directory_is_read_per_call(tmp_path, monkeypatch):
+    """`$ATTEST_STORE_DIR` must be honoured even when set after this module was imported.
+
+    Found in P6-S3: the directory was a module-level constant bound at import, so the UI tests set
+    the variable too late and the app wrote cases into the repo instead of a scratch directory. It
+    failed silently — the data went somewhere real, just not where it was asked to. A hosted deploy
+    redirecting the store would have missed in the same way.
+    """
+    monkeypatch.setenv("ATTEST_STORE_DIR", str(tmp_path / "redirected"))
+
+    case = make_case()
+    save_case(case)  # no explicit directory — must follow the environment
+
+    assert (tmp_path / "redirected").exists()
+    assert load_case(case.case_id) == case
+    assert list_cases() == [case.case_id]
+
+
 def test_store_needs_no_credentials(tmp_path, monkeypatch):
     """The store must work in a keyless clone.
 

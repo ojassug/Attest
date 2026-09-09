@@ -972,3 +972,52 @@ language offered as precedent with no case behind it and nothing able to answer 
 this?". Same shape as the gap list failing loudly on an unknown pack.
 
 `./scripts/verify.sh P6-S2 --offline` exits zero at **287 tests**.
+
+---
+
+## 2026-09-09 · The console cannot be the place a gate gets weakened, and the UI is tested by driving it
+
+**Decision (P6-S3).** `app.py` approves by building a real `ApprovalRecord` with a real
+`content_hash` and calling the same `emit_submission_artifact` / `emit_appeal_artifact` the tests
+exercise. There is no UI-side path to a document. Delete `app.py` and both gates are exactly as
+strong as before.
+
+**And the UI is tested by driving it, not by importing it.** The written DoD asks only for
+`test_app_imports_without_error`, which proves the file parses. That is not enough for the screen a
+clinician approves from, so `tests/test_p6_s3.py` uses Streamlit's `AppTest` to click the real
+buttons.
+
+The distinction is specific. `test_p4_s2.py` proves the gate refuses an unapproved packet — and it
+would keep passing in front of a broken screen that renders an enabled approve button with no
+approver, or that writes a document before anyone presses anything. Those are UI failures with
+correct engine behaviour behind them, and only driving the UI catches them.
+`test_gate_1_writes_nothing_until_a_clinician_is_named` asserts both halves: the control is disabled
+*and* the output directory is empty.
+
+**Found by writing those tests: `STORE_DIR` was bound at import.** The UI tests set
+`$ATTEST_STORE_DIR` in a fixture, by which point `attest.store` was already imported, so the app
+wrote cases into the repository instead of a scratch directory — silently, because the data went
+somewhere real, just not where it was asked to. A hosted deploy redirecting the store to writable
+space would have missed in the same way, on an ephemeral filesystem, with nothing to show for it.
+
+`store_dir()` now resolves per call — explicit argument, then `$ATTEST_STORE_DIR`, then `sessions/`
+— and `test_the_store_directory_is_read_per_call` sets the variable *after* import, which is the
+only ordering that reproduces the bug.
+
+**UNKNOWN is not styled as a negative.** The PA panel renders REQUIRED as an error, NOT_REQUIRED as
+a success, and UNKNOWN as a warning. Colouring UNKNOWN green would tell a practice "no
+authorization needed" because we failed to find a policy — the failure `PARequirement.UNKNOWN`
+exists to prevent, reintroduced in CSS at the last step.
+
+**Per-case state, keyed by case name.** Switching cases must never leave the previous case's
+verdicts on screen; two payers with materially different criteria are one click apart, and a stale
+coverage table would be read as this patient's. The checklist's fail conditions list it.
+
+**`docs/ui-checklist.md` covers only what a test cannot see** — whether the screen *reads* correctly
+to someone who has never used it, whether a quoted passage in the downloaded PDF still matches the
+note character for character, whether the synthetic-data banner is visible without scrolling. It
+ends in fail conditions that stop a recording rather than suggestions.
+
+**Verified:** `streamlit run app.py --server.headless true` serves HTTP 200, and the gap case renders
+9/10 criteria met, 13/13 quotes verified verbatim, with `ps-04b` flagged and its question quoting
+the payer's requirement. `./scripts/verify.sh P6-S3 --offline` exits zero at **297 tests**.

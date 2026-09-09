@@ -28,7 +28,7 @@ from pathlib import Path
 
 from attest.gates import content_hash
 from attest.models import Appeal, Rebuttal
-from attest.store import STORE_DIR, list_cases, load_appeal
+from attest.store import list_cases, load_appeal
 
 
 def is_precedent(appeal: Appeal) -> bool:
@@ -43,7 +43,7 @@ def is_precedent(appeal: Appeal) -> bool:
     return approval.content_hash == content_hash(appeal)
 
 
-def find_precedents(criterion_id: str, store_dir: Path | str = STORE_DIR) -> list[Appeal]:
+def find_precedents(criterion_id: str, store_dir: Path | str | None = None) -> list[Appeal]:
     """Approved appeals that argued this criterion, most recently approved first.
 
     Ordering is by approval time descending: payer policies churn, so the language a clinician
@@ -63,7 +63,7 @@ def find_precedents(criterion_id: str, store_dir: Path | str = STORE_DIR) -> lis
     return sorted(found, key=lambda a: (a.approval.approved_at, a.appeal_id), reverse=True)
 
 
-def precedent_rebuttals(criterion_id: str, store_dir: Path | str = STORE_DIR) -> list[Rebuttal]:
+def precedent_rebuttals(criterion_id: str, store_dir: Path | str | None = None) -> list[Rebuttal]:
     """The approved arguments themselves, for the criterion asked about.
 
     `find_precedents` returns whole appeals because that is what the Definition of Done specifies

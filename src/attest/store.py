@@ -24,6 +24,7 @@ is never invoked, never sends a prompt, and needs no credentials — verified by
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 
 from strands import Agent
@@ -35,7 +36,24 @@ from attest.models import Appeal, Case
 # `sessions/` is gitignored: stored cases are runtime state, never committed. Synthetic though the
 # corpus is, a case store that lands in version control is the wrong habit to build into a product
 # that will one day hold PHI.
-STORE_DIR = Path("sessions")
+DEFAULT_STORE_DIR = Path("sessions")
+
+STORE_ENV_VAR = "ATTEST_STORE_DIR"
+
+
+def store_dir(override: Path | str | None = None) -> Path:
+    """Where cases are kept: an explicit argument, else `$ATTEST_STORE_DIR`, else `sessions/`.
+
+    Read per call rather than bound at import. Two callers need to redirect it — the UI tests,
+    which must not write into the repo, and a hosted deploy, whose filesystem is ephemeral — and
+    both set the variable after this module is already imported. A module-level constant looked
+    correct and silently wrote to the default; `test_the_store_directory_is_read_per_call` is the
+    tripwire, because the symptom is data in the wrong place rather than an error.
+    """
+    if override is not None:
+        return Path(override)
+    return Path(os.environ.get(STORE_ENV_VAR, DEFAULT_STORE_DIR))
+
 
 # One agent per session, so its id is fixed. Pinned rather than left to Strands' default: the id is
 # part of the storage key, and a changed default would orphan every stored case silently.
@@ -79,17 +97,17 @@ def session_id_for(case_id: str) -> str:
     return f"{SESSION_PREFIX}{case_id}"
 
 
-def _storage(store_dir: Path | str) -> LocalFileStorage:
-    return LocalFileStorage(base_dir=str(store_dir))
+def _storage(directory: Path | str | None) -> LocalFileStorage:
+    return LocalFileStorage(base_dir=str(store_dir(directory)))
 
 
-def _manager(case_id: str, store_dir: Path | str) -> SnapshotSessionManager:
-    return SnapshotSessionManager(session_id_for(case_id), storage=_storage(store_dir))
+def _manager(case_id: str, directory: Path | str | None) -> SnapshotSessionManager:
+    return SnapshotSessionManager(session_id_for(case_id), storage=_storage(directory))
 
 
-def _read_state(case_id: str, store_dir: Path | str) -> dict | None:
+def _read_state(case_id: str, directory: Path | str | None) -> dict | None:
     """The session's whole state dict, or `None` if the session has never been written."""
-    manager = _manager(case_id, store_dir)
+    manager = _manager(case_id, directory)
 
     # Deliberately constructed without `session_manager=`. Passing it restores implicitly and
     # returns nothing, so there would be no way to tell "never saved" from "saved and empty".
@@ -100,15 +118,15 @@ def _read_state(case_id: str, store_dir: Path | str) -> dict | None:
     return dict(agent.state.get())
 
 
-def _write_state(case_id: str, store_dir: Path | str, state: dict) -> str:
+def _write_state(case_id: str, directory: Path | str | None, state: dict) -> str:
     """Replace the session's state. Returns the session id written to."""
-    manager = _manager(case_id, store_dir)
+    manager = _manager(case_id, directory)
     agent = Agent(agent_id=AGENT_ID, state=state)
     asyncio.run(manager.save_snapshot(agent, is_latest=True))
     return manager.session_id
 
 
-def save_case(case: Case, store_dir: Path | str = STORE_DIR) -> str:
+def save_case(case: Case, store_dir: Path | str | None = None) -> str:
     """Persist a case, overwriting any earlier version of that same case.
 
     Read-modify-write, so re-saving an edited case does not discard the appeal stored beside it.
@@ -120,7 +138,7 @@ def save_case(case: Case, store_dir: Path | str = STORE_DIR) -> str:
     return _write_state(case.case_id, store_dir, state)
 
 
-def save_appeal(appeal: Appeal, store_dir: Path | str = STORE_DIR) -> str:
+def save_appeal(appeal: Appeal, store_dir: Path | str | None = None) -> str:
     """Persist an appeal alongside the case it argues.
 
     Raises if that case is not in the store. An appeal filed against a case that does not exist is
@@ -138,7 +156,7 @@ def save_appeal(appeal: Appeal, store_dir: Path | str = STORE_DIR) -> str:
     return _write_state(appeal.case_id, store_dir, state)
 
 
-def load_case(case_id: str, store_dir: Path | str = STORE_DIR) -> Case | None:
+def load_case(case_id: str, store_dir: Path | str | None = None) -> Case | None:
     """Return the stored case, or `None` if this case has never been saved.
 
     `None` means "no such case", which is an ordinary answer for a lookup — a UI listing cases or
@@ -174,7 +192,7 @@ def load_case(case_id: str, store_dir: Path | str = STORE_DIR) -> Case | None:
     return case
 
 
-def load_appeal(case_id: str, store_dir: Path | str = STORE_DIR) -> Appeal | None:
+def load_appeal(case_id: str, store_dir: Path | str | None = None) -> Appeal | None:
     """Return the appeal stored for this case, or `None` if there is none.
 
     Same split as `load_case`: absence is an ordinary answer, damage raises.
@@ -194,7 +212,7 @@ def load_appeal(case_id: str, store_dir: Path | str = STORE_DIR) -> Appeal | Non
     return appeal
 
 
-def list_cases(store_dir: Path | str = STORE_DIR) -> list[str]:
+def list_cases(store_dir: Path | str | None = None) -> list[str]:
     """Every stored case id, sorted.
 
     Not in P6-S1's written Definition of Done, but a case store that cannot be enumerated is not a
