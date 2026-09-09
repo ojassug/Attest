@@ -760,3 +760,37 @@ costs nothing: **cassettes are keyed on tier, not model id**, so no recording wa
 test that depends on it. Six tests times four retries burned roughly two dozen calls on a failure
 that a single call would have diagnosed. Reproduce a failing model call directly, with retries off,
 before re-running a suite.
+
+---
+
+## 2026-09-09 · Two gates, one implementation, and they must not accept each other's approvals
+
+**Decision (P5-S3).** Gate 2 mirrors Gate 1 exactly: `AppealGate` interrupts on
+`BeforeToolCallEvent` before `emit_appeal_artifact`, and `emit_appeal_artifact` independently
+refuses to write without an `ApprovalRecord` whose hash matches. Both gates now share one
+implementation, `_ApprovalGate`, with subclasses supplying only the tool name, interrupt name,
+payload key, document type and refusal message.
+
+**Why refactor rather than copy.** The two gates differ in five strings and a summary block.
+Duplicating forty lines of interrupt-and-record logic would mean a future fix to one gate silently
+not applying to the other — and these are the two places in the product where "it silently did not
+apply" is least acceptable. Gate 1's thirteen tests made the refactor verifiable rather than
+hopeful; they passed unchanged.
+
+**Separation is a property, not an accident.** Three tests pin it:
+
+- `test_gate2_does_not_fire_on_the_submission_tool`
+- `test_gate1_does_not_fire_on_the_appeal_tool`
+- `test_an_approval_for_a_different_case_is_refused`
+
+The last one matters most and comes free from the hash: `content_hash` covers `case_id`, so an
+approval for one patient's appeal cannot authorise another's, and a Gate 1 packet approval can
+never satisfy Gate 2. Two gates that accept each other's approvals are one gate wearing a disguise.
+
+**`content_hash` now takes `Packet | Appeal`.** Both carry an `approval` field and nothing else in
+common, and the function only ever needed `model_dump(exclude={"approval"})`. Generalising it was a
+type change, not a behaviour change.
+
+**Verified end to end:** an unapproved appeal writes nothing at all, and an approved one emits
+`appeal.md` plus `approval.json` carrying the approver, an ISO timestamp and the content hash.
+`./scripts/verify.sh P5-S3 --offline` exits zero at 257 tests.
