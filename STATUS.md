@@ -70,7 +70,13 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
 
-**Submittable line:** everything through `P6-S4` is required. `P7` and `P8-S1..S3` are upside; `P8-S4` and `P8-S5` are mandatory to actually submit.
+**Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
+
+**Corrected 09-09.** This line previously called `P8-S1..S3` upside. That was wrong and had been
+since P0-S2: `Attest-PRODUCT.md` §1.4 lists a **README** and an **architecture diagram** among the
+things you must submit, so **P8-S1, P8-S2, P8-S4 and P8-S5 are all mandatory**. Only **P8-S3**
+(impact metrics) and **all of P7** are genuinely upside. Stage One is pass/fail on baseline
+viability, so a missing architecture diagram risks not being scored at all.
 
 ---
 
