@@ -12,11 +12,11 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P5 complete, plus P6-S1..S3.** **P6-S4 is next — the last required step.** |
-| **Next step** | `P6-S4` — public deploy. **BLOCKED on a browser, not code.** See `docs/deploy.md`. |
+| **Phase** | **P0–P6 complete.** Every required phase is done; the product is submittable. |
+| **Next step** | `P8-S4` (demo video) and `P8-S5` (Devpost) — both mandatory. P7 / P8-S1..S3 are upside. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
-| **Public demo URL** | not yet deployed |
+| **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
 | **Demo video URL** | not yet recorded |
 
 ---
@@ -59,7 +59,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
 | P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
-| P6-S4 | Public deploy for judges                   | BLOCKED| —     | —        | —     |
+| P6-S4 | Public deploy for judges                   | DONE   | ojassug| 1593eb7 | 09-09 |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
 | P7-S2 | Physical-therapy extensibility pack        | TODO   | —     | —        | —     |
 | P7-S3 | AgentCore entrypoint                       | TODO   | —     | —        | —     |
@@ -86,7 +86,14 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 in about eleven seconds, with no API key and no network. This session added the case store,
 precedent reuse, and the Streamlit console — all three deterministic, **no quota spent at all.**
 
-**P6-S4 is the only required step left, and it is BLOCKED on a browser, not on code.**
+**P6-S4 landed too — the console is live at <https://attest.streamlit.app>, public, no key
+needed. Every required phase (P0–P6) is complete and the product is submittable.** What remains is
+mandatory but not code: **the demo video (P8-S4) and the Devpost submission (P8-S5)**, which needs
+an AWS Builder ID nobody has obtained yet.
+
+**Checking the live app with curl needs a cookie jar** (`-c/-b`). Streamlit mints an anonymous
+session via a redirect to `/-/auth/app`; without stored cookies curl loops and exits 47, which
+looks exactly like a private app. See `docs/deploy.md`.
 
 ---
 

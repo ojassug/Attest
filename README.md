@@ -4,6 +4,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Status: in development](https://img.shields.io/badge/status-in%20development-yellow.svg)](STATUS.md)
+[![Live demo](https://img.shields.io/badge/live%20demo-attest.streamlit.app-ff4b4b.svg)](https://attest.streamlit.app)
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
@@ -167,6 +168,20 @@ Still to land: `src/attest/packet/` and `src/attest/appeal/` (P4–P5), the case
 ### Working protocol
 
 This is a two-person, sequential build (one contributor works until their usage limit, then the other resumes on another machine). Because context is lost at every handoff, the three committed files above — plan, status, decisions — *are* the shared memory. A session starting cold reads `STATUS.md` → `DECISIONS.md` → `PLAN.md`, runs the gate for the last step marked done to verify (not trust) the previous session's claim, then continues.
+
+## Try it without installing anything
+
+**<https://attest.streamlit.app>** — the live console, public and free, no account and no API key.
+
+Pick a demo case in the sidebar and walk it: read the note, match the payer's criteria, see each
+verdict with the exact quote behind it, approve at Gate 1, then turn the denial into an appeal and
+approve at Gate 2. Every model call replays from committed cassettes, so the hosted app needs no
+credentials and shows the same results this repository reproduces offline.
+
+> The hosted container is ephemeral — Streamlit Community Cloud restarts it when the app sleeps, so
+> stored cases do not persist across days and precedent reuse demonstrates within a session. That is
+> a property of the free hosting tier, not of the case store, which is durable and proven across
+> real processes by `test_case_survives_process_restart`.
 
 ## Getting started
 
