@@ -80,69 +80,105 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 
 ---
 
-**2026-09-08 — Atharv** *(session 2)*
+**2026-09-09 — Atharv** *(session 2, spanning 09-08 and 09-09)*
 
-**P0 through P4 are complete.** `./scripts/verify.sh P4 --offline` exits zero at **223 tests** in
-about two seconds. The session-1 note below is still worth reading, but its specifics are
-superseded — the count is no longer 146 and P3-S3 is long done.
+**P0 through P5 are complete.** `./scripts/verify.sh ALL --offline` exits zero at **268 tests** in
+about two seconds, **with no API key and no network**. CI runs that same command on Linux on every
+push. The session-1 note below is history now — its counts and "next step" are long superseded.
 
-### Read this before starting P5
+The full loop runs: note -> intake -> PA determination -> criteria matching -> span verification ->
+gap list -> justification -> **Gate 1** -> submission artifact (Markdown + PDF) -> denial parsing ->
+rebuttal drafting -> **Gate 2** -> appeal with a deadline.
 
-**P5-S1 and P5-S2 cannot start without a Gemini API key.** `have_credentials()` is currently
-`False`, there is no `.env` on this machine, and no `cassettes/` namespace exists for the appeal
-path — so there is nothing to replay and the first run must be live. P5-S3 and P5-S4 are
-deterministic and need no quota.
+---
 
-**Enable billing on the key before starting.** P5 is the most prompt-iteration-heavy phase left,
-and every prompt change forces a cassette re-record. The free tier is 20 requests per day *per
-model* and four models were already spent on 09-08. At flash pricing the whole project is a few
-dollars; see `docs/setup.md`.
+### Start here
 
-**P5-S4 will probably hit `ArtifactRenderError`.** fpdf2's core fonts are latin-1 only and the
-denial letter contains em-dashes, so an appeal PDF quoting it will refuse to render rather than
-silently substitute the character. That refusal is deliberate — see DECISIONS.md — and the fix is
-`FPDF.add_font` with a Unicode TTF plus the font file. Budget ten minutes for it.
+```bash
+git pull
+./scripts/verify.sh ALL --offline      # expect 268 passed; needs nothing
+```
 
-**PLAN.md's `live` annotations are stale.** It marks several P3–P5 tests `(marker live)`, but
-DECISIONS.md reserves `live` for calls that genuinely cannot be replayed. Every step since P3-S2
-has used `@needs_model` instead. Follow the code, not that annotation — and note PLAN.md itself
-has *not* been corrected, which is a deliberate open item rather than an oversight.
+If that is green you have a working baseline and can start **P6-S1 (case store)**. Every remaining
+step in P6 is deterministic — **no model calls, no quota, no credentials needed.**
 
-### Two platform bugs, fixed before any feature work
+---
 
-The recorded baseline did not reproduce on Windows, so this session started by fixing that:
+### The provider situation — read before touching `llm.py`
 
-1. `verify.sh` probed only `.venv/bin/pytest` (POSIX) and exited **127** while printing
-   `GATE FAILED`. A missing runner now exits 2; `GATE FAILED` again means only that tests failed.
-2. Every `read_text()` omitted `encoding=`, so Windows used cp1252. That crashed on the policy
-   text and, worse, silently changed the cassette cache key — so a machine holding every cassette
-   demanded a live API key for every model-backed test. The offline gate was Linux-only.
-   **Never remove an explicit `encoding="utf-8"`.**
+**We are on Gemini and want to be on Bedrock.** Bedrock was originally deferred because the AWS
+account did not exist. It exists now, but:
 
-### Known and still open
+    authorizationStatus: NOT_AUTHORIZED     <- account-wide, every model
+    agreementAvailability: NOT_AVAILABLE
+    entitlementAvailability: AVAILABLE      <- eligibility is fine
+    regionAvailability: AVAILABLE           <- us-west-2 is fine
 
-`test_p2_s3.py::test_pa_tool_is_registered` is not marked `live` but still needs a key to be
-*present* — any dummy string works, no request is made. Measured: a keyless run is **222/223**,
-with a placeholder **223/223**. Fixing it means either letting `build_model()` construct without a
-key, which contradicts a recorded decision, or skipping the test without credentials, which
-weakens the gate. Not decided.
+The account is **still under AWS verification**. Nothing is misconfigured: credentials
+authenticate, IAM has `AmazonBedrockFullAccess`, the region is right. Check with one call:
 
-### Where the product stands
+```python
+boto3.client('bedrock', region_name='us-west-2').get_foundation_model_availability(
+    modelId='anthropic.claude-opus-5')          # watch authorizationStatus
+```
 
-- **Verification:** 39/39 spans verify verbatim (100%) with **zero** criteria downgraded, so
-  P3-S2's 30/30 ground-truth verdict accuracy is intact. Gap ids match ground truth exactly.
-- **Gate 1 is enforced twice** — a `BeforeToolCallEvent` interrupt on the agent path, and an
-  independent hash check in the emitter. Editing a packet after sign-off invalidates the approval.
-- **Artifacts** emit as Markdown + PDF from one block list, so the checkable document and the sent
-  document cannot drift.
-- **P3-S3 through P4-S3 made zero model calls** — six consecutive steps, no quota touched.
+**When it flips to `AUTHORIZED`:** enable model access in the Bedrock console (a separate gate),
+then swap the provider. The swap is small — **no production file outside `src/attest/llm.py`
+constructs a model** — but four things change there: `DEFAULT_MODELS` (Bedrock ids carry an
+inference-profile prefix; `us.anthropic.claude-opus-5` and `us.anthropic.claude-sonnet-5` are both
+ACTIVE), the credential check (boto3 chain, not an API key), `build_model`, and **`is_retryable`,
+which currently matches Gemini's `429 RESOURCE_EXHAUSTED` / `503` strings that Bedrock never
+emits** — miss that and retries silently stop working.
 
-### Not code, and overdue
+**Then re-record.** Cassettes are keyed on the prompt, not the model, so all of them replay under
+Bedrock and the gate goes green *having never called AWS*. That is a trap, not a win:
 
-- **AWS $50 credit form closes Sep 11, 12:00pm PT.** Not requested.
-- **AWS Builder ID** — a required Devpost field. Not obtained.
-- The Gemini key should be rotated; it was pasted into a chat transcript.
-- `README.md` was brought up to date this session, but P8-S1 still owns the final pass.
+```bash
+ATTEST_CACHE=refresh ./scripts/verify.sh ALL     # re-records and re-asserts ground truth
+```
+
+Ground-truth accuracy (30/30 verdicts) was measured on Gemini and is not guaranteed to transfer.
+The gate will tell you exactly which criterion moved.
+
+---
+
+### Landmines
+
+**`gemini-3.8-flash` returns `503 high demand` on structured output.** The reasoning tier is now
+`gemini-3.6-flash`. `docs/setup.md` had already documented this while `DEFAULT_MODELS` still
+pointed at the constrained model — cost an hour.
+
+**A failing module-scoped pytest fixture re-runs for every test that uses it.** Six tests times
+four retries burned ~24 API calls on a failure one direct call would have shown. Reproduce a
+failing model call on its own, with retries off, before re-running a suite.
+
+**Never remove an explicit `encoding="utf-8"`.** Python otherwise uses the locale default — cp1252
+on Windows — which crashes on the policy text and, far worse, silently changes the cassette cache
+key so a machine holding every cassette starts demanding live API calls.
+
+**P5-S4 emits Markdown only.** If an appeal PDF is added it will raise `ArtifactRenderError`: the
+denial letter contains em-dashes and fpdf2's core fonts are latin-1 only. That refusal is
+deliberate — substituting a character inside a quoted passage would make the PDF disagree with the
+note it quotes. The fix is a Unicode TTF via `FPDF.add_font`, about ten minutes.
+
+---
+
+### What is left
+
+| | |
+|---|---|
+| **P6** ▲ | The last required phase. All four steps deterministic. |
+| **P8-S4** | Demo video, ≤5 min, public on YouTube/Vimeo. **Mandatory.** |
+| **P8-S5** | Devpost submission. **Mandatory.** Needs an AWS Builder ID. |
+| P7, P8-S1..S3 | Upside only. Do not start until P6 is green. |
+
+**Deadline: Sep 14, 2026, 5:00pm PT.** The $50 AWS credit form was submitted on 09-08.
+
+**P6-S4 needs a public URL judges can reach** — that means a Streamlit Community Cloud account or
+similar. Worth creating before you need it.
+
+**Still outstanding:** an AWS Builder ID (a required Devpost field), and the Gemini key should be
+rotated — the original was pasted into a chat transcript.
 
 ---
 

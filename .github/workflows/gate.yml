@@ -1,0 +1,42 @@
+# The gate, run on a clean machine with no credentials.
+name: gate
+
+# This is deliberately the judge's scenario, not ours: a fresh Linux checkout, a fresh install,
+# no API key, no network access to any model. Everything replays from `cassettes/`.
+#
+# It exists because a green suite on a developer's machine proved too little. The recorded
+# baseline was Linux-only for a while - every file read omitted `encoding=`, which crashed on
+# Windows and, worse, silently changed the cassette cache key so a machine holding every cassette
+# demanded live API calls. CI on a second platform is what makes "installs and runs consistently"
+# (hackathon rules 1.4) a check rather than a claim.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-gate:
+    name: verify.sh ALL --offline
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"   # 3.13+ is too new for the Strands dependency tree
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Run the full gate, offline and keyless
+        # No GOOGLE_API_KEY and no AWS credentials are configured for this job, on purpose.
+        # If this step ever needs one, the offline claim has quietly stopped being true.
+        run: ./scripts/verify.sh ALL --offline
