@@ -122,8 +122,15 @@ def test_ingest_output_is_not_auto_shipped():
 
 
 def test_no_pack_was_written_by_ingestion():
-    """Belt and braces: the shipped packs are exactly the two reviewed ones."""
+    """Belt and braces: every shipped pack is one a human reviewed and committed.
+
+    The list is explicit rather than a count, so a pack appearing here has to be added
+    deliberately by someone editing this test — which is exactly the review step that
+    `ingest_policy` must never be able to skip. `vnshealth-medicare-pt` was added in P7-S2
+    and is hand-authored from the committed source text, like the two before it.
+    """
     assert sorted(p.stem for p in PACKS_DIR.glob("*.yaml")) == [
         "highmark-hho-de-mp-1147",
         "pacificsource-commercial-tms",
+        "vnshealth-medicare-pt",
     ]

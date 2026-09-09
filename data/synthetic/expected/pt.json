@@ -1,0 +1,28 @@
+{
+  "case_id": "SYNTH-004",
+  "note_file": "notes/pt.md",
+  "pack_id": "vnshealth-medicare-pt",
+  "description": "The extensibility case (P7-S2): a different specialty, a different payer, a different plan type, and a policy whose central requirement is a judgement rather than a threshold. VNS Health Plans requires that the member 'demonstrates meaningful functional progress' for a continuation authorization, which cannot be keyword-matched - the note carries a table of objective measures across four re-assessments and the matcher has to read improvement out of it. Three criteria are exclusions with polarity absent (maintenance-only care, duplicative therapists, no measurable improvement after 4-6 visits), so a well-documented member must read as satisfying them. The pack and the note are data: no code in src/attest changes to run this case.",
+  "intake": {
+    "payer": "VNS Health Plans",
+    "plan": "Medicare Advantage",
+    "service": "Outpatient physical therapy",
+    "cpt_codes": ["97110", "97112", "97116", "97140"],
+    "primary_diagnosis_code": "M25.561"
+  },
+  "pa_required": "required",
+  "verdicts": {
+    "pt-01": "met",
+    "pt-02": "met",
+    "pt-03": "met",
+    "pt-04": "met",
+    "pt-05": "met",
+    "pt-06": "met",
+    "pt-07": "met",
+    "pt-08": "met",
+    "pt-09": "met",
+    "pt-10": "met",
+    "pt-11": "met"
+  },
+  "expected_gaps": []
+}

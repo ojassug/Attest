@@ -1021,3 +1021,127 @@ ends in fail conditions that stop a recording rather than suggestions.
 **Verified:** `streamlit run app.py --server.headless true` serves HTTP 200, and the gap case renders
 9/10 criteria met, 13/13 quotes verified verbatim, with `ps-04b` flagged and its question quoting
 the payer's requirement. `./scripts/verify.sh P6-S3 --offline` exits zero at **297 tests**.
+
+---
+
+## 2026-09-09 · The orchestrator routes; code decides what is true
+
+**Decision (P7-S1).** `src/attest/agents/orchestrator.py` composes intake / criteria / packet /
+appeal specialists via `agent.as_tool()`. Two properties keep the routing layer from eroding
+guarantees the deterministic pipeline already provides.
+
+**Specialists exchange identifiers, never clinical content.** Every tool reads and writes a shared
+`Run` and returns a short factual summary — counts, criterion ids, verdicts — never a quote. If
+evidence travelled between agents as prose, each hop would be a chance to paraphrase it, and the
+paraphrase would reach the packet builder looking exactly like a quote. The verifier cannot catch
+that: by then the note it would check against is two agents away.
+`test_no_specialist_hands_back_a_clinical_quote` asserts no summary contains a line from the note.
+
+**Verification is inside the criteria step, not a stage a router can choose.** `do_criteria` matches
+and enforces in one indivisible call, and there is no tool anywhere that returns unverified
+coverage — so no routing decision, however confused, can produce a packet built on evidence the
+verifier never saw.
+
+**Parity is the claim, and it is measured twice.** `test_end_to_end_parity` (live) requires the
+orchestrated run to produce byte-identical verdicts to the direct pipeline on all three cases; it
+**passed**. An offline twin runs the same assertion without a routing model, so a regression is
+caught for free, and it also checks both paths against committed ground truth — otherwise parity
+could be satisfied by both being wrong in the same way.
+
+**The steps are plain functions; the `@tool` closures are wrappers.** That is what lets the offline
+twin exist, and it states the design claim in code: orchestration contributes routing and nothing
+else, so the steps must be complete on their own.
+
+**Router on the reasoning tier, specialists on the fast one.** Routing is the one call nothing
+downstream can check — a misbehaving specialist still lands in `Run` where code sees it, but a
+router that silently omits the criteria specialist just produces a thinner case. It also splits the
+work across two daily quotas, which is what makes the live tests runnable at all.
+
+**Found by running it: the orchestrator had no retry.** The first parity attempt completed case one
+and died mid-intake on case two with a provider `ServerError`. Every other model call in the project
+goes through `with_retry`; this one did not. An orchestrated run is many calls deep and therefore
+*more* exposed to the free tier's 503s, not less. Now wrapped.
+
+**Then it hit the real ceiling.** The second attempt exhausted `gemini-3.6-flash`'s 20-request daily
+cap — the retry worked correctly, but a daily quota does not clear in 51 seconds. Parity passed on
+`ATTEST_MODEL_REASONING=gemini-3.7-flash` / `ATTEST_MODEL_FAST=gemini-3.1-flash-lite`. Recorded
+because the result is model-attributable and the next session will need to rotate again.
+
+---
+
+## 2026-09-09 · A specialty is a pack and a note — proven by AST, not by assertion
+
+**Decision (P7-S2).** `vnshealth-medicare-pt` ships: outpatient physical therapy, VNS Health Plans,
+Medicare Advantage, hand-authored from a real published policy committed at
+`data/policies/raw/vnshealth-medicare-pt-ot-st.txt`.
+
+**The extensibility test parses the AST rather than grepping.** `test_pt_case_runs_with_zero_code_changes`
+walks every module under `src/attest`, discards docstrings (prose names specialties deliberately, and
+does) and comments (never in the tree), and fails if a specialty word appears in any remaining string
+literal or identifier. It passes: **no engine module names a specialty.** A grep would have failed on
+the docstrings; a hand-wave would have proven nothing.
+
+**PT was chosen because it is the harder specialty, and this is where that gets tested.** The
+original decision record picked TMS for near-binary criteria and named PT's "documented functional
+progress" as fuzzier and easier to fake convincingly. `pt-06` is exactly that requirement.
+
+**All-MET ground truth is weakly discriminating, so there is a negative case too.** Every PT criterion
+is MET, which a matcher that agreed with everything would satisfy. `test_the_progress_criterion_fails_when_the_measurements_are_removed`
+truncates the note to a bare claim of progress with no measurements. The engine returns
+**INSUFFICIENT** — and independently flags `pt-07`, `pt-08` and `pt-11` for the same absence, with
+`pt-11` correctly reasoning that it cannot rule out an *exclusion* without interim measurements.
+INSUFFICIENT rather than UNMET is the right answer: a question for the practice, not an argument
+with the payer.
+
+The degraded note is built by truncation, not surgery. The real note quotes current measurements in
+three places, so editing one out leaves the others and the test quietly stops meaning what it says.
+
+**Verdicts matched committed ground truth on the first run**, 11/11, with no ground-truth adjustment
+— written before the matcher ever saw the note, as the protocol requires.
+
+### Three earlier tests were amended, and that is worth stating plainly
+
+Adding a third pack broke tests that had encoded *corpus facts* as invariants: "there are exactly two
+packs", "from two payers", "all carrying the TMS CPT codes", and an ingestion allow-list naming two
+files. Those were true in P1-S3 and are not properties of a pack.
+
+The split now made explicit: TMS-specific assertions run over `TMS_PACKS`; assertions true of **any**
+pack — traceability, https source, stated appeal-window provenance, contraindication polarity, unique
+ids — still run over all of them, so the new pack is held to the same standard rather than exempted.
+Recorded rather than done quietly, because editing an earlier gate to make a later step pass is
+exactly the move the protocol exists to make visible. **No production code changed.**
+
+---
+
+## 2026-09-09 · The runtime stops at Gate 1, and `requirements.txt` stays one line
+
+**Decision (P7-S3).** `agent_runtime.py` returns the assembled packet and the `content_hash` a
+clinician must approve — and writes nothing. A headless deployment is precisely where Gate 1 would
+otherwise decay from a product rule into a UI convention.
+
+**Two modes, defaulting to the boring one.** `direct` runs the deterministic pipeline; `orchestrated`
+routes the same work through P7-S1's specialists. They are required to agree — that is
+`test_end_to_end_parity` — so the switch changes what a caller can observe, never what comes back.
+Direct is the default because a deployed service should not spend a routing model's quota, and a 503
+inside a routing loop is a failed request rather than a slower one.
+
+**`requirements.txt` deliberately does not pin, against PLAN's wording.** The first P7-S3 attempt
+carried a hand-maintained list of `==` pins beside `pyproject.toml`; the commit that reverted it said
+at the time that it was a second source of truth. It is now also a *shared* file: P6-S4 deploys the
+live, judge-facing Streamlit console from the same `requirements.txt`, and the original pinned list
+correctly omitted `streamlit` because the UI is not part of the runtime image. Restoring it would
+break the public demo to satisfy a word in the plan. The file is one line — `.` — and if reproducible
+image builds are ever needed the mechanism is a generated lockfile, not a second hand-edited list.
+
+**`pythonpath = ["."]` is back in `pyproject.toml`**, exactly as the revert commit anticipated: it was
+removed with P7-S3 on the stated grounds that it should return alongside the module that needs it.
+AgentCore requires `agent_runtime.py` at the image root, so tests cannot import it otherwise.
+
+**Verified with the DoD's own command.** `python agent_runtime.py`, then
+`curl -X POST localhost:8080/invocations -d '{"case":"gap"}'` returns a valid packet: 10 verdicts,
+9 claims, gap `ps-04b` matching ground truth, no rejected spans, `approval_required: true`. The PT
+case runs through the same handler and returns 11 verdicts — extensibility holds all the way to the
+deployment surface. Unknown cases, empty payloads and bad modes come back as `{"error": ...}` rather
+than a 500.
+
+`./scripts/verify.sh P7-S3 --offline` exits zero at **340 tests**.

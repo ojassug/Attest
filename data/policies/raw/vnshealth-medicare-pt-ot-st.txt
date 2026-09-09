@@ -1,0 +1,93 @@
+ 
+Page 1 of 3 
+Medicare and Medicaid Clinical Guideline: Outpatient Physical 
+Therapy, Occupational Therapy, and Speech Therapy Utilization 
+ 
+Effective Date: 5/2025 Next Effective Date: 5/2026 
+Department: Medical Management Owner: Director, Utilization Management 
+Approved by: Chief Medical Officer  Version: 1.0  
+ ________________________________________________________________________________________________________________  
+Applicable Line of Business (LOB): Medicare, MLTC, MMC 
+ ________________________________________________________________________________________________________________  
+ 
+1. Purpose 
+To ensure appropriate, evidence-based utilization of outpatient physical therapy (PT), 
+occupational therapy (OT), and speech therapy (ST) services for Medicare Advantage 
+beneficiaries while complying with CMS regulations, promoting functional outcomes, and 
+preventing overutilization. 
+2. Scope 
+This guideline applies to all outpatient PT, OT, and ST services delivered under the Medicare 
+Advantage plan, including services provided in outpatient clinics, therapy centers, and home-
+based settings when billed under outpatient benefits. 
+3. Service Approvals 
+Outpatient PT, OT, ST services must be: 
+- Medically necessary and restorative in nature. 
+- Ordered by a licensed physician or qualified provider. 
+- Delivered under a written plan of care reviewed and certified every 30 days. 
+- Supported by measurable functional goals and objective documentation. 
+- Evaluated for continued necessity through re-assessments. 
+4. Clinical Criteria 
+Initial Evaluation & Treatment 
+- Covered for functional impairments due to illness, injury, or surgery. 
+- Requires physician referral and evaluation by a licensed therapist. 
+- Must include objective baseline measurements and functional goals using standardized tools 
+(e.g., PROMIS, DASH, Berg Balance Scale). 
+  
+ 
+Page 2 of 3 
+Treatment Plan Requirements 
+Plan of care must include: 
+- Diagnosis and therapy rationale. 
+- Functional goals (SMART format). 
+- Frequency and duration (e.g., 2x/week x 6 weeks). 
+- Discharge criteria. 
+- Certification by the referring provider within 30 days. 
+5. Utilization Management Protocols 
+A. Authorization Requirements 
+- Initial visits (evaluation visit + up to 11 follow up visits, total 12 visits) 
+- Continuation (greater than 12 visits up to 24 visits): Prior authorization required with 
+submission of: 
+  - Progress report. 
+  - Updated objective measures. 
+  - Justification for continued skilled therapy. 
+B. Continuation Authorizations 
+  - Member demonstrates meaningful functional progress. 
+  - Therapy prevents decline in ADLs for chronic neuromuscular disorders. 
+  - Services required post-surgery (e.g., joint replacement). 
+  - Prior authorization granted for extension based on clinical review. 
+C. Denial Criteria 
+- Services primarily for maintenance without evidence of skill need. 
+- Duplicative services from multiple therapists without care coordination. 
+- Lack of measurable improvement after 4-6 visits. 
+- Absence of physician certification or plan of care. 
+The Clinical Evaluation Manager (CEM) will clearly outline rationale for discontinuation of 
+authorization in the clinical review note and forward for medical director review (MDR) via 
+GuidingCare activity. 
+6. Documentation Standards 
+Therapists must document: 
+- Objective measures (ROM, strength, endurance, gait, ADLs). 
+- Progress toward goals every 4 visits. 
+- Barriers to progress and plan modifications. 
+- Functional improvements aligned with therapy goals.  
+- Pain relief 
+ 
+Page 3 of 3 
+The CEM ensures the documentation from the therapist includes the above. When information 
+is incomplete, the CEM will make three attempts to obtain the information. When information 
+remains incomplete, the request should be forwarded for MDR due to inability to establish 
+medical necessity due to lack of information. 
+7. Oversight & Audit 
+-Quarterly audits of therapy claims for: 
+  - Medical necessity. 
+  - Timely documentation. 
+  - Plan adherence and recertification. 
+- Outlier provider identification based on utilization and outcomes. 
+8. Provider Education 
+- Annual training on Medicare and Medicaid documentation and medical necessity. 
+- Dissemination of CMS updates and plan policy changes. 
+9. CMS Compliance 
+Adheres to: 
+- CMS Pub 100-02 Medicare Benefit Policy Manual, Chapter 15. 
+- Medicare coverage rules for outpatient therapy. 
+- NCCI Edits and LCD/NCD guidance. 
+- eMedNY for Medicaid LOB 

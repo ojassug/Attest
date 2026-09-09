@@ -395,7 +395,10 @@ Judging criterion 1 scores *how thoroughly and skilfully the project uses Strand
 **DoD**
 - [ ] **File** one PT policy pack + one synthetic PT case + ground truth
 - [ ] **Test** `test_p7_s2.py::test_pt_case_runs_with_zero_code_changes` — asserts the PT run touches no specialty-specific branch; the pack is data
-- [ ] **Test** `test_p7_s2.py::test_pt_verdicts_match_ground_truth` (marker `live`)
+- [ ] **Test** `test_p7_s2.py::test_pt_verdicts_match_ground_truth` (marker `needs_model`)
+      *(annotation corrected in P7-S2, on the same grounds as the eight corrected earlier: `live`
+      means "cannot be replayed from a cassette", and this replays. P7-S1's two DoD tests are
+      genuinely `live` — an agent's tool-calling loop is not cassette-backed — so those stand.)*
 
 ## P7-S3 — AgentCore entrypoint
 
