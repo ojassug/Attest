@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P5 complete, plus P6-S1.** **P6-S2 is next. P6 is the last required phase.** |
-| **Next step** | `P6-S2` — precedent reuse. All of P6 is deterministic; no quota needed. |
+| **Phase** | **P0–P5 complete, plus P6-S1 and P6-S2.** **P6-S3 is next. P6 is the last required phase.** |
+| **Next step** | `P6-S3` — Streamlit UI. Deterministic; no quota needed. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | not yet deployed |
@@ -57,7 +57,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P5-S3 | Gate 2 — approval before appeal            | DONE   | Atharv| d1ef57e  | 09-09 |
 | P5-S4 | Appeal artifact and deadline               | DONE   | Atharv| bf62963  | 09-09 |
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
-| P6-S2 | Precedent reuse                            | TODO   | —     | —        | —     |
+| P6-S2 | Precedent reuse                            | DONE   | Atharv| pending  | 09-09 |
 | P6-S3 | Streamlit UI                               | TODO   | —     | —        | —     |
 | P6-S4 | Public deploy for judges                   | TODO   | —     | —        | —     |
 | P7-S1 | Orchestrator with specialist subagents     | TODO   | —     | —        | —     |
