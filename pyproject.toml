@@ -81,4 +81,11 @@ markers = [
   "p8_s4: gate for step P8-S4",
   "p8_s5: gate for step P8-S5",
   "p9_s1: gate for step P9-S1",
+  "p9_s2: gate for step P9-S2",
+  "p9_s3: gate for step P9-S3",
+  "p9_s4: gate for step P9-S4",
+  "p9_s5: gate for step P9-S5",
+  "p9_s6: gate for step P9-S6",
+  "p9_s7: gate for step P9-S7",
+  "p9_s8: gate for step P9-S8",
 ]

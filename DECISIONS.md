@@ -1276,3 +1276,265 @@ pass is the move the protocol exists to make visible, so it is recorded rather t
 that cannot afford an upload interaction, say — the answer is a query parameter that *pre-fills the
 uploader* from the corpus, leaving the pipeline entry point unchanged. Reinstating a picker that
 sets the pack directly would put the bypass back.
+
+## 2026-09-10 · Constructing an agent is not asking a model, and P7-S1 forgot it
+
+**Decision (P9-S8).** The two composition tests in `tests/test_p7_s1.py` inject a placeholder
+credential before calling `build_orchestrator`. `./scripts/verify.sh ALL --offline` now exits zero
+on a keyless clone — **357 passed, 5 deselected** — where it had been reporting `2 failed,
+355 passed`.
+
+**This was not a new problem and did not need a new answer.** `test_p2_s3.py` hit it at P2-S3,
+against `build_intake_agent`, and wrote the reasoning into its own docstring: `build_model` refuses
+to construct without a key *deliberately*, so a missing key surfaces as a setup problem rather than
+as an auth error deep inside an agent run — but constructing an `Agent` makes no request, so any
+string will do. That test even records the cost of getting it wrong: "made a keyless clone fail 1
+of 268 and left the 'judges can clone and run it' claim untrue."
+
+P7-S1 built five agents the same way — four specialists plus the router — and never applied the
+pattern. The two properties under test are settled before any provider is touched: which
+specialists exist, what they are named, and what their descriptions say.
+
+**What was rejected, and why.**
+
+*A `needs_key` skip.* Available, one line, and wrong. It would leave `agent.as_tool()` composition
+— the thing P7-S1 exists to demonstrate, and the thing judging criterion 1 scores — unverified in
+the only environment that matters. `.github/workflows/gate.yml` is deliberately "the judge's
+scenario, not ours"; a skip would make the gate green by agreeing not to look.
+
+*Threading a model factory through `build_orchestrator` and the four `_*_agent` helpers.* Drafted
+first, and discarded on reading `test_p2_s3.py`. It changes production code to serve a test, adds a
+parameter to five functions, and is a second solution to a problem this repository had already
+solved. The smaller diff is also the more honest one: the test says "constructing this needs no
+model", which is exactly true.
+
+**The failure was in reading CI, not in writing it.** The workflow caught this on every push and
+reported `failure` on at least five consecutive runs, including the P9-S1 merge to `main`. Nobody
+opened it. Two sentences in `README.md` — "exits zero, 357 tests, ~13s, no API key" and "the same
+command runs in CI on every push … the judge's scenario rather than ours" — were false for days on
+a public repository that invites judges to clone and run exactly that command, against rules that
+require a project which "installs and runs consistently".
+
+The count in that sentence turned out to be right: the command selects 357 tests and now passes all
+357, so no number needed correcting. Only "exits zero" was false.
+
+**What would change our mind.** If a future specialist ever needs a *live* model at construction —
+to negotiate a context window, say — the placeholder stops being honest and the model factory comes
+back. Nothing in Strands' `Agent.__init__` does that today.
+
+### The corollary, which is now P9-S2
+
+The same session found `verify.sh ALL --offline` reporting `15 failed, 342 passed` on a Windows
+checkout. Normalising *only* the corpus line endings to LF took it to `2 failed, 355 passed` —
+identical to CI, which is what isolated these two failures in the first place. The other thirteen
+are `.gitattributes` pinning `*.sh` and nothing else, so `read_upload` decodes CRLF where
+`Path.read_text` recorded the cassettes against LF. **The P6-S3 and P9-S1 gates do not pass on a
+Windows clone.** That is P9-S2 and it is not fixed here; this entry records only that the two
+problems were separate, and were separated by experiment rather than by assumption.
+
+## 2026-09-10 · A newline is an encoding, and an uploader is an invitation
+
+**Decision (P9-S2).** `.gitattributes` pins `*.md` to `eol=lf`, `read_upload` normalises newlines
+after decoding, and every engine call in `app.py` runs inside `guarded`, which renders a failure
+instead of raising it into the page.
+
+### The newline half
+
+`docs/setup.md` and this log already record that every file read must name its encoding, because a
+note decoded two ways on two machines shifts every character offset the verifier reports —
+"evidence spans would point at the wrong text *while still appearing verified*". That was fixed.
+This is the same bug through a different door, and it was invisible for the same reason: it does
+not fail, it *diverges*.
+
+Every reader in this codebase goes through `Path.read_text`, whose universal-newline handling
+collapses `\r\n` to `\n` before anything sees it. That is the text the cassettes were recorded
+against, the text the ground truth describes, and the text every offset in `tests/` refers to.
+`read_upload` is the single exception: an upload is raw bytes, and `.decode("utf-8")` translates
+nothing. With `.gitattributes` pinning only `*.sh`, a Markdown note checked out on Windows reached
+the pipeline as **2424 characters where the recorded one is 2371** — a different string, a
+different `cache._key`, a cassette miss, a live call, and on a keyless clone a traceback.
+
+**The shape of the failure is what makes it worth this much prose.** `verify.sh ALL --offline`
+failed 13 tests on Windows and passed on Linux. CI is Linux, both prior sessions worked on Linux or
+macOS, and the whole of `tests/test_p9_s1.py` — the gate for the step that *introduced* the upload
+path — was among the 13. A gate that passes on the machine that wrote it and fails on the other one
+is worse than a gate that fails everywhere, because it gets recorded as DONE.
+
+Fixed at both ends deliberately. The attribute fixes the checkout; `read_upload` fixes the upload.
+Only the second survives the case nothing in git can reach: a judge who downloads a synthetic note,
+opens it in Notepad, saves it, and uploads CRLF from a file that was never in the repository.
+
+**Not fixed by normalising the corpus once and committing it.** The index was already LF — the
+smudge happens on checkout, every checkout, so a one-time normalisation would have looked like a
+fix on the machine that ran it and changed nothing for anyone else.
+
+### The uploader half
+
+P9-S1 replaced a three-case radio with a file uploader and, in doing so, quietly changed what the
+screen promises. A radio offers three things that work. An uploader invites anything — and the
+first thing a judge will upload is a note of their own, which this deploy has no key to answer.
+`app.py` caught `MissingFactError` and nothing else, so that arrived as a Python traceback: the
+first entry under *Fail conditions* in `docs/ui-checklist.md`.
+
+`guarded` distinguishes exactly one case, and only where it can be sure of it. When a *model-backed*
+stage fails and no credential is configured, the call can only have been reached by missing a
+cassette, so the screen says the note is not one of the recorded ones, explains why that is by
+design rather than broken, and expands the sample downloads underneath — saying what went wrong
+without handing over something that works is half an answer. Every other failure is named as what
+it is. **The screen never claims a real failure was expected**, which is the line this repo has
+held everywhere else: `UNKNOWN` is not "not required", and a placeholder deadline says it is a
+placeholder.
+
+`ApprovalRequired` travels through the same path on purpose. When `emit_submission_artifact`
+refuses a packet whose hash moved after sign-off, that is the gate working, and it is now rendered
+rather than raised — **still stopping**, just legibly. No guard swallows a failure and continues;
+every branch ends in `st.stop()`.
+
+### What the gate proves, and how it was checked
+
+`tests/test_p9_s2.py` drives the real screen. The strongest assertion needs no comparison: scratch
+space is keyed by a hash of the note text, so uploading the CRLF copy into a session that already
+read the LF copy **continues that review** instead of offering *Run intake* again. Two strings that
+hash alike are one string.
+
+The normalisation was then temporarily reverted and the suite re-run, to confirm the gate actually
+fails without it. It does. A test that has never been seen to fail is a test that has not been
+shown to test anything.
+
+**What would change our mind.** If Attest ever accepts a format where `\r` is data rather than a
+line ending — a fixed-width payer export, say — `read_upload` stops being the right place and the
+normalisation moves to the Markdown path only.
+
+## 2026-09-10 · A verdict is not a sentence until you know which way the criterion points
+
+**Decision (P9-S3).** The criterion label carries the id, the category and what the verdict *means*
+— `✅ hho-05 · Contraindication — Ruled out`. The payer's wording moves inside the expander, still
+verbatim. A criterion with `polarity: absent` gets its own wording table and a line saying how it
+is satisfied.
+
+### The tick meant the opposite of what a reader would take it for
+
+`Polarity` has existed since P1-S1, and its docstring is exactly right: "Collapsing both senses
+into one would make every contraindication read as unmet, so the distinction is explicit." The
+engine respects it — `match.py` tells the model a contraindication is satisfied by absence, and the
+verdicts are correct. **The screen then threw the distinction away**, rendering from the verdict
+alone:
+
+    ✅ hho-05 — Seizure disorder or any history of seizure with increased risk of future seizure
+
+To anyone who is not a clinician that says the patient *has* a seizure disorder. It says the
+opposite. Four of Highmark's ten criteria are `absent`, and three of PacificSource's, so the
+flagship demo case had four lines stating the inverse of the finding on the screen
+`Attest-PRODUCT.md` §9 calls "the product's core".
+
+`INSUFFICIENT` is the pair worth reading twice. On an absent criterion it does not mean the finding
+might be present — it means nobody wrote it down, and `match.py` already says "an undocumented
+contraindication is unknown, not ruled out". **"Not ruled out"** is that sentence in two words, and
+it is deliberately not reassuring.
+
+### The label was the whole policy text
+
+Up to 524 characters (`hho-03`), wrapping to four lines, ten stacked in a column, all collapsed —
+so the core screen showed **no evidence at rest** and cost ten clicks to reveal any. The id and the
+category, which are the two things a reviewer scans a list of ten for, were hidden inside.
+
+The wording moves in rather than being summarised. Quoting the payer verbatim is the product's
+argument, not decoration: the appeal cites this language back at them. A label that paraphrased the
+policy would be a paraphrase on the one screen built to refuse paraphrase.
+
+### The category is read as English, and nowhere else
+
+`humanise` turns `treatment_resistance` into `Treatment resistance` in the label only. Categories
+stay raw wherever code groups by them. A label is doing a different job from a key.
+
+### What the gate proves, and how it was checked
+
+`tests/test_p9_s3.py` asserts over *every* criterion in the pack rather than a chosen few, because
+the fault was a rendering rule that happened to be wrong for one polarity — the kind that hides
+until a pack nobody was looking at ships. `test_the_packs_still_contain_the_case_this_gate_exists_for`
+guards the fixture itself: if no pack has an absent criterion, the polarity tests assert nothing
+and would go on passing.
+
+Both behaviours were then temporarily reverted and the suite re-run. Polarity-blind wording fails
+`test_a_contraindication_that_was_ruled_out_is_not_labelled_met`; the policy text back in the label
+fails `test_no_criterion_label_is_longer_than_a_scannable_line`. Neither test passes vacuously.
+
+**What would change our mind.** If a pack ever ships a criterion whose polarity is genuinely
+ambiguous — "document either A or the absence of B" — the two-value table stops being enough, and
+the honest answer is a per-criterion display sentence in the pack rather than a third enum value
+the model has to infer.
+
+### Not fixed here
+
+The evidence quote is still the faintest thing in the expander, and the note itself is still a
+separate collapsed block rather than the place the spans are shown. That is P9-S6, and it is the
+one recommendation in `docs/uiux-review.md` worth building even if nothing else on the list is.
+
+## 2026-09-10 · The README promises a command, so the command has to exist
+
+**Decision (P8-S1, P8-S2).** `src/attest/demo.py` runs one case end to end from a terminal and stops
+at Gate 1. `docs/architecture.svg` is the diagram, embedded in `README.md`. Several README claims
+that had quietly become false are corrected.
+
+### `attest.demo` did not exist, and P8-S1's DoD named it
+
+The Definition of Done written at P0-S2 says: *clone into an empty directory, follow the README
+verbatim, `python -m attest.demo --case clean` succeeds.* There was no such module. The choice was
+to build it or to refine the DoD down to `streamlit run app.py`, and the DoD was right the first
+time:
+
+- **A blocking, interactive command is a poor gate.** "Follow the README and it works" has to be
+  checkable without a browser, an upload dialog and a websocket session.
+- **P9-S1 removed the last non-interactive path to a committed case.** The console reaches nothing
+  preloaded, on purpose — which is correct for the product and left no way at all to run `clean`
+  without a file picker.
+- **It is a second, independent composition of the same public API**, alongside `app.py` and
+  `agent_runtime.py`. Not duplicated logic: duplicated *entry*, which is what having three surfaces
+  means.
+
+**It stops at Gate 1 and there is no `--approve` flag.** `agent_runtime.py` already refuses to emit
+headlessly for this reason, and a CLI is the other place the approval rule would quietly decay into
+a UI convention. Approval is a person reading the assertions, not an argument.
+
+### Printing is an encoding too
+
+The suite already holds that every file read names its encoding. Writing turned out to be the same
+rule from the other side, and it failed the same way — silently on one platform, loudly on another.
+
+A Windows console defaults to cp1252. The policy packs carry an em dash in `source_title`. So
+`python -m attest.demo --case clean > out.txt` raised `UnicodeEncodeError` on a default Windows
+shell while working perfectly on macOS and in CI — reproduced before it was fixed, not reasoned
+about. `use_utf8_output()` reconfigures stdout and stderr to UTF-8 with `errors="replace"`, and the
+module's own chrome is ASCII so the layout never depends on that working. Only the payer's words do,
+and a terminal that cannot render a dash should show a question mark rather than lose the run.
+
+This is the third encoding bug in this project and the second in two days. The first was file reads
+(P3-S4), the second newlines on upload (P9-S2), this is output. They share a shape: **the failure
+is a divergence between two platforms, not an error on either.**
+
+### The diagram says what is true, including what is not deployed
+
+`docs/architecture.svg` is hand-authored rather than generated: it has to show three things a
+renderer would not know to separate — which boxes are Strands agents, which are deterministic code,
+and where the two human gates sit. The "where it runs" band names Streamlit Community Cloud and the
+terminal as live, and draws **Amazon Bedrock AgentCore Runtime dashed, labelled "not deployed:
+Bedrock model access pending"**.
+
+Drawing AgentCore as though it were live would be the easy thing and the wrong one. A judge who
+reads `STATUS.md` finds P7-S4 `BLOCKED`, and a diagram contradicting the status board costs more
+credibility than the box was worth. Presentation attributes only, no CSS and no external fonts, so
+GitHub's sanitiser cannot strip the styling; an explicit white background so it survives dark mode.
+
+### Three README claims were false and are now not
+
+- **"357 tests"** → 366, and the run is ~30s rather than ~13s on a cold Windows box.
+- **"Without one the run is 184/185. This is a known open item"**, about
+  `test_pa_tool_is_registered` needing a credential — that was fixed *at P2-S3*, by the very
+  placeholder-credential pattern P9-S8 has just applied to `test_p7_s1.py`. The note outlived the
+  problem by a fortnight.
+- **"`docs/aws-setup.md` will cover it then"** — a file that does not exist, promising coverage of a
+  step that is blocked on AWS rather than on us.
+
+None of these were lies when written. That is the point: a README is a claim surface, and on a
+public repository a judge is invited to check it. `P9-S8` was the same failure in CI, and the same
+lesson — **the numbers in prose have to be produced by running the thing.**
