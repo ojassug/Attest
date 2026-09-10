@@ -1276,3 +1276,58 @@ pass is the move the protocol exists to make visible, so it is recorded rather t
 that cannot afford an upload interaction, say — the answer is a query parameter that *pre-fills the
 uploader* from the corpus, leaving the pipeline entry point unchanged. Reinstating a picker that
 sets the pack directly would put the bypass back.
+
+## 2026-09-10 · Constructing an agent is not asking a model, and P7-S1 forgot it
+
+**Decision (P9-S8).** The two composition tests in `tests/test_p7_s1.py` inject a placeholder
+credential before calling `build_orchestrator`. `./scripts/verify.sh ALL --offline` now exits zero
+on a keyless clone — **357 passed, 5 deselected** — where it had been reporting `2 failed,
+355 passed`.
+
+**This was not a new problem and did not need a new answer.** `test_p2_s3.py` hit it at P2-S3,
+against `build_intake_agent`, and wrote the reasoning into its own docstring: `build_model` refuses
+to construct without a key *deliberately*, so a missing key surfaces as a setup problem rather than
+as an auth error deep inside an agent run — but constructing an `Agent` makes no request, so any
+string will do. That test even records the cost of getting it wrong: "made a keyless clone fail 1
+of 268 and left the 'judges can clone and run it' claim untrue."
+
+P7-S1 built five agents the same way — four specialists plus the router — and never applied the
+pattern. The two properties under test are settled before any provider is touched: which
+specialists exist, what they are named, and what their descriptions say.
+
+**What was rejected, and why.**
+
+*A `needs_key` skip.* Available, one line, and wrong. It would leave `agent.as_tool()` composition
+— the thing P7-S1 exists to demonstrate, and the thing judging criterion 1 scores — unverified in
+the only environment that matters. `.github/workflows/gate.yml` is deliberately "the judge's
+scenario, not ours"; a skip would make the gate green by agreeing not to look.
+
+*Threading a model factory through `build_orchestrator` and the four `_*_agent` helpers.* Drafted
+first, and discarded on reading `test_p2_s3.py`. It changes production code to serve a test, adds a
+parameter to five functions, and is a second solution to a problem this repository had already
+solved. The smaller diff is also the more honest one: the test says "constructing this needs no
+model", which is exactly true.
+
+**The failure was in reading CI, not in writing it.** The workflow caught this on every push and
+reported `failure` on at least five consecutive runs, including the P9-S1 merge to `main`. Nobody
+opened it. Two sentences in `README.md` — "exits zero, 357 tests, ~13s, no API key" and "the same
+command runs in CI on every push … the judge's scenario rather than ours" — were false for days on
+a public repository that invites judges to clone and run exactly that command, against rules that
+require a project which "installs and runs consistently".
+
+The count in that sentence turned out to be right: the command selects 357 tests and now passes all
+357, so no number needed correcting. Only "exits zero" was false.
+
+**What would change our mind.** If a future specialist ever needs a *live* model at construction —
+to negotiate a context window, say — the placeholder stops being honest and the model factory comes
+back. Nothing in Strands' `Agent.__init__` does that today.
+
+### The corollary, which is now P9-S2
+
+The same session found `verify.sh ALL --offline` reporting `15 failed, 342 passed` on a Windows
+checkout. Normalising *only* the corpus line endings to LF took it to `2 failed, 355 passed` —
+identical to CI, which is what isolated these two failures in the first place. The other thirteen
+are `.gitattributes` pinning `*.sh` and nothing else, so `read_upload` decodes CRLF where
+`Path.read_text` recorded the cassettes against LF. **The P6-S3 and P9-S1 gates do not pass on a
+Windows clone.** That is P9-S2 and it is not fixed here; this entry records only that the two
+problems were separate, and were separated by experiment rather than by assumption.

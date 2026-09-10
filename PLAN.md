@@ -622,10 +622,19 @@ the command that fails. See `docs/uiux-review.md` §0.3.
 
 **DoD**
 - [ ] **File** `tests/test_p7_s1.py` — `test_the_orchestrator_composes_exactly_the_four_specialists`
-      and `test_every_specialist_advertises_what_it_is_for` no longer require a credential to
-      construct the orchestrator, or carry the same `needs_key` skip the other modules use
+      and `test_every_specialist_advertises_what_it_is_for` construct the orchestrator without a
+      real credential, by the same placeholder-credential route `test_p2_s3.py` already established
+      for `build_intake_agent`
 - [ ] **Command** `./scripts/verify.sh ALL --offline` exits zero **with no `GOOGLE_API_KEY` and no
       `.env` present**
-- [ ] **Command** the `gate` workflow's most recent run on `main` reports success
+- [ ] **Command** the `gate` workflow reports success on the commit carrying this fix
 - [ ] **File** `README.md` — the test count quoted beside the offline claim matches what that
       command actually reports
+
+*Refined 2026-09-10, before any work was done against it.* The first item originally offered
+"no longer require a credential … or carry the same `needs_key` skip". Both were wrong once
+`test_p2_s3.py` was read: it hit this exact problem at P2-S3, wrote the reasoning into its
+docstring, and solved it by injecting a placeholder key because constructing an agent makes no
+request. A `needs_key` skip would have left composition unchecked in precisely the environment
+that matters, and threading a model factory through five functions would have been a second
+solution to a solved problem.
