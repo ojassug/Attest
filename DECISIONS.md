@@ -1469,3 +1469,72 @@ the model has to infer.
 The evidence quote is still the faintest thing in the expander, and the note itself is still a
 separate collapsed block rather than the place the spans are shown. That is P9-S6, and it is the
 one recommendation in `docs/uiux-review.md` worth building even if nothing else on the list is.
+
+## 2026-09-10 · The README promises a command, so the command has to exist
+
+**Decision (P8-S1, P8-S2).** `src/attest/demo.py` runs one case end to end from a terminal and stops
+at Gate 1. `docs/architecture.svg` is the diagram, embedded in `README.md`. Several README claims
+that had quietly become false are corrected.
+
+### `attest.demo` did not exist, and P8-S1's DoD named it
+
+The Definition of Done written at P0-S2 says: *clone into an empty directory, follow the README
+verbatim, `python -m attest.demo --case clean` succeeds.* There was no such module. The choice was
+to build it or to refine the DoD down to `streamlit run app.py`, and the DoD was right the first
+time:
+
+- **A blocking, interactive command is a poor gate.** "Follow the README and it works" has to be
+  checkable without a browser, an upload dialog and a websocket session.
+- **P9-S1 removed the last non-interactive path to a committed case.** The console reaches nothing
+  preloaded, on purpose — which is correct for the product and left no way at all to run `clean`
+  without a file picker.
+- **It is a second, independent composition of the same public API**, alongside `app.py` and
+  `agent_runtime.py`. Not duplicated logic: duplicated *entry*, which is what having three surfaces
+  means.
+
+**It stops at Gate 1 and there is no `--approve` flag.** `agent_runtime.py` already refuses to emit
+headlessly for this reason, and a CLI is the other place the approval rule would quietly decay into
+a UI convention. Approval is a person reading the assertions, not an argument.
+
+### Printing is an encoding too
+
+The suite already holds that every file read names its encoding. Writing turned out to be the same
+rule from the other side, and it failed the same way — silently on one platform, loudly on another.
+
+A Windows console defaults to cp1252. The policy packs carry an em dash in `source_title`. So
+`python -m attest.demo --case clean > out.txt` raised `UnicodeEncodeError` on a default Windows
+shell while working perfectly on macOS and in CI — reproduced before it was fixed, not reasoned
+about. `use_utf8_output()` reconfigures stdout and stderr to UTF-8 with `errors="replace"`, and the
+module's own chrome is ASCII so the layout never depends on that working. Only the payer's words do,
+and a terminal that cannot render a dash should show a question mark rather than lose the run.
+
+This is the third encoding bug in this project and the second in two days. The first was file reads
+(P3-S4), the second newlines on upload (P9-S2), this is output. They share a shape: **the failure
+is a divergence between two platforms, not an error on either.**
+
+### The diagram says what is true, including what is not deployed
+
+`docs/architecture.svg` is hand-authored rather than generated: it has to show three things a
+renderer would not know to separate — which boxes are Strands agents, which are deterministic code,
+and where the two human gates sit. The "where it runs" band names Streamlit Community Cloud and the
+terminal as live, and draws **Amazon Bedrock AgentCore Runtime dashed, labelled "not deployed:
+Bedrock model access pending"**.
+
+Drawing AgentCore as though it were live would be the easy thing and the wrong one. A judge who
+reads `STATUS.md` finds P7-S4 `BLOCKED`, and a diagram contradicting the status board costs more
+credibility than the box was worth. Presentation attributes only, no CSS and no external fonts, so
+GitHub's sanitiser cannot strip the styling; an explicit white background so it survives dark mode.
+
+### Three README claims were false and are now not
+
+- **"357 tests"** → 366, and the run is ~30s rather than ~13s on a cold Windows box.
+- **"Without one the run is 184/185. This is a known open item"**, about
+  `test_pa_tool_is_registered` needing a credential — that was fixed *at P2-S3*, by the very
+  placeholder-credential pattern P9-S8 has just applied to `test_p7_s1.py`. The note outlived the
+  problem by a fortnight.
+- **"`docs/aws-setup.md` will cover it then"** — a file that does not exist, promising coverage of a
+  step that is blocked on AWS rather than on us.
+
+None of these were lies when written. That is the point: a README is a claim surface, and on a
+public repository a judge is invited to check it. `P9-S8` was the same failure in CI, and the same
+lesson — **the numbers in prose have to be produced by running the thing.**
