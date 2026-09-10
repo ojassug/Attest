@@ -24,7 +24,9 @@ No API key is required. Every model call replays from `cassettes/`.
 - [ ] Have the four corpus files to hand — `data/synthetic/notes/{clean,gap,denial}.md` and
       `data/synthetic/denials/denial_001.md`. **Upload the committed files themselves.** A re-typed
       or PDF-round-tripped note changes the cassette key and turns the demo into live API calls
-      against a 20-request daily cap.
+      against a 20-request daily cap. Line endings are no longer part of that hazard — P9-S2 pins
+      `*.md` to LF in `.gitattributes` and normalises them in `read_upload` — but the text itself
+      still has to be the committed text, character for character.
 - [ ] Browser zoom at 100%, window wide enough for the two-column intake panel to sit side by side.
 
 ---
@@ -106,6 +108,17 @@ No API key is required. Every model call replays from `cassettes/`.
 - [ ] Intake still succeeds and the structured case is still shown.
 - [ ] Prior authorization reads **Unknown** — as a warning, never green — and the review **stops**
       with *No policy on file*. Confirm there is no criteria section and no path to a document.
+
+---
+
+## 6 · A note nobody recorded (do this once, it is what a judge will do first)
+
+- [ ] Write two lines of nonsense into a `.md` file and upload it as the clinical note.
+- [ ] **Run intake** → the screen says the note is not one of the recorded ones, explains that the
+      demo replays responses recorded ahead of time so it costs nothing and needs no key, and
+      expands the sample downloads underneath. **No traceback.**
+- [ ] The same holds for any note of your own. An uploader is an invitation, and this is the
+      answer to it — P9-S2 exists because the screen used to answer with a stack trace.
 
 ---
 

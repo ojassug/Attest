@@ -1,3 +1,15 @@
 # Shell scripts must stay LF: core.autocrlf would otherwise smudge them to CRLF on
 # Windows checkouts, which breaks the shebang under bash on every platform.
 *.sh text eol=lf
+
+# Markdown must stay LF for the same reason, one layer up, and it is load-bearing rather than
+# cosmetic. The synthetic notes are Markdown, `app.py` reads an upload as raw bytes, and every
+# other reader goes through `Path.read_text`, which collapses CRLF before anything sees it. So a
+# note smudged to CRLF on checkout reached the pipeline as a *different string* than the one the
+# cassettes were recorded against and the ground truth describes: cassette miss, live API call,
+# and on a keyless clone a failure. Without this line `verify.sh ALL --offline` failed 13 tests on
+# Windows and passed on Linux — the worst shape a bug can take on a two-machine project.
+#
+# `read_upload` normalises newlines too. This fixes the checkout; that fixes the upload, which is
+# the half a judge can still break by re-saving a downloaded note in an editor.
+*.md text eol=lf
