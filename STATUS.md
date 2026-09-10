@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S1`/`P8-S2`/`P8-S4`/`P8-S5` — README, architecture diagram, video, Devpost. All mandatory, all outranking what is left of P9. Tier 0 of the UI/UX review (`P9-S8`, `P9-S2`, `P9-S3`) is done. |
+| **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. |
+| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left**, and P8-S5 needs an AWS Builder ID nobody has obtained. Then `P9-S4`, which is being taken in a parallel session. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -64,8 +64,8 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S4 | Deploy to AgentCore Runtime                | BLOCKED| —     | —        | —     |
-| P8-S1 | README                                     | TODO   | —     | —        | —     |
-| P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
+| P8-S1 | README                                     | DONE   | ojassug| 045760b  | 09-10 |
+| P8-S2 | Architecture diagram                       | DONE   | ojassug| 045760b  | 09-10 |
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
@@ -96,9 +96,49 @@ viability, so a missing architecture diagram risks not being scored at all.
 
 **2026-09-10 — ojassug** *(session 7)*
 
+**P8-S1 and P8-S2 are DONE — gates passed at `045760b`.** Two of the four mandatory submission
+deliverables. **Only `P8-S4` (video) and `P8-S5` (Devpost) remain mandatory**, and P8-S5 still needs
+an AWS Builder ID nobody has obtained — the credit form also closes **Sep 11, 12:00pm PT**.
+
+**`src/attest/demo.py` is new, because P8-S1's DoD named a module that did not exist.** The DoD,
+written at P0-S2, says *clone into an empty directory, follow the README verbatim,
+`python -m attest.demo --case clean` succeeds*. It was right: a blocking interactive command is a
+poor gate, and P9-S1 had removed the last non-interactive path to a committed case. It stops at
+Gate 1 and has **no `--approve` flag**, for the same reason `agent_runtime.py` refuses to emit
+headlessly.
+
+**That DoD was then actually performed, not assumed:** a fresh `git clone` into an empty directory
+on Windows, its own venv, `pip install -e ".[dev]"`, no `.env` and no key —
+`python -m attest.demo --case clean` exits 0, and `verify.sh ALL --offline` reports **366 passed,
+5 deselected**. The clone also checks out all 14 Markdown files as LF, which is P9-S2's fix holding
+from a judge's position.
+
+**Printing is an encoding too, and this is the third encoding bug in the project.** A Windows
+console defaults to cp1252, the packs carry an em dash in `source_title`, and
+`python -m attest.demo --case clean > out.txt` raised `UnicodeEncodeError` on a default Windows
+shell while working on macOS and in CI. Reproduced before fixing. File reads (P3-S4), newlines on
+upload (P9-S2) and now output all share one shape: **a divergence between platforms, not an error
+on either.**
+
+**`docs/architecture.svg` draws AgentCore dashed and labelled "not deployed".** P7-S4 is `BLOCKED`
+on this very board, and a diagram contradicting the status board costs more credibility than the
+box is worth.
+
+**Three README claims had quietly become false** and are corrected: the test count (357 → 366); a
+note saying `test_pa_tool_is_registered` still needs a credential, which was fixed at P2-S3 by the
+very pattern P9-S8 has now applied to `test_p7_s1.py`; and a pointer to `docs/aws-setup.md`, which
+does not exist. None were lies when written. That is the point.
+
+**CI is green, and P9-S8's last DoD item is closed.** [PR #7](https://github.com/ojassug/Attest/pull/7)
+reports `verify.sh ALL --offline` **pass** — the first green run on this repository in at least six.
+
+---
+
+**Earlier in the same session:**
+
 **A UI/UX review of the P9-S1 console is written up in `docs/uiux-review.md`, and P9-S2 through
-P9-S7 are drafted in `PLAN.md` from it.** No code changed this session — the six new steps are
-contract, not work done. `pyproject.toml` gained the six matching markers in the same commit,
+P9-S7 are drafted in `PLAN.md` from it.** The six new steps were contract before they were work —
+`pyproject.toml` gained the six matching markers in the same commit, `pyproject.toml` gained the six matching markers in the same commit,
 because `test_p0_s3.py::test_every_step_has_a_marker` reads step ids straight out of `PLAN.md` and
 would have taken the P0 gate red — and with it every cumulative run — the moment the headings
 landed alone.
@@ -160,10 +200,10 @@ unverified in the one environment that matters. Reasoning in `DECISIONS.md`, 202
 **The count in that README sentence was right all along**: the command selects 357 tests and now
 passes all 357, so no number needed correcting. Only "exits zero" had to become true.
 
-**One item on the P9-S8 DoD is still open, and it needs a merge, not a commit:** *the `gate`
-workflow reports success on the commit carrying this fix.* The workflow triggers on pushes to
-`main` and on pull requests, so it has not run for this branch. Open a PR or merge, then check
-`gh run list --branch main` — do not mark that box from a local pass.
+**That last DoD item is now closed.** [PR #7](https://github.com/ojassug/Attest/pull/7) runs the
+workflow on this branch and it reports **pass** — the first green `gate` run on this repository in
+at least six. It was deliberately not ticked from a local pass, because the whole finding was that
+a green local run and a green CI run had quietly stopped being the same thing.
 
 **Local numbers on Windows, for whoever picks this up:** `verify.sh ALL --offline` reported
 `15 failed, 342 passed` here. Normalising *only* the corpus line endings to LF took it to
