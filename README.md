@@ -8,7 +8,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **366 tests** — replays offline from recorded model responses in about thirty seconds, **with no API key and no network**, on Linux, macOS and Windows alike. What remains is the submission deliverables (P8) and an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **366 tests** — replays offline from recorded model responses in about thirty seconds, **with no API key and no network**, on Linux, macOS and Windows alike. What remains is the demo video and the Devpost entry (P8-S4, P8-S5), plus an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -137,7 +137,7 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ✅ done |
 | — | **Submittable product complete through here** | |
 | **P7** | Multi-agent orchestration depth + AgentCore deployment | 🟡 S1–S3 done; S4 blocked on AWS Bedrock authorization |
-| **P8** | Submission deliverables (README, architecture diagram, metrics, demo video, Devpost) | ⬜ planned |
+| **P8** | Submission deliverables — README, architecture diagram, metrics, demo video, Devpost | 🟡 S1–S2 done; S4 (video) and S5 (Devpost) outstanding |
 | **P9** | Final improvements — upload-driven intake, a keyless green gate, an error boundary, criteria that say what they mean (S1–S3, S8 done); phase deliberately open | 🟡 in progress |
 
 ▲ = required for a viable submission.

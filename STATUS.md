@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left**, and P8-S5 needs an AWS Builder ID nobody has obtained. Then `P9-S4`, which is being taken in a parallel session. |
+| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left.** P8-S5 needs an AWS Builder ID nobody has obtained. Then `P9-S4`. Steps are being taken **one at a time, in one session** — no parallel branches. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -98,7 +98,13 @@ viability, so a missing architecture diagram risks not being scored at all.
 
 **P8-S1 and P8-S2 are DONE — gates passed at `045760b`.** Two of the four mandatory submission
 deliverables. **Only `P8-S4` (video) and `P8-S5` (Devpost) remain mandatory**, and P8-S5 still needs
-an AWS Builder ID nobody has obtained — the credit form also closes **Sep 11, 12:00pm PT**.
+an AWS Builder ID nobody has obtained. That is the one outstanding human errand.
+
+**The AWS credit is not one of them, and `PLAN.md` was misleading about it.** The $50 form was
+submitted 09-08 and the credit approved 09-10 — $170, expiring Oct 31, both recorded further down
+this file. P8-S5's DoD still carried it as an open checkbox with a Sep 11 deadline, which read as
+outstanding work and cost this session a wrong reminder to Ojas. The checkbox is now ticked and the
+hard-deadlines table in `PLAN.md` marks the form satisfied. **Sep 14 is the only deadline left.**
 
 **`src/attest/demo.py` is new, because P8-S1's DoD named a module that did not exist.** The DoD,
 written at P0-S2, says *clone into an empty directory, follow the README verbatim,

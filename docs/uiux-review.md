@@ -338,20 +338,29 @@ is done.
 
 ## 4 · Scope warning
 
-**P8 outranks all of P9.** As of 2026-09-10 the submission deadline is four days away and
-`P8-S1` (README), `P8-S2` (architecture diagram), `P8-S4` (demo video) and `P8-S5` (Devpost, which
-needs an AWS Builder ID nobody has yet) are all mandatory and all `TODO`. Stage One judging is
-pass/fail on baseline viability and required deliverables; a missing architecture diagram risks not
-being scored at all, and no amount of console polish compensates for that.
+**P8 outranks all of P9.** Stage One judging is pass/fail on baseline viability and required
+deliverables; a missing architecture diagram risks not being scored at all, and no amount of
+console polish compensates for that.
+
+**Updated 2026-09-10, later the same day.** `P8-S1` (README) and `P8-S2` (architecture diagram) are
+now **done**, gates passed at `045760b`. **`P8-S4` (demo video) and `P8-S5` (Devpost) are the only
+mandatory work left**; P8-S5 needs an AWS Builder ID nobody has obtained yet, which is the single
+outstanding human errand. The AWS credit is *not* outstanding — it was approved on 09-10 — and
+Sep 14 is the only deadline that still applies.
 
 Read the tiers above accordingly:
 
 - **P9-S8 came before everything, including P8, and is done.** It was the smallest item on this
-  list and the only one touching Stage One pass/fail. Its last DoD item — CI reporting success —
-  needs the fix merged to `main`.
+  list and the only one touching Stage One pass/fail. Its last DoD item is closed too: CI on
+  [PR #7](https://github.com/ojassug/Attest/pull/7) reports pass.
 - **P9-S2 and P9-S3 were worth doing before the video is recorded, and are done** — one prevents a
   traceback on camera, the other stopped the core screen from stating the inverse of the truth.
   With P9-S8 that clears the whole of Tier 0; **everything below this line still ranks under P8.**
-- **P9-S4** materially changes what a judge sees on the live link, and its pipeline visual is
-  reusable as the P8-S2 diagram, so it pays for itself twice.
+- **P9-S4** materially changes what a judge sees on the live link. Its pipeline visual no longer
+  has to double as the architecture diagram — `docs/architecture.svg` exists and P8-S2 is closed —
+  so it can be built for the landing screen alone.
 - **P9-S5 through P9-S7 are upside.** Build them if P8 is genuinely finished, and not before.
+
+Steps are taken **one at a time, in one session**. An earlier draft of this document sketched a
+parallel split by file; that is not how the work is being done, and the ordering above is the whole
+plan.
