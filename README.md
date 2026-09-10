@@ -8,7 +8,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — the full loop runs.** Phases **P0 through P5 are complete and gated**: a clinical note becomes a criteria-matched submission packet behind a clinician approval gate, and a payer denial becomes an evidence-backed appeal behind a second one. The whole suite — **268 tests** — replays offline from recorded model responses in about two seconds, **with no API key and no network**. Case tracking and the reviewer UI (P6) are what remain. See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **357 tests** — replays offline from recorded model responses in about thirteen seconds, **with no API key and no network**. What remains is the submission deliverables (P8) and an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -127,10 +127,11 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | **P3** ▲ | Criteria engine — per-criterion evidence matching + the deterministic verifier *(the core)* | ✅ done |
 | **P4** ▲ | Packet assembly & Gate 1 (approval before submission) | ✅ done |
 | **P5** ▲ | Denial → appeal loop & Gate 2 (approval before appeal) | ✅ done |
-| **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | 🟡 next |
+| **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ✅ done |
 | — | **Submittable product complete through here** | |
-| **P7** | Multi-agent orchestration depth + AgentCore deployment | ⬜ upside |
+| **P7** | Multi-agent orchestration depth + AgentCore deployment | 🟡 S1–S3 done; S4 blocked on AWS Bedrock authorization |
 | **P8** | Submission deliverables (README, architecture diagram, metrics, demo video, Devpost) | ⬜ planned |
+| **P9** | Final improvements — upload-driven intake (S1 done); phase deliberately open | 🟡 in progress |
 
 ▲ = required for a viable submission.
 
@@ -142,7 +143,8 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | Evidence spans verifying verbatim against their note | **39/39 (100%)**, with zero criteria downgraded |
 | Gap list vs. ground truth | exact on all three cases |
 | Contested criteria parsed from the denial letter | exact — plus the one objection that maps to no criterion, surfaced rather than dropped |
-| `./scripts/verify.sh ALL --offline` | exits zero, **268 tests**, ~2s, no API key |
+| An uploaded note reaching its own payer's pack | derived from the extracted payer/plan/CPT — an unlisted payer stops the review rather than guessing |
+| `./scripts/verify.sh ALL --offline` | exits zero, **357 tests**, ~13s, no API key |
 
 The same command runs in CI on every push, on Linux, with no credentials configured — the judge's scenario rather than ours.
 
@@ -163,7 +165,7 @@ Alongside the engine, the repository holds the product definition and the engine
 | [`scripts/verify.sh`](scripts/verify.sh) | The step gate. Runs a step's tests plus every prior step's. |
 | [`docs/setup.md`](docs/setup.md) | Developer setup, model provider, and the daily-quota notes. |
 
-Still to land: `src/attest/packet/` and `src/attest/appeal/` (P4–P5), the case store (P6-S1), and `app.py` for the Streamlit UI (P6-S3).
+All of the above has landed, along with `src/attest/packet/`, `src/attest/appeal/`, the case store, the orchestrator, and `app.py` — the reviewer console, which takes its case as an uploaded document and reaches nothing preloaded.
 
 ### Working protocol
 
@@ -173,10 +175,22 @@ This is a two-person, sequential build (one contributor works until their usage 
 
 **<https://attest.streamlit.app>** — the live console, public and free, no account and no API key.
 
-Pick a demo case in the sidebar and walk it: read the note, match the payer's criteria, see each
-verdict with the exact quote behind it, approve at Gate 1, then turn the denial into an appeal and
-approve at Gate 2. Every model call replays from committed cassettes, so the hosted app needs no
-credentials and shows the same results this repository reproduces offline.
+**Nothing is preloaded.** Upload a clinical note in the sidebar and walk it: Attest reads the note,
+works out *from the note itself* which payer's policy applies, checks the record against that
+policy criterion by criterion, shows each verdict with the exact quote behind it, and stops at
+Gate 1. Upload the payer's denial letter — a second document, as it is in a practice — and it
+drafts the appeal, stopping again at Gate 2.
+
+No note of your own? The landing screen offers the synthetic corpus as downloads. Upload
+`clean.md` for a fully documented case, `gap.md` to see the agent ask the practice for what is
+missing, or `denial.md` plus `denial_001.md` for the full denial-to-appeal loop. Uploading
+`denial.md` after `clean.md` is the thing worth watching: **the same screen, unchanged, reaches a
+different payer's criteria**, because the pack is derived from what was read rather than chosen
+from a menu.
+
+Every model call replays from committed cassettes, so the hosted app needs no credentials and
+shows the same results this repository reproduces offline — provided you upload the committed
+files unmodified, since the cassette key is a hash of the note text.
 
 > The hosted container is ephemeral — Streamlit Community Cloud restarts it when the app sleeps, so
 > stored cases do not persist across days and precedent reuse demonstrates within a session. That is
@@ -185,7 +199,7 @@ credentials and shows the same results this repository reproduces offline.
 
 ## Getting started
 
-The engine and its full test suite run today, offline, with **no API key and no network** — every model call replays from a recorded cassette. `python -m attest.demo` and the Streamlit UI land in P4 and P6-S3 respectively.
+The engine, the reviewer console, and the full test suite all run today, offline, with **no API key and no network** — every model call replays from a recorded cassette. Once installed, `streamlit run app.py` opens the console locally; upload a note from `data/synthetic/notes/` to walk a case.
 
 ```bash
 git clone https://github.com/ojassug/Attest.git

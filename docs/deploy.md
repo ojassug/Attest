@@ -61,6 +61,15 @@ done until someone has actually used the deployed app.
 
 ## Known limits of the hosted demo
 
+- **A first-time visitor has to download a note before they can do anything.** Since P9-S1 the
+  console is upload-driven with nothing preloaded, so the landing screen offers the synthetic
+  corpus as downloads and the judge uploads one back. Confirm those download buttons render on the
+  deployed app specifically — they read `data/synthetic/` at runtime, which is exactly the class of
+  path that broke the first deploy behind a healthy 200.
+- **Judges must upload the committed files unmodified.** Cassette keys hash the note text, so a
+  note that has been edited or round-tripped through another format is a live API call. On a
+  deploy with no key configured that surfaces as an error, not as a slower answer.
+
 - **The case store is ephemeral.** Community Cloud restarts the container when the app sleeps, and
   stored cases go with it. Precedent reuse therefore demonstrates within a session, not across
   days. This is a hosting property, not a product one — the store is durable, and

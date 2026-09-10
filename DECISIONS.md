@@ -1200,3 +1200,79 @@ one are the same error in opposite directions: trusting a proxy signal (a redire
 status) instead of the thing the DoD actually claims. A step whose DoD is "judges can use it" is
 not done until someone has used it. `docs/deploy.md` now says the `curl` check is necessary and not
 sufficient.
+
+---
+
+## 2026-09-10 · The case is uploaded, and the payer's policy is derived rather than chosen
+
+**Decision (P9-S1).** `app.py` takes its case as an uploaded document. The three-case radio is
+gone, `attest.corpus` is no longer imported, and the policy pack comes from
+`find_pack(cpt, payer, plan)` applied to what intake extracted.
+
+**Why the picker had to go.** It settled the payer, the pack and the case id *before the model read
+a word*. Everything downstream then ran correctly against a case whose identity had been supplied
+by the person opening the app — so the screen could demonstrate the renderer and never the product.
+The step a practice actually cares about is Attest working out, from a document it has not seen,
+whose rules apply; with a picker there is no honest way to show it, and a judge is right to suspect
+the three cases are the only three that work.
+
+The routing was never the missing part. `find_pack` has existed since P2-S2 and `check_pa_required`
+has always used it. **The UI was bypassing a decision the engine was already making** — `pack` came
+straight off the corpus object. Removing the picker did not add a capability; it stopped hiding one.
+
+**No pack means the review stops.** This is the same rule as `PARequirement.UNKNOWN`, one layer up:
+we cannot check a note against criteria we do not have, and proceeding would render an empty
+coverage table that reads as *nothing to answer*. The intake stays on screen — the run is stopped,
+not discarded — and the screen says a policy was not found and that the payer should be asked
+directly. `test_an_unlisted_payer_stops_the_review_instead_of_guessing` patches both bindings of
+`find_pack`, because `pa_lookup` imported it by name at its own import time and patching only the
+loader would produce a screen claiming a policy was found while the router said otherwise.
+
+### Supersedes: "per-case state, keyed by case name" (P6-S3)
+
+That entry required switching cases never to leave the previous case's verdicts on screen. The
+property still holds; the key changed. Scratch space is now keyed by a **hash of the note text**,
+not a filename, and that is the stronger version: re-uploading the same note continues the same
+review, and re-uploading an *edited* note starts a fresh one — which is correct, because the edit
+is exactly what invalidates the verdicts already rendered. A filename key would silently show
+yesterday's coverage for a note that had been rewritten under the same name.
+
+### Downloading a sample is not preloading one
+
+P6-S4 put this console on a public URL specifically so judges could use it. An upload-only screen
+is useless to someone with no clinical note on their machine, and there is no lawful place for
+them to get one — so the landing screen offers the synthetic corpus as **downloads**.
+
+The distinction is not a dodge. Nothing enters the pipeline until a human uploads it, which is the
+entire content of "nothing is preloaded"; the app hands over a file and forgets it.
+`test_the_landing_screen_hands_a_stranger_a_note_to_try` keeps the affordance from being tidied
+away by a later session reading the rule too literally.
+
+### The uploads must be byte-identical, and that is load-bearing
+
+Cassette keys hash the note text (`cache._key`). Uploading the committed `clean.md` therefore hits
+the cassette the radio used to, and the demo still costs nothing. Re-typing the note, round-tripping
+it through a PDF, or changing one character makes it a live call against a 20-request daily cap.
+
+This is the encoding landmine already recorded here, arriving through a new door: `read_upload`
+decodes `utf-8` explicitly rather than trusting the platform default, because a note decoded two
+ways on two machines would not merely look wrong — it would shift every character offset the
+verifier reports, so evidence spans would point at the wrong text *while still appearing verified*.
+
+### An earlier gate's tests were rewritten, and that is worth stating plainly
+
+`tests/test_p6_s3.py` drove the app by writing the radio's key into session state. Those helpers now
+upload the corpus files through `AppTest`'s `FileUploader.set_value()`. Every assertion is unchanged
+in substance — the gates are still asserted inert until a clinician is named, no document still
+exists before approval, every quote still carries the verifier's mark — but `test_the_landing_screen_names_the_payer_and_the_policy`
+genuinely could not survive: the screen cannot name a payer before a note has been read, so it now
+asserts the same thing after intake and is named for what it checks.
+
+Same shape as the three P1-S3 tests amended in P7-S2. Editing an earlier gate to make a later step
+pass is the move the protocol exists to make visible, so it is recorded rather than done quietly.
+**No engine code changed** — the diff is `app.py`, two test modules, one marker, and the docs.
+
+**What would change our mind.** If a demo ever needs to open on a populated case — a recorded video
+that cannot afford an upload interaction, say — the answer is a query parameter that *pre-fills the
+uploader* from the corpus, leaving the pipeline entry point unchanged. Reinstating a picker that
+sets the pack directly would put the bypass back.

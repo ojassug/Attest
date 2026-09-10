@@ -455,3 +455,35 @@ These are scored as heavily as the code. Two of the five judging criteria — Pr
 - [ ] AWS $50 credit requested (form closes **Sep 11, 12:00pm PT** — request it even if Bedrock
       is never used, since P7 deployment would consume it)
 - [ ] Optional: builder.aws blog post, title containing "Agents for Humans" (+0.2 each, max +0.6)
+
+---
+
+# P9 — Final improvements
+
+**This phase is open.** Unlike P0–P8, it was not scoped up front: it collects changes that make the
+finished product demo *what it already does* more honestly, and steps are appended as they are
+decided. Everything here runs on a product that is already submittable and already gated, so no
+step in P9 may take a P0–P8 gate red — the cumulative runner is what enforces that.
+
+## P9-S1 — Upload-driven intake, nothing preloaded
+
+The console takes its case as an uploaded document, and derives the payer's policy from what the
+model read rather than from a control the reviewer set. The corpus is not deleted — it still backs
+every gate in `tests/` — it is simply no longer reachable from the screen.
+
+**DoD**
+- [ ] **File** `app.py` renders a clinical-note uploader and a separate denial-letter uploader, and
+      contains no occurrence of `attest.corpus`, `load_case`, or `CASE_NAMES`
+- [ ] **File** `app.py` selects the policy pack by calling `find_pack` with the payer, plan and CPT
+      that intake extracted — no pack is chosen before the note has been read
+- [ ] **Test** `test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all`
+- [ ] **Test** `test_p9_s1.py::test_the_landing_screen_offers_no_case_to_pick`
+- [ ] **Test** `test_p9_s1.py::test_the_landing_screen_hands_a_stranger_a_note_to_try` — the public
+      deploy stays judge-testable by someone who has no clinical note of their own
+- [ ] **Test** `test_p9_s1.py::test_an_uploaded_note_routes_itself_to_its_payers_policy` (marker `needs_model`)
+- [ ] **Test** `test_p9_s1.py::test_a_different_payer_routes_to_a_different_policy` (marker `needs_model`) —
+      the same screen, unchanged, reaches a different pack because the note differs
+- [ ] **Test** `test_p9_s1.py::test_an_unlisted_payer_stops_the_review_instead_of_guessing` (marker `needs_model`)
+- [ ] **Test** `test_p9_s1.py::test_the_appeal_waits_for_a_separately_uploaded_denial` (marker `needs_model`)
+- [ ] **File** `docs/ui-checklist.md` walks the upload flow rather than a case picker
+- [ ] **Command** `./scripts/verify.sh P9-S1 --offline` exits zero
