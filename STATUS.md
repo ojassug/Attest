@@ -46,20 +46,20 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P2-S3 | Intake agent wiring                        | DONE   | Atharv| 1b99b51  | 09-08 |
 | P3-S1 | Policy ingestion to draft criteria         | DONE   | Atharv| e0f07e4  | 09-08 |
 | P3-S2 | Per-criterion evidence matching            | DONE   | Atharv| a1358d9  | 09-08 |
-| P3-S3 | Evidence-span verifier                     | DONE   | Atharv| 67c6b21  | 09-08 |
-| P3-S4 | Verifier enforcement in the pipeline       | DONE   | Atharv| f80d422  | 09-08 |
-| P3-S5 | Gap list                                   | DONE   | Atharv| 7385449  | 09-08 |
-| P4-S1 | Justification from verified evidence only  | DONE   | Atharv| 86eb7d0  | 09-08 |
-| P4-S2 | Gate 1 — approval before submission        | DONE   | Atharv| 6ae10bd  | 09-08 |
-| P4-S3 | Submission artifact                        | DONE   | Atharv| 7a69618  | 09-08 |
-| P5-S1 | Denial parsing                             | DONE   | Atharv| 1948ff8  | 09-09 |
-| P5-S2 | Rebuttal drafting                          | DONE   | Atharv| f211ce8  | 09-09 |
-| P5-S3 | Gate 2 — approval before appeal            | DONE   | Atharv| d1ef57e  | 09-09 |
-| P5-S4 | Appeal artifact and deadline               | DONE   | Atharv| bf62963  | 09-09 |
+| P3-S3 | Evidence-span verifier                     | DONE   | Ojas  | 67c6b21  | 09-08 |
+| P3-S4 | Verifier enforcement in the pipeline       | DONE   | Ojas  | f80d422  | 09-08 |
+| P3-S5 | Gap list                                   | DONE   | Ojas  | 7385449  | 09-08 |
+| P4-S1 | Justification from verified evidence only  | DONE   | Ojas  | 86eb7d0  | 09-08 |
+| P4-S2 | Gate 1 — approval before submission        | DONE   | Ojas  | 6ae10bd  | 09-08 |
+| P4-S3 | Submission artifact                        | DONE   | Ojas  | 7a69618  | 09-08 |
+| P5-S1 | Denial parsing                             | DONE   | Ojas  | 1948ff8  | 09-09 |
+| P5-S2 | Rebuttal drafting                          | DONE   | Ojas  | f211ce8  | 09-09 |
+| P5-S3 | Gate 2 — approval before appeal            | DONE   | Ojas  | d1ef57e  | 09-09 |
+| P5-S4 | Appeal artifact and deadline               | DONE   | Ojas  | bf62963  | 09-09 |
 | P6-S1 | Case store                                 | DONE   | Atharv| d06930f  | 09-09 |
 | P6-S2 | Precedent reuse                            | DONE   | Atharv| be5f410  | 09-09 |
 | P6-S3 | Streamlit UI                               | DONE   | Atharv| 721143f  | 09-09 |
-| P6-S4 | Public deploy for judges                   | DONE   | ojassug| 1593eb7 | 09-09 |
+| P6-S4 | Public deploy for judges                   | DONE   | Atharv| 1593eb7  | 09-09 |
 | P7-S1 | Orchestrator with specialist subagents     | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| f8e50fb  | 09-09 |
@@ -232,7 +232,7 @@ needed", which is the failure UNKNOWN exists to prevent, reintroduced in CSS.
 
 ---
 
-**2026-09-09 — Atharv** *(session 2, spanning 09-08 and 09-09)*
+**2026-09-09 — Ojas** *(session 2, spanning 09-08 and 09-09)*
 
 **P0 through P5 are complete.** `./scripts/verify.sh ALL --offline` exits zero at **268 tests** in
 about two seconds, **with no API key and no network**. CI runs that same command on Linux on every
