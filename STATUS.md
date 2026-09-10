@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. `P9` is open for further final-improvement steps. |
+| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory and all outranking P9. Then `P9-S2` and `P9-S3`, which are small and should land *before* the video is recorded. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -70,6 +70,13 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
 | P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
+| P9-S2 | Console survives a note it has never seen   | TODO   | —     | —        | —     |
+| P9-S3 | A criterion says what it means              | TODO   | —     | —        | —     |
+| P9-S4 | Landing screen makes the case               | TODO   | —     | —        | —     |
+| P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
+| P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
+| P9-S7 | The run shows the agent that produced it    | TODO   | —     | —        | —     |
+| P9-S8 | The keyless gate is green again             | TODO   | —     | —        | —     |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
@@ -84,6 +91,65 @@ viability, so a missing architecture diagram risks not being scored at all.
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-10 — ojassug** *(session 7)*
+
+**A UI/UX review of the P9-S1 console is written up in `docs/uiux-review.md`, and P9-S2 through
+P9-S7 are drafted in `PLAN.md` from it.** No code changed this session — the six new steps are
+contract, not work done. `pyproject.toml` gained the six matching markers in the same commit,
+because `test_p0_s3.py::test_every_step_has_a_marker` reads step ids straight out of `PLAN.md` and
+would have taken the P0 gate red — and with it every cumulative run — the moment the headings
+landed alone.
+
+**Two findings in that review are demo-blockers, not design opinions.**
+
+1. **On a Windows checkout, uploading the committed corpus file misses every cassette.**
+   `.gitattributes` pins only `*.sh` to LF, so `git ls-files --eol PLAN.md` reads `i/lf w/crlf`:
+   Markdown is CRLF in the working tree. `read_upload` decodes those bytes directly, giving 2424
+   characters where `Path.read_text` — which recorded the cassettes and which every test uses —
+   gives 2371. Different string, different `cache._key`, cassette miss, live call, and on a keyless
+   run a `RuntimeError: No Gemini API key found` rendered as a traceback in the page. Reproduced on
+   the first attempt. The hosted app is unaffected (Linux clone, LF both ways), so this bites
+   whoever records the demo locally, and `docs/ui-checklist.md` tells them to do exactly the thing
+   that fails.
+2. **`app.py` catches only `MissingFactError`**, so any other failure renders a red traceback. A
+   second one was reproduced by pointing `ATTEST_STORE_DIR` at a long path. P9-S1 made this more
+   likely, not less: an open uploader invites a note the cassettes do not have.
+
+Both are P9-S2, and both are small.
+
+**And a third, found while checking that the first two were not self-inflicted: the gate is red on
+`main`, and has been for at least five runs.** `gh run list --branch main` reports `failure` on
+every recent push including the P9-S1 merge. The most recent run says **`2 failed, 355 passed,
+5 deselected`**, both failures in `tests/test_p7_s1.py`, both `RuntimeError: No Gemini API key
+found`. `build_orchestrator` constructs Strands `Agent`s, `Agent` construction calls
+`build_model()`, and neither test carries the `skipif` that `test_p0_s4.py` and `test_p2_s1.py`
+define for exactly this. They are the only two tests in the repo that need a credential to check
+something structural.
+
+**That makes two sentences in `README.md` false right now** — "exits zero, 357 tests, no API key"
+and "the same command runs in CI on every push … the judge's scenario rather than ours" — and the
+rules require a project that installs and runs consistently. It is drafted as **P9-S8** and it
+outranks the rest of P9, and arguably P8 too, because it is a ten-minute fix on a Stage One
+pass/fail criterion. `.github/workflows/gate.yml` was built to catch exactly this; it did, and
+nobody read it.
+
+**Local numbers on Windows, for whoever picks this up:** `verify.sh ALL --offline` reported
+`15 failed, 342 passed` here. Normalising *only* the corpus line endings to LF took it to
+`2 failed, 355 passed` — identical to CI. That is the experiment that pins finding 1: thirteen of
+those fifteen were CRLF, and **the P6-S3 and P9-S1 gates do not pass on a Windows clone at all.**
+
+**The deployed app is already the P9-S1 screen.** Session 6's note below says it still runs the old
+picker until the branch is merged; that is now stale. <https://attest.streamlit.app> serves the
+upload-driven console, and it was walked at desktop and at 375 px this session. Nobody has yet run
+`docs/ui-checklist.md` against it end to end, so that item stands.
+
+**Also worth knowing before the video:** four of the ten Highmark criteria carry `polarity: absent`,
+and the screen renders a tick beside "Seizure disorder or any history of seizure" — which reads to
+a non-clinician as the inverse of what was found. That is P9-S3, and it is a label change over data
+already loaded.
 
 ---
 
