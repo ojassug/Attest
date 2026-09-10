@@ -106,8 +106,8 @@ git push
 
 | What | When |
 |---|---|
-| AWS $50 credit request form | **Sep 11, 2026, 12:00pm PT** |
-| Devpost submission closes | **Sep 14, 2026, 5:00pm PT** |
+| ~~AWS $50 credit request form~~ | ~~Sep 11, 2026, 12:00pm PT~~ — **satisfied.** Submitted 09-08, approved 09-10 ($170, expires Oct 31) |
+| Devpost submission closes | **Sep 14, 2026, 5:00pm PT** — the only hard deadline left |
 
 ---
 
@@ -452,8 +452,9 @@ These are scored as heavily as the code. Two of the five judging criteria — Pr
 - [ ] **File** `docs/submission-checklist.md` with every `Attest-PRODUCT.md` §1.4 requirement ticked: text description, public repo, README, architecture diagram, video, AWS Builder ID, Apache 2.0 licence visible in the repo About section, optional live demo link
 - [ ] Submitted on Devpost before **Sep 14, 2026, 5:00pm PT**
 - [ ] **File** `docs/setup.md` records the AWS Builder ID (a required Devpost submission field)
-- [ ] AWS $50 credit requested (form closes **Sep 11, 12:00pm PT** — request it even if Bedrock
-      is never used, since P7 deployment would consume it)
+- [x] ~~AWS $50 credit requested~~ — **done. Form submitted 09-08, credit approved 09-10: $170
+      total, expiring Oct 31.** See `STATUS.md`. This item is closed; the Sep 11 form deadline no
+      longer applies to anything and reading it as open has already misled one session.
 - [ ] Optional: builder.aws blog post, title containing "Agents for Humans" (+0.2 each, max +0.6)
 
 ---
