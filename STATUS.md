@@ -69,7 +69,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
-| P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| pending  | 09-10 |
+| P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
