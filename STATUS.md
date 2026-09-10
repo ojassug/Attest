@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. `P9` is open for further final-improvement steps. |
+| **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. |
+| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left.** P8-S5 needs an AWS Builder ID nobody has obtained. Then `P9-S4`. Steps are being taken **one at a time, in one session** — no parallel branches. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -64,12 +64,19 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S4 | Deploy to AgentCore Runtime                | BLOCKED| —     | —        | —     |
-| P8-S1 | README                                     | TODO   | —     | —        | —     |
-| P8-S2 | Architecture diagram                       | TODO   | —     | —        | —     |
+| P8-S1 | README                                     | DONE   | ojassug| 045760b  | 09-10 |
+| P8-S2 | Architecture diagram                       | DONE   | ojassug| 045760b  | 09-10 |
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
 | P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
+| P9-S2 | Console survives a note it has never seen   | DONE   | ojassug| f906041  | 09-10 |
+| P9-S3 | A criterion says what it means              | DONE   | ojassug| 2436618  | 09-10 |
+| P9-S4 | Landing screen makes the case               | TODO   | —     | —        | —     |
+| P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
+| P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
+| P9-S7 | The run shows the agent that produced it    | TODO   | —     | —        | —     |
+| P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
@@ -84,6 +91,151 @@ viability, so a missing architecture diagram risks not being scored at all.
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-10 — ojassug** *(session 7)*
+
+**P8-S1 and P8-S2 are DONE — gates passed at `045760b`.** Two of the four mandatory submission
+deliverables. **Only `P8-S4` (video) and `P8-S5` (Devpost) remain mandatory**, and P8-S5 still needs
+an AWS Builder ID nobody has obtained. That is the one outstanding human errand.
+
+**The AWS credit is not one of them, and `PLAN.md` was misleading about it.** The $50 form was
+submitted 09-08 and the credit approved 09-10 — $170, expiring Oct 31, both recorded further down
+this file. P8-S5's DoD still carried it as an open checkbox with a Sep 11 deadline, which read as
+outstanding work and cost this session a wrong reminder to Ojas. The checkbox is now ticked and the
+hard-deadlines table in `PLAN.md` marks the form satisfied. **Sep 14 is the only deadline left.**
+
+**`src/attest/demo.py` is new, because P8-S1's DoD named a module that did not exist.** The DoD,
+written at P0-S2, says *clone into an empty directory, follow the README verbatim,
+`python -m attest.demo --case clean` succeeds*. It was right: a blocking interactive command is a
+poor gate, and P9-S1 had removed the last non-interactive path to a committed case. It stops at
+Gate 1 and has **no `--approve` flag**, for the same reason `agent_runtime.py` refuses to emit
+headlessly.
+
+**That DoD was then actually performed, not assumed:** a fresh `git clone` into an empty directory
+on Windows, its own venv, `pip install -e ".[dev]"`, no `.env` and no key —
+`python -m attest.demo --case clean` exits 0, and `verify.sh ALL --offline` reports **366 passed,
+5 deselected**. The clone also checks out all 14 Markdown files as LF, which is P9-S2's fix holding
+from a judge's position.
+
+**Printing is an encoding too, and this is the third encoding bug in the project.** A Windows
+console defaults to cp1252, the packs carry an em dash in `source_title`, and
+`python -m attest.demo --case clean > out.txt` raised `UnicodeEncodeError` on a default Windows
+shell while working on macOS and in CI. Reproduced before fixing. File reads (P3-S4), newlines on
+upload (P9-S2) and now output all share one shape: **a divergence between platforms, not an error
+on either.**
+
+**`docs/architecture.svg` draws AgentCore dashed and labelled "not deployed".** P7-S4 is `BLOCKED`
+on this very board, and a diagram contradicting the status board costs more credibility than the
+box is worth.
+
+**Three README claims had quietly become false** and are corrected: the test count (357 → 366); a
+note saying `test_pa_tool_is_registered` still needs a credential, which was fixed at P2-S3 by the
+very pattern P9-S8 has now applied to `test_p7_s1.py`; and a pointer to `docs/aws-setup.md`, which
+does not exist. None were lies when written. That is the point.
+
+**CI is green, and P9-S8's last DoD item is closed.** [PR #7](https://github.com/ojassug/Attest/pull/7)
+reports `verify.sh ALL --offline` **pass** — the first green run on this repository in at least six.
+
+---
+
+**Earlier in the same session:**
+
+**A UI/UX review of the P9-S1 console is written up in `docs/uiux-review.md`, and P9-S2 through
+P9-S7 are drafted in `PLAN.md` from it.** The six new steps were contract before they were work —
+`pyproject.toml` gained the six matching markers in the same commit, `pyproject.toml` gained the six matching markers in the same commit,
+because `test_p0_s3.py::test_every_step_has_a_marker` reads step ids straight out of `PLAN.md` and
+would have taken the P0 gate red — and with it every cumulative run — the moment the headings
+landed alone.
+
+**Two findings in that review are demo-blockers, not design opinions.**
+
+1. **On a Windows checkout, uploading the committed corpus file misses every cassette.**
+   `.gitattributes` pins only `*.sh` to LF, so `git ls-files --eol PLAN.md` reads `i/lf w/crlf`:
+   Markdown is CRLF in the working tree. `read_upload` decodes those bytes directly, giving 2424
+   characters where `Path.read_text` — which recorded the cassettes and which every test uses —
+   gives 2371. Different string, different `cache._key`, cassette miss, live call, and on a keyless
+   run a `RuntimeError: No Gemini API key found` rendered as a traceback in the page. Reproduced on
+   the first attempt. The hosted app is unaffected (Linux clone, LF both ways), so this bites
+   whoever records the demo locally, and `docs/ui-checklist.md` tells them to do exactly the thing
+   that fails.
+2. **`app.py` catches only `MissingFactError`**, so any other failure renders a red traceback. A
+   second one was reproduced by pointing `ATTEST_STORE_DIR` at a long path. P9-S1 made this more
+   likely, not less: an open uploader invites a note the cassettes do not have.
+
+**Both are fixed — P9-S2 is DONE, gate passed at `f906041`.** `.gitattributes` pins `*.md` to
+`eol=lf`, `read_upload` normalises newlines after decoding, and every engine call in `app.py` runs
+inside `guarded`, which renders a failure instead of raising it. `verify.sh ALL --offline` is
+**361 passed, 5 deselected** and now passes on Windows as well as Linux.
+
+Two things worth carrying forward. **The fix is at both ends on purpose:** the attribute fixes the
+checkout, `read_upload` fixes the upload, and only the second survives a judge downloading a note,
+re-saving it in Notepad, and uploading CRLF from a file git never touches. And **normalising the
+corpus once and committing it would have fixed nothing** — the index was already LF; the smudge
+happens on every checkout.
+
+**A judge who uploads their own note now gets a sentence, not a stack trace:** the screen says the
+note is not one of the recorded ones, explains that the demo replays recorded responses so it costs
+nothing and needs no key, and expands the sample downloads underneath. Walked in a browser, not
+only asserted. `docs/ui-checklist.md` §6 covers it.
+
+Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**And a third, found while checking that the first two were not self-inflicted: the gate is red on
+`main`, and has been for at least five runs.** `gh run list --branch main` reports `failure` on
+every recent push including the P9-S1 merge. The most recent run says **`2 failed, 355 passed,
+5 deselected`**, both failures in `tests/test_p7_s1.py`, both `RuntimeError: No Gemini API key
+found`. `build_orchestrator` constructs Strands `Agent`s, `Agent` construction calls
+`build_model()`, and neither test carries the `skipif` that `test_p0_s4.py` and `test_p2_s1.py`
+define for exactly this. They are the only two tests in the repo that need a credential to check
+something structural.
+
+**That made two sentences in `README.md` false** — "exits zero, 357 tests, no API key" and "the
+same command runs in CI on every push … the judge's scenario rather than ours" — on a public
+repository that invites judges to clone and run exactly that command.
+`.github/workflows/gate.yml` was built to catch this; it did, on every push, and nobody opened it.
+
+**P9-S8 is DONE — gate passed at `84cb86e`.** `./scripts/verify.sh ALL --offline` now exits zero
+with no `GOOGLE_API_KEY` and no `.env`: **357 passed, 5 deselected**. The fix was two lines of test
+setup, not new design: `test_p2_s3.py` had already solved this at P2-S3 by injecting a placeholder
+credential, on the grounds that constructing an `Agent` makes no request, and P7-S1 simply never
+applied it. A `needs_key` skip was rejected — it would have left `agent.as_tool()` composition
+unverified in the one environment that matters. Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**The count in that README sentence was right all along**: the command selects 357 tests and now
+passes all 357, so no number needed correcting. Only "exits zero" had to become true.
+
+**That last DoD item is now closed.** [PR #7](https://github.com/ojassug/Attest/pull/7) runs the
+workflow on this branch and it reports **pass** — the first green `gate` run on this repository in
+at least six. It was deliberately not ticked from a local pass, because the whole finding was that
+a green local run and a green CI run had quietly stopped being the same thing.
+
+**Local numbers on Windows, for whoever picks this up:** `verify.sh ALL --offline` reported
+`15 failed, 342 passed` here. Normalising *only* the corpus line endings to LF took it to
+`2 failed, 355 passed` — identical to CI. That is the experiment that pins finding 1: thirteen of
+those fifteen were CRLF, and **the P6-S3 and P9-S1 gates do not pass on a Windows clone at all.**
+
+**The deployed app is already the P9-S1 screen.** Session 6's note below says it still runs the old
+picker until the branch is merged; that is now stale. <https://attest.streamlit.app> serves the
+upload-driven console, and it was walked at desktop and at 375 px this session. Nobody has yet run
+`docs/ui-checklist.md` against it end to end, so that item stands.
+
+**P9-S3 is DONE too — gate passed at `2436618`.** Four of the ten Highmark criteria carry
+`polarity: absent`, and the screen was rendering a tick beside "Seizure disorder or any history of
+seizure" — which to a non-clinician says the patient *has* one. It says the opposite. The label is
+now `✅ hho-05 · Contraindication — Ruled out`, and the payer's wording — up to 524 characters of
+it — moved inside the expander, where it is still verbatim. All ten criteria now fit on one screen
+as ten scannable lines; they used to be ten paragraphs of policy text.
+
+**The wording table is the part to leave alone.** `INSUFFICIENT` on an absent criterion reads
+"Not ruled out", not "Insufficiently documented", because `match.py` is explicit that an
+undocumented contraindication is *unknown*, not ruled out. That phrasing is deliberately not
+reassuring. Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**Everything in Tier 0 of `docs/uiux-review.md` is now done** — P9-S8, P9-S2 and P9-S3. What
+remains in P9 is Tier 1 and up: `P9-S4` (landing screen, and its pipeline visual is reusable as the
+P8-S2 diagram), then `P9-S5`, `P9-S6`, `P9-S7`. **None of them outrank P8.**
 
 ---
 

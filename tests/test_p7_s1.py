@@ -54,10 +54,28 @@ def fresh(name: str) -> tuple[Run, object]:
     )
 
 
+@pytest.fixture
+def placeholder_credential(monkeypatch):
+    """Let a keyless clone construct the orchestrator, which makes no request.
+
+    `build_model` refuses to construct without a credential - deliberately, so a missing key
+    surfaces as a setup problem rather than as an auth error deep inside an agent run. But
+    `build_orchestrator` calls it five times, once per specialist plus the router, purely to hand
+    each `Agent` a model it never reaches: which specialists exist, what they are named and what
+    their descriptions say are all settled before any provider is touched.
+
+    Without this the two composition tests below were the only ones in the suite that a keyless
+    clone could not run, and they failed `verify.sh ALL --offline` on `main` - the judge's exact
+    scenario, and the one CI runs. Same fix, same reasoning, as `test_p2_s3.py`; P7-S1 simply never
+    applied the pattern P2-S3 had already established. See DECISIONS.md, 2026-09-10.
+    """
+    monkeypatch.setenv("GOOGLE_API_KEY", "placeholder-no-request-is-made")
+
+
 # ------------------------------------------------------------------- composition
 
 
-def test_the_orchestrator_composes_exactly_the_four_specialists():
+def test_the_orchestrator_composes_exactly_the_four_specialists(placeholder_credential):
     """`agent.as_tool()` composition, and the names the router is told to call."""
     run, _ = fresh("denial")
     agent = build_orchestrator(run)
@@ -65,7 +83,7 @@ def test_the_orchestrator_composes_exactly_the_four_specialists():
     assert set(agent.tool_names) == {INTAKE, CRITERIA, PACKET, APPEAL}
 
 
-def test_every_specialist_advertises_what_it_is_for():
+def test_every_specialist_advertises_what_it_is_for(placeholder_credential):
     """A router picks by description. An empty one makes routing a coin flip."""
     run, _ = fresh("denial")
     agent = build_orchestrator(run)

@@ -5,7 +5,7 @@ would actually work through it: upload the note, decide whether a prior authoriz
 check the payer's criteria against the record, see what is missing, approve, send. Then the same
 again when a denial arrives.
 
-Three rules shape this file. The first two come from `Attest-PRODUCT.md` §6:
+Four rules shape this file. The first two come from `Attest-PRODUCT.md` §6:
 
 **The gates are not UI logic, so this file must not be able to weaken them.** Approving here builds
 a real `ApprovalRecord` and calls the same `emit_*_artifact` functions the tests exercise. There is
@@ -23,6 +23,12 @@ practice actually cares about, which is Attest working out *by itself* whose rul
 corpus still exists and still backs every gate in `tests/` — it is simply no longer wired into the
 screen. See `DECISIONS.md`, 2026-09-10.
 
+**Nothing raises into the page.** An uploader is an invitation, and a judge will accept it with a
+note of their own — which is a live model call this deploy has no key for. Every engine call on
+this screen therefore sits inside `guarded`, which turns a failure into a sentence a person can act
+on. A Python traceback rendered in the page is the first entry under *Fail conditions* in
+`docs/ui-checklist.md`, and before P9-S2 this file had two reliable ways to produce one.
+
 The app replays from committed cassettes, so a judge with no API key sees the same results — but
 only for a note whose text matches what was recorded. Any other note is a live call.
 """
@@ -31,6 +37,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -45,7 +52,8 @@ from attest.appeal.precedent import find_precedents
 from attest.criteria.gaps import build_gap_list
 from attest.criteria.match import match_all
 from attest.gates import content_hash
-from attest.models import ApprovalRecord, Packet, Verdict
+from attest.llm import have_credentials
+from attest.models import ApprovalRecord, Packet, Polarity, Verdict
 from attest.packet.emit import ARTIFACT_NAME, PDF_NAME, emit_submission_artifact
 from attest.packet.justification import build_justification
 from attest.paths import data_dir
@@ -58,10 +66,34 @@ from attest.verifier import enforce_verification
 # deploy has an ephemeral filesystem.
 OUT_ROOT = Path(os.environ.get("ATTEST_OUT_DIR", "out"))
 
-VERDICT_STYLE = {
-    Verdict.MET: ("✅", "Met"),
-    Verdict.UNMET: ("❌", "Not met"),
-    Verdict.INSUFFICIENT: ("⚠️", "Insufficiently documented"),
+# The icon follows the verdict, because "satisfied / not satisfied / cannot tell" means the same
+# thing to a reviewer whichever way the criterion points.
+VERDICT_ICON = {
+    Verdict.MET: "✅",
+    Verdict.UNMET: "❌",
+    Verdict.INSUFFICIENT: "⚠️",
+}
+
+# The wording does not, and collapsing the two senses is the specific misreading this table exists
+# to prevent. Four of Highmark's ten criteria are contraindications, and the screen used to render
+# them as "✅ hho-05 — Seizure disorder or any history of seizure", which to anyone who is not a
+# clinician says the patient *has* a seizure disorder. It says the opposite: the record documents
+# that they do not.
+#
+# INSUFFICIENT is the pair worth reading twice. On an absent criterion it does not mean the finding
+# might be there — it means nobody wrote it down, and `match.py` is explicit that "an undocumented
+# contraindication is unknown, not ruled out". "Not ruled out" is that sentence in two words.
+VERDICT_WORDING = {
+    Polarity.PRESENT: {
+        Verdict.MET: "Met",
+        Verdict.UNMET: "Not met",
+        Verdict.INSUFFICIENT: "Insufficiently documented",
+    },
+    Polarity.ABSENT: {
+        Verdict.MET: "Ruled out",
+        Verdict.UNMET: "Present — contraindicated",
+        Verdict.INSUFFICIENT: "Not ruled out",
+    },
 }
 
 # Offered for download on the landing screen, never loaded into the pipeline. A judge opening the
@@ -82,14 +114,118 @@ st.set_page_config(page_title="Attest — prior authorization", page_icon="🩺"
 
 
 def read_upload(uploaded) -> str:
-    """Decode an uploaded document.
+    """Decode an uploaded document, and settle its line endings.
 
     The encoding is named rather than left to the platform default. Sessions alternate between a
     Mac and a Windows machine, and a note decoded under two different default codecs would not
     merely look wrong — it would shift every character offset the verifier records, so evidence
     spans would point at the wrong text while still appearing verified.
+
+    Newlines are the same hazard through a different door, and P9-S2 found it the hard way. Every
+    other reader in this codebase goes through `Path.read_text`, whose universal-newline handling
+    collapses `\\r\\n` to `\\n` before anything sees it — so that is the text the cassettes were
+    recorded against and the text the ground truth describes. An upload arrives as raw bytes with
+    no such translation, so a note checked out on Windows reached this function as a *different
+    string*: 2424 characters where the recorded one is 2371. Different string, different
+    `cache._key`, cassette miss, live call, and on a keyless deploy a traceback in the page.
+
+    `.gitattributes` now pins `*.md` to LF, which fixes the checkout. This fixes the upload, which
+    is the half that still matters: a judge who opens a downloaded note in Notepad and saves it
+    has re-introduced CRLF on a file no `.gitattributes` will ever touch.
     """
-    return uploaded.getvalue().decode("utf-8")
+    text = uploaded.getvalue().decode("utf-8")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def humanise(category: str) -> str:
+    """`treatment_resistance` → `Treatment resistance`.
+
+    Categories are pack data written for code to group by, and they reach the screen unchanged
+    everywhere else in this file. In a criterion label they are doing a different job — telling a
+    reviewer what kind of requirement they are looking at — so they get read as English.
+    """
+    return category.replace("_", " ").capitalize()
+
+
+def offer_samples(*, expanded: bool = False) -> None:
+    """Hand over the synthetic corpus as downloads, never as a loaded case.
+
+    Two screens need this: the landing screen, where a judge has no clinical note of their own, and
+    the dead end `guarded` reaches when someone uploads a note the cassettes cannot answer. Telling
+    them what went wrong without handing them something that works is half an answer.
+
+    Nothing here enters the pipeline. The app writes a file out and forgets it; the case still only
+    arrives by upload. See `DECISIONS.md`, 2026-09-10 — "downloading a sample is not preloading
+    one".
+    """
+    notes_dir = data_dir() / "synthetic"
+    if not notes_dir.is_dir():
+        return
+
+    with st.expander("No note to hand? Download a synthetic one", expanded=expanded):
+        st.caption(
+            "Fabricated records, written for testing. Download one and upload it in the "
+            "sidebar. The denial walkthrough needs the letter as well, at step 5."
+        )
+        for label, relative in SAMPLE_NOTES.items():
+            path = notes_dir / relative
+            if path.is_file():
+                st.download_button(
+                    label,
+                    path.read_text(encoding="utf-8"),
+                    file_name=path.name,
+                    use_container_width=True,
+                )
+        denial_path = notes_dir / SAMPLE_DENIAL
+        if denial_path.is_file():
+            st.download_button(
+                "Denial letter — Highmark",
+                denial_path.read_text(encoding="utf-8"),
+                file_name=denial_path.name,
+                use_container_width=True,
+            )
+
+
+@contextmanager
+def guarded(stage: str, *, model_backed: bool = False):
+    """Turn any failure in `stage` into a sentence, and stop the run.
+
+    Streamlit renders an uncaught exception as a traceback inside the page, which is the first
+    entry under *Fail conditions* in `docs/ui-checklist.md`. Before P9-S1 that was mostly
+    theoretical — the screen offered three known cases. An uploader changes that: it invites a note
+    nobody recorded, and the public deploy has no key to answer one with.
+
+    `model_backed` distinguishes the two failures a person can actually do something about. With no
+    credential configured, a model call can only have been reached by missing a cassette — the note
+    is simply not one of the recorded ones — and saying so is more useful than the `RuntimeError`
+    about a missing key, which sounds like the deploy is broken when it is working as designed.
+    Everything else is named as what it is; the screen never pretends a real failure was expected.
+    """
+    try:
+        yield
+    except MissingFactError as exc:
+        # Not a failure of the run: the note omits something the request cannot proceed without.
+        # That is a question for the practice, so it keeps its own wording and its own icon.
+        st.error(str(exc), icon="❓")
+        st.stop()
+    except Exception as exc:  # noqa: BLE001 - the whole point is that nothing escapes to the page
+        if model_backed and not have_credentials():
+            st.warning(
+                f"**This note is not one of the recorded ones.** {stage} needs a model, and this "
+                "demo answers from responses recorded ahead of time so that it costs nothing and "
+                "works with no API key. A note that was not part of that recording has nothing to "
+                "replay.\n\n"
+                "Download one of the synthetic notes below and upload that, or run Attest locally "
+                "with your own key to use this note — see `docs/setup.md`.",
+                icon="🎞️",
+            )
+            offer_samples(expanded=True)
+        else:
+            st.error(
+                f"**{stage} could not be completed.** {type(exc).__name__}: {exc}",
+                icon="🛑",
+            )
+        st.stop()
 
 
 def note_key(text: str) -> str:
@@ -155,30 +291,7 @@ if uploaded is None:
         "is submitted."
     )
 
-    notes_dir = data_dir() / "synthetic"
-    if notes_dir.is_dir():
-        with st.expander("No note to hand? Download a synthetic one", expanded=False):
-            st.caption(
-                "Fabricated records, written for testing. Download one and upload it in the "
-                "sidebar. The denial walkthrough needs the letter as well, at step 5."
-            )
-            for label, relative in SAMPLE_NOTES.items():
-                path = notes_dir / relative
-                if path.is_file():
-                    st.download_button(
-                        label,
-                        path.read_text(encoding="utf-8"),
-                        file_name=path.name,
-                        use_container_width=True,
-                    )
-            denial_path = notes_dir / SAMPLE_DENIAL
-            if denial_path.is_file():
-                st.download_button(
-                    "Denial letter — Highmark",
-                    denial_path.read_text(encoding="utf-8"),
-                    file_name=denial_path.name,
-                    use_container_width=True,
-                )
+    offer_samples()
     st.stop()
 
 
@@ -199,14 +312,10 @@ st.header("1 · Read the note and decide whether a PA is needed")
 if "case" not in state:
     if st.button("Run intake", type="primary"):
         with st.spinner("Reading the note…"):
-            try:
+            with guarded("Reading the note", model_backed=True):
                 state["case"] = extract_case(note_text)
-            except MissingFactError as exc:
-                # The note is missing something the request cannot proceed without. That is a
-                # question for the practice, not a failure of the run — say which fact, and stop.
-                st.error(str(exc), icon="❓")
-                st.stop()
-            save_case(state["case"])
+            with guarded("Filing the case"):
+                save_case(state["case"])
         st.rerun()
     st.stop()
 
@@ -274,11 +383,13 @@ st.header("2 · Check the record against the payer's criteria")
 if "coverage" not in state:
     if st.button("Match criteria", type="primary"):
         with st.spinner("Reading each criterion against the note…"):
-            raw = match_all(pack, note_text, case_id=case.case_id)
-            # The verifier runs before anything is displayed, not after. A quote that cannot be
-            # found verbatim in the note never reaches this screen at all.
-            state["verified"] = enforce_verification(raw, note_text)
-            state["coverage"] = state["verified"].coverage
+            with guarded("Matching the criteria", model_backed=True):
+                raw = match_all(pack, note_text, case_id=case.case_id)
+                # The verifier runs before anything is displayed, not after. A quote that cannot be
+                # found verbatim in the note never reaches this screen at all. It stays inside the
+                # guard with the match it checks: a verification failure is not a result either.
+                state["verified"] = enforce_verification(raw, note_text)
+                state["coverage"] = state["verified"].coverage
         st.rerun()
     st.stop()
 
@@ -308,11 +419,29 @@ if report.rejected:
 
 for verdict in coverage.verdicts:
     criterion = by_id[verdict.criterion_id]
-    icon, label = VERDICT_STYLE[verdict.verdict]
+    icon = VERDICT_ICON[verdict.verdict]
+    label = VERDICT_WORDING[criterion.polarity][verdict.verdict]
 
-    with st.expander(f"{icon} **{criterion.id}** — {criterion.text}", expanded=False):
-        st.caption(f"{label} · {criterion.category} · policy {criterion.source_section}")
-        st.write(verdict.reasoning)
+    # The label answers "which criterion, what kind, and how did it land" — the three things a
+    # reviewer scans a list of ten for. The payer's wording used to be *in* this label: up to 524
+    # characters of policy legalese wrapping to four lines, ten of them stacked, which made the
+    # product's core screen the one nobody could read. It moves inside, where it is still on
+    # screen and still verbatim, and where reading it is a choice rather than a toll.
+    with st.expander(
+        f"{icon} **{criterion.id}** · {humanise(criterion.category)} — {label}", expanded=False
+    ):
+        st.markdown(f"**The payer's own words.** {criterion.text}")
+        # "Source:" rather than "Policy", because a section name is already a section name —
+        # Highmark's is literally "POLICY POSITION", and the old prefix rendered it twice.
+        st.caption(f"Source: {criterion.source_section}")
+
+        if criterion.polarity is Polarity.ABSENT:
+            st.caption(
+                "This is a contraindication: it is satisfied when the record documents the "
+                "finding is **absent**. Silence is not the same as ruled out."
+            )
+
+        st.markdown(f"**Attest's reading.** {verdict.reasoning}")
 
         if verdict.spans:
             st.markdown("**Evidence from the note**")
@@ -382,7 +511,10 @@ if st.button("Approve and generate submission", type="primary", disabled=not app
         }
     )
     out = OUT_ROOT / packet.case_id
-    emit_submission_artifact(approved, out)
+    # `emit_submission_artifact` refuses a packet whose hash has moved since sign-off. That refusal
+    # is the gate doing its job, so it is rendered rather than raised — and it still stops here.
+    with guarded("Generating the submission"):
+        emit_submission_artifact(approved, out)
     state["submission"] = out
     st.rerun()
 
@@ -430,10 +562,12 @@ with st.expander("The denial letter", expanded=False):
 if "appeal" not in state:
     if st.button("Draft the appeal", type="primary"):
         with st.spinner("Reading the denial and building the rebuttals…"):
-            denial = parse_denial(denial_text, pack, case_id=case.case_id)
-            rebuttals = draft_rebuttals(denial.contested, coverage, pack)
-            state["denial"] = denial
-            state["appeal"] = build_appeal(denial, rebuttals, pack)
+            with guarded("Reading the denial", model_backed=True):
+                denial = parse_denial(denial_text, pack, case_id=case.case_id)
+            with guarded("Drafting the rebuttals", model_backed=True):
+                rebuttals = draft_rebuttals(denial.contested, coverage, pack)
+                state["denial"] = denial
+                state["appeal"] = build_appeal(denial, rebuttals, pack)
         st.rerun()
     st.stop()
 
@@ -499,9 +633,10 @@ if st.button("Approve and send appeal", type="primary", disabled=not appeal_appr
         }
     )
     out = OUT_ROOT / appeal.case_id
-    artifact = emit_appeal_artifact(approved_appeal, out)
-    # Stored so it becomes precedent for the next case that hits the same criterion.
-    save_appeal(approved_appeal)
+    with guarded("Generating the appeal"):
+        artifact = emit_appeal_artifact(approved_appeal, out)
+        # Stored so it becomes precedent for the next case that hits the same criterion.
+        save_appeal(approved_appeal)
     state["appeal_artifact"] = artifact
     st.rerun()
 

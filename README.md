@@ -8,7 +8,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **357 tests** — replays offline from recorded model responses in about thirteen seconds, **with no API key and no network**. What remains is the submission deliverables (P8) and an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **366 tests** — replays offline from recorded model responses in about thirty seconds, **with no API key and no network**, on Linux, macOS and Windows alike. What remains is the demo video and the Devpost entry (P8-S4, P8-S5), plus an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -66,6 +66,11 @@ Given a patient's clinical note and insurance details, Attest:
 
 The engine runs autonomously between two hard human-approval gates:
 
+![Attest architecture — a clinical note is read by the intake specialist, routed to the payer's policy by find_pack, matched criterion by criterion, and every quote checked verbatim by a deterministic verifier before Gate 1 stops for a named clinician. A denial letter arrives separately and the appeal specialist drafts rebuttals, held again at Gate 2.](docs/architecture.svg)
+
+<details>
+<summary>The same flow as text</summary>
+
 ```mermaid
 flowchart TD
     A["Clinical note + insurance details"] --> B["Intake: structure the case"]
@@ -87,6 +92,8 @@ flowchart TD
     classDef gate fill:#f6c343,stroke:#7a5901,color:#1a1a1a;
     class GATE1,GATE2 gate;
 ```
+
+</details>
 
 Attest is built as a multi-step, tool-using agent system on the **Strands Agents SDK**, with specialist agents (intake, criteria matching, packet assembly, appeal drafting) composed under an orchestrator. Both approval gates are implemented on Strands' first-class human-in-the-loop primitive (`BeforeToolCallEvent.interrupt(...)`), so the gate holds even when the agent is driven headlessly — it is a product requirement, not UI logic.
 
@@ -130,8 +137,8 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ✅ done |
 | — | **Submittable product complete through here** | |
 | **P7** | Multi-agent orchestration depth + AgentCore deployment | 🟡 S1–S3 done; S4 blocked on AWS Bedrock authorization |
-| **P8** | Submission deliverables (README, architecture diagram, metrics, demo video, Devpost) | ⬜ planned |
-| **P9** | Final improvements — upload-driven intake (S1 done); phase deliberately open | 🟡 in progress |
+| **P8** | Submission deliverables — README, architecture diagram, metrics, demo video, Devpost | 🟡 S1–S2 done; S4 (video) and S5 (Devpost) outstanding |
+| **P9** | Final improvements — upload-driven intake, a keyless green gate, an error boundary, criteria that say what they mean (S1–S3, S8 done); phase deliberately open | 🟡 in progress |
 
 ▲ = required for a viable submission.
 
@@ -144,7 +151,7 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | Gap list vs. ground truth | exact on all three cases |
 | Contested criteria parsed from the denial letter | exact — plus the one objection that maps to no criterion, surfaced rather than dropped |
 | An uploaded note reaching its own payer's pack | derived from the extracted payer/plan/CPT — an unlisted payer stops the review rather than guessing |
-| `./scripts/verify.sh ALL --offline` | exits zero, **357 tests**, ~13s, no API key |
+| `./scripts/verify.sh ALL --offline` | exits zero, **366 tests**, no API key, on Linux, macOS and Windows |
 
 The same command runs in CI on every push, on Linux, with no credentials configured — the judge's scenario rather than ours.
 
@@ -163,7 +170,10 @@ Alongside the engine, the repository holds the product definition and the engine
 | [`data/synthetic/`](data/synthetic) | Synthetic notes and denial letters, plus ground truth committed *before* the matching code existed. |
 | `cassettes/` | Recorded model responses, so the whole suite replays offline with no API key and no quota. |
 | [`scripts/verify.sh`](scripts/verify.sh) | The step gate. Runs a step's tests plus every prior step's. |
+| [`src/attest/demo.py`](src/attest/demo.py) | `python -m attest.demo` — one case end to end in a terminal, stopping at Gate 1. No browser, no key. |
+| [`docs/architecture.svg`](docs/architecture.svg) | The agent graph, the verifier, both gates, and where it runs. |
 | [`docs/setup.md`](docs/setup.md) | Developer setup, model provider, and the daily-quota notes. |
+| [`docs/uiux-review.md`](docs/uiux-review.md) | A walkthrough of the console judged against the scoring criteria, and the P9 steps drawn from it. |
 
 All of the above has landed, along with `src/attest/packet/`, `src/attest/appeal/`, the case store, the orchestrator, and `app.py` — the reviewer console, which takes its case as an uploaded document and reaches nothing preloaded.
 
@@ -218,15 +228,37 @@ python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 py -3.12 -m venv .venv && .venv/Scripts/python.exe -m pip install -e ".[dev]"
 ```
 
-Then run the gate. It needs nothing else:
+**See it work in about ten seconds, with no browser and no key:**
 
 ```bash
-./scripts/verify.sh P3 --offline
+python -m attest.demo --case clean
 ```
 
-> One test (`test_pa_tool_is_registered`) constructs a Strands `Agent` and so wants a credential to be *present* — it makes no request, so any placeholder in `.env` satisfies it. Without one the run is 184/185. This is a known open item, tracked in [DECISIONS.md](DECISIONS.md).
+It reads a synthetic note, works out which payer's policy applies, checks the record criterion by
+criterion, prints the evidence counts and the gap list, and **stops at Gate 1** with the content
+hash a clinician would approve. It writes nothing — there is no `--approve` flag, because approval
+is a person reading the assertions. Try `--case gap` to watch it ask the practice for what is
+missing, `--case denial` for a different payer's criteria entirely, or `--case pt` for a different
+specialty. `--note path/to/note.md` reads your own.
 
-To re-record cassettes or run the three provider-connectivity tests you need a free [Google AI Studio](https://aistudio.google.com/apikey) key in `.env`. Note the free tier allows **20 requests per day per model** — see [`docs/setup.md`](docs/setup.md) for the model roster, rotation, and why cassettes exist. Amazon Bedrock is deferred to P7; `docs/aws-setup.md` will cover it then.
+Then run the full gate. It needs nothing else — no key, no network:
+
+```bash
+./scripts/verify.sh ALL --offline
+```
+
+Expect **366 passed, 5 deselected**. The five are the provider-connectivity tests, which cannot be
+replayed from a cassette; `--offline` deselects them and that is a valid pass. The same command
+runs in CI on every push, on a clean Linux machine with no credentials configured — the judge's
+scenario rather than ours.
+
+And to use the console locally:
+
+```bash
+streamlit run app.py
+```
+
+To re-record cassettes or run the three provider-connectivity tests you need a free [Google AI Studio](https://aistudio.google.com/apikey) key in `.env`. Note the free tier allows **20 requests per day per model** — see [`docs/setup.md`](docs/setup.md) for the model roster, rotation, and why cassettes exist. Amazon Bedrock is a one-constructor swap in `src/attest/llm.py`; the AgentCore entrypoint is written and verified, and deployment is blocked on Bedrock model access rather than on code — see [STATUS.md](STATUS.md).
 
 ## Compliance, safety & scope
 
