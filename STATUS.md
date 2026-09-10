@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory and all outranking P9. Then `P9-S2` and `P9-S3`, which are small and should land *before* the video is recorded. |
+| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. `P9-S8` and `P9-S2` are done; `P9-S3` is the last small one worth landing *before* the video is recorded. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -70,7 +70,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
 | P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
-| P9-S2 | Console survives a note it has never seen   | TODO   | —     | —        | —     |
+| P9-S2 | Console survives a note it has never seen   | DONE   | ojassug| f906041  | 09-10 |
 | P9-S3 | A criterion says what it means              | TODO   | —     | —        | —     |
 | P9-S4 | Landing screen makes the case               | TODO   | —     | —        | —     |
 | P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
@@ -118,7 +118,23 @@ landed alone.
    second one was reproduced by pointing `ATTEST_STORE_DIR` at a long path. P9-S1 made this more
    likely, not less: an open uploader invites a note the cassettes do not have.
 
-Both are P9-S2, and both are small.
+**Both are fixed — P9-S2 is DONE, gate passed at `f906041`.** `.gitattributes` pins `*.md` to
+`eol=lf`, `read_upload` normalises newlines after decoding, and every engine call in `app.py` runs
+inside `guarded`, which renders a failure instead of raising it. `verify.sh ALL --offline` is
+**361 passed, 5 deselected** and now passes on Windows as well as Linux.
+
+Two things worth carrying forward. **The fix is at both ends on purpose:** the attribute fixes the
+checkout, `read_upload` fixes the upload, and only the second survives a judge downloading a note,
+re-saving it in Notepad, and uploading CRLF from a file git never touches. And **normalising the
+corpus once and committing it would have fixed nothing** — the index was already LF; the smudge
+happens on every checkout.
+
+**A judge who uploads their own note now gets a sentence, not a stack trace:** the screen says the
+note is not one of the recorded ones, explains that the demo replays recorded responses so it costs
+nothing and needs no key, and expands the sample downloads underneath. Walked in a browser, not
+only asserted. `docs/ui-checklist.md` §6 covers it.
+
+Reasoning in `DECISIONS.md`, 2026-09-10.
 
 **And a third, found while checking that the first two were not self-inflicted: the gate is red on
 `main`, and has been for at least five runs.** `gh run list --branch main` reports `failure` on

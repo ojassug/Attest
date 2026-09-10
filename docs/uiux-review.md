@@ -60,6 +60,14 @@ cannot survive.
 "Any Python traceback rendered in the page" is the first entry under **Fail conditions** in
 `docs/ui-checklist.md`. The console has two reliable ways to produce one.
 
+> **Both fixed — P9-S2, gate passed at `f906041`.** `.gitattributes` pins `*.md` to `eol=lf`,
+> `read_upload` normalises newlines after decoding, and every engine call runs inside `guarded`.
+> `verify.sh ALL --offline` is now **361 passed, 5 deselected**, on Windows as well as Linux. A
+> judge who uploads their own note gets an explanation and the sample downloads, not a stack trace
+> — walked in a browser, and covered by `docs/ui-checklist.md` §6. The fix is deliberately at both
+> ends: the attribute fixes the checkout, `read_upload` fixes the upload, and only the second
+> survives someone re-saving a downloaded note in an editor. See `DECISIONS.md`, 2026-09-10.
+
 ### 0.3 The keyless gate is red on `main`, and the README tells judges to run it
 
 Found while confirming that the two findings above were not self-inflicted. They were not — but
@@ -271,7 +279,7 @@ Mapped to the steps drafted in `PLAN.md`.
 | Tier | Step | What it buys |
 |---|---|---|
 | **0 — viability** | ~~**P9-S8**~~ **done** | `verify.sh ALL --offline` exits zero again, keyless, so the README's instruction to judges stops being false. Gate passed at `84cb86e`. |
-| **0 — blockers** | **P9-S2** | The demo stops crashing. CRLF pinned and normalised; every model call in the console has an error boundary. |
+| **0 — blockers** | ~~**P9-S2**~~ **done** | The demo stops crashing. CRLF pinned and normalised; every engine call in the console has an error boundary. Gate passed at `f906041`. |
 | **0 — correctness** | **P9-S3** | The criteria screen stops saying the opposite of what it means, and becomes scannable. |
 | **1 — first impression** | **P9-S4** | A judge understands the problem, the audience and the pipeline before clicking anything — on a phone too. |
 | **2 — credibility** | **P9-S5** | The gates look like gates; the approval shows who, when and against what hash; section 5 stops asserting a denial that has not happened. |
