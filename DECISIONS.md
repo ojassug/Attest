@@ -1331,3 +1331,76 @@ are `.gitattributes` pinning `*.sh` and nothing else, so `read_upload` decodes C
 `Path.read_text` recorded the cassettes against LF. **The P6-S3 and P9-S1 gates do not pass on a
 Windows clone.** That is P9-S2 and it is not fixed here; this entry records only that the two
 problems were separate, and were separated by experiment rather than by assumption.
+
+## 2026-09-10 · A newline is an encoding, and an uploader is an invitation
+
+**Decision (P9-S2).** `.gitattributes` pins `*.md` to `eol=lf`, `read_upload` normalises newlines
+after decoding, and every engine call in `app.py` runs inside `guarded`, which renders a failure
+instead of raising it into the page.
+
+### The newline half
+
+`docs/setup.md` and this log already record that every file read must name its encoding, because a
+note decoded two ways on two machines shifts every character offset the verifier reports —
+"evidence spans would point at the wrong text *while still appearing verified*". That was fixed.
+This is the same bug through a different door, and it was invisible for the same reason: it does
+not fail, it *diverges*.
+
+Every reader in this codebase goes through `Path.read_text`, whose universal-newline handling
+collapses `\r\n` to `\n` before anything sees it. That is the text the cassettes were recorded
+against, the text the ground truth describes, and the text every offset in `tests/` refers to.
+`read_upload` is the single exception: an upload is raw bytes, and `.decode("utf-8")` translates
+nothing. With `.gitattributes` pinning only `*.sh`, a Markdown note checked out on Windows reached
+the pipeline as **2424 characters where the recorded one is 2371** — a different string, a
+different `cache._key`, a cassette miss, a live call, and on a keyless clone a traceback.
+
+**The shape of the failure is what makes it worth this much prose.** `verify.sh ALL --offline`
+failed 13 tests on Windows and passed on Linux. CI is Linux, both prior sessions worked on Linux or
+macOS, and the whole of `tests/test_p9_s1.py` — the gate for the step that *introduced* the upload
+path — was among the 13. A gate that passes on the machine that wrote it and fails on the other one
+is worse than a gate that fails everywhere, because it gets recorded as DONE.
+
+Fixed at both ends deliberately. The attribute fixes the checkout; `read_upload` fixes the upload.
+Only the second survives the case nothing in git can reach: a judge who downloads a synthetic note,
+opens it in Notepad, saves it, and uploads CRLF from a file that was never in the repository.
+
+**Not fixed by normalising the corpus once and committing it.** The index was already LF — the
+smudge happens on checkout, every checkout, so a one-time normalisation would have looked like a
+fix on the machine that ran it and changed nothing for anyone else.
+
+### The uploader half
+
+P9-S1 replaced a three-case radio with a file uploader and, in doing so, quietly changed what the
+screen promises. A radio offers three things that work. An uploader invites anything — and the
+first thing a judge will upload is a note of their own, which this deploy has no key to answer.
+`app.py` caught `MissingFactError` and nothing else, so that arrived as a Python traceback: the
+first entry under *Fail conditions* in `docs/ui-checklist.md`.
+
+`guarded` distinguishes exactly one case, and only where it can be sure of it. When a *model-backed*
+stage fails and no credential is configured, the call can only have been reached by missing a
+cassette, so the screen says the note is not one of the recorded ones, explains why that is by
+design rather than broken, and expands the sample downloads underneath — saying what went wrong
+without handing over something that works is half an answer. Every other failure is named as what
+it is. **The screen never claims a real failure was expected**, which is the line this repo has
+held everywhere else: `UNKNOWN` is not "not required", and a placeholder deadline says it is a
+placeholder.
+
+`ApprovalRequired` travels through the same path on purpose. When `emit_submission_artifact`
+refuses a packet whose hash moved after sign-off, that is the gate working, and it is now rendered
+rather than raised — **still stopping**, just legibly. No guard swallows a failure and continues;
+every branch ends in `st.stop()`.
+
+### What the gate proves, and how it was checked
+
+`tests/test_p9_s2.py` drives the real screen. The strongest assertion needs no comparison: scratch
+space is keyed by a hash of the note text, so uploading the CRLF copy into a session that already
+read the LF copy **continues that review** instead of offering *Run intake* again. Two strings that
+hash alike are one string.
+
+The normalisation was then temporarily reverted and the suite re-run, to confirm the gate actually
+fails without it. It does. A test that has never been seen to fail is a test that has not been
+shown to test anything.
+
+**What would change our mind.** If Attest ever accepts a format where `\r` is data rather than a
+line ending — a fixed-width payer export, say — `read_upload` stops being the right place and the
+normalisation moves to the Markdown path only.
