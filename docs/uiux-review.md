@@ -204,6 +204,14 @@ blockquote beneath the model's reasoning, and `✓ verified verbatim · characte
 note` is a small grey caption. The most precise, most credible detail in the entire product is
 styled as a footnote.
 
+> **Both fixed — P9-S3, gate passed at `2436618`.** The label is now
+> `✅ hho-05 · Contraindication — Ruled out`; the payer's wording moved inside the expander, still
+> verbatim; and an absent criterion carries a line saying it is satisfied when the record documents
+> the finding is *absent*. All ten criteria fit on one screen. `INSUFFICIENT` on a contraindication
+> reads **Not ruled out**, because `match.py` is explicit that an undocumented contraindication is
+> unknown rather than ruled out. Not fixed here: the evidence quote is still the faintest element
+> in the expander — that is P9-S6. See `DECISIONS.md`, 2026-09-10.
+
 **And the checkmarks mean opposite things without saying so.** Four of the ten Highmark criteria
 carry `polarity: absent`. The screen renders:
 
@@ -280,7 +288,7 @@ Mapped to the steps drafted in `PLAN.md`.
 |---|---|---|
 | **0 — viability** | ~~**P9-S8**~~ **done** | `verify.sh ALL --offline` exits zero again, keyless, so the README's instruction to judges stops being false. Gate passed at `84cb86e`. |
 | **0 — blockers** | ~~**P9-S2**~~ **done** | The demo stops crashing. CRLF pinned and normalised; every engine call in the console has an error boundary. Gate passed at `f906041`. |
-| **0 — correctness** | **P9-S3** | The criteria screen stops saying the opposite of what it means, and becomes scannable. |
+| **0 — correctness** | ~~**P9-S3**~~ **done** | The criteria screen stops saying the opposite of what it means, and becomes scannable. Gate passed at `2436618`. |
 | **1 — first impression** | **P9-S4** | A judge understands the problem, the audience and the pipeline before clicking anything — on a phone too. |
 | **2 — credibility** | **P9-S5** | The gates look like gates; the approval shows who, when and against what hash; section 5 stops asserting a denial that has not happened. |
 | **3 — marquee** | **P9-S6** | The note renders with its verified spans highlighted in place. The strongest engineering claim, made visible without narration. |
@@ -341,8 +349,9 @@ Read the tiers above accordingly:
 - **P9-S8 came before everything, including P8, and is done.** It was the smallest item on this
   list and the only one touching Stage One pass/fail. Its last DoD item — CI reporting success —
   needs the fix merged to `main`.
-- **P9-S2 and P9-S3 are worth doing before the video is recorded** — one prevents a traceback on
-  camera, the other stops the core screen from stating the inverse of the truth. Both are small.
+- **P9-S2 and P9-S3 were worth doing before the video is recorded, and are done** — one prevents a
+  traceback on camera, the other stopped the core screen from stating the inverse of the truth.
+  With P9-S8 that clears the whole of Tier 0; **everything below this line still ranks under P8.**
 - **P9-S4** materially changes what a judge sees on the live link, and its pipeline visual is
   reusable as the P8-S2 diagram, so it pays for itself twice.
 - **P9-S5 through P9-S7 are upside.** Build them if P8 is genuinely finished, and not before.

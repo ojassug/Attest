@@ -13,7 +13,7 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 | | |
 |---|---|
 | **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. `P9-S8` and `P9-S2` are done; `P9-S3` is the last small one worth landing *before* the video is recorded. |
+| **Next step** | `P8-S1`/`P8-S2`/`P8-S4`/`P8-S5` — README, architecture diagram, video, Devpost. All mandatory, all outranking what is left of P9. Tier 0 of the UI/UX review (`P9-S8`, `P9-S2`, `P9-S3`) is done. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -71,7 +71,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
 | P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
 | P9-S2 | Console survives a note it has never seen   | DONE   | ojassug| f906041  | 09-10 |
-| P9-S3 | A criterion says what it means              | TODO   | —     | —        | —     |
+| P9-S3 | A criterion says what it means              | DONE   | ojassug| 2436618  | 09-10 |
 | P9-S4 | Landing screen makes the case               | TODO   | —     | —        | —     |
 | P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
 | P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
@@ -175,10 +175,21 @@ picker until the branch is merged; that is now stale. <https://attest.streamlit.
 upload-driven console, and it was walked at desktop and at 375 px this session. Nobody has yet run
 `docs/ui-checklist.md` against it end to end, so that item stands.
 
-**Also worth knowing before the video:** four of the ten Highmark criteria carry `polarity: absent`,
-and the screen renders a tick beside "Seizure disorder or any history of seizure" — which reads to
-a non-clinician as the inverse of what was found. That is P9-S3, and it is a label change over data
-already loaded.
+**P9-S3 is DONE too — gate passed at `2436618`.** Four of the ten Highmark criteria carry
+`polarity: absent`, and the screen was rendering a tick beside "Seizure disorder or any history of
+seizure" — which to a non-clinician says the patient *has* one. It says the opposite. The label is
+now `✅ hho-05 · Contraindication — Ruled out`, and the payer's wording — up to 524 characters of
+it — moved inside the expander, where it is still verbatim. All ten criteria now fit on one screen
+as ten scannable lines; they used to be ten paragraphs of policy text.
+
+**The wording table is the part to leave alone.** `INSUFFICIENT` on an absent criterion reads
+"Not ruled out", not "Insufficiently documented", because `match.py` is explicit that an
+undocumented contraindication is *unknown*, not ruled out. That phrasing is deliberately not
+reassuring. Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**Everything in Tier 0 of `docs/uiux-review.md` is now done** — P9-S8, P9-S2 and P9-S3. What
+remains in P9 is Tier 1 and up: `P9-S4` (landing screen, and its pipeline visual is reusable as the
+P8-S2 diagram), then `P9-S5`, `P9-S6`, `P9-S7`. **None of them outrank P8.**
 
 ---
 
