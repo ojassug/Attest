@@ -95,6 +95,16 @@ Why it matters more than anything else in this document:
 
 This is drafted as **P9-S8**, and it outranks the rest of P9.
 
+> **Fixed, same day — gate passed at `84cb86e`.** `verify.sh ALL --offline` now exits zero keyless:
+> **357 passed, 5 deselected**. The answer was already in the repository: `test_p2_s3.py` hit this
+> at P2-S3 against `build_intake_agent` and solved it by injecting a placeholder credential,
+> because constructing an `Agent` makes no request. P7-S1 never applied the pattern. A `needs_key`
+> skip was rejected — it would have left `agent.as_tool()` composition unverified in the judge's
+> exact environment. The 357 in the README turned out to be correct; only "exits zero" was false.
+> See `DECISIONS.md`, 2026-09-10. **One DoD item remains open and needs a merge rather than a
+> commit:** the workflow only runs on `main` and on pull requests, so it has not yet reported on
+> this fix.
+
 **Local numbers, for comparison.** On this Windows checkout the same command reported
 **15 failed, 342 passed**. Normalising only the corpus line endings to LF — changing nothing else —
 took it to **2 failed, 355 passed**, matching CI exactly. That is the experiment that confirms
@@ -260,7 +270,7 @@ Mapped to the steps drafted in `PLAN.md`.
 
 | Tier | Step | What it buys |
 |---|---|---|
-| **0 — viability** | **P9-S8** | `verify.sh ALL --offline` exits zero again, keyless, so the README's instruction to judges stops being false. |
+| **0 — viability** | ~~**P9-S8**~~ **done** | `verify.sh ALL --offline` exits zero again, keyless, so the README's instruction to judges stops being false. Gate passed at `84cb86e`. |
 | **0 — blockers** | **P9-S2** | The demo stops crashing. CRLF pinned and normalised; every model call in the console has an error boundary. |
 | **0 — correctness** | **P9-S3** | The criteria screen stops saying the opposite of what it means, and becomes scannable. |
 | **1 — first impression** | **P9-S4** | A judge understands the problem, the audience and the pipeline before clicking anything — on a phone too. |
@@ -320,9 +330,9 @@ being scored at all, and no amount of console polish compensates for that.
 
 Read the tiers above accordingly:
 
-- **P9-S8 comes before everything, including P8.** It is the smallest item on this list and the
-  only one that touches Stage One pass/fail. A judge who runs the command the README gives them
-  currently sees a failing gate.
+- **P9-S8 came before everything, including P8, and is done.** It was the smallest item on this
+  list and the only one touching Stage One pass/fail. Its last DoD item — CI reporting success —
+  needs the fix merged to `main`.
 - **P9-S2 and P9-S3 are worth doing before the video is recorded** — one prevents a traceback on
   camera, the other stops the core screen from stating the inverse of the truth. Both are small.
 - **P9-S4** materially changes what a judge sees on the live link, and its pipeline visual is
