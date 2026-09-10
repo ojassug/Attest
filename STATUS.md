@@ -76,7 +76,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
 | P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
 | P9-S7 | The run shows the agent that produced it    | TODO   | —     | —        | —     |
-| P9-S8 | The keyless gate is green again             | TODO   | —     | —        | —     |
+| P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
@@ -129,12 +129,25 @@ found`. `build_orchestrator` constructs Strands `Agent`s, `Agent` construction c
 define for exactly this. They are the only two tests in the repo that need a credential to check
 something structural.
 
-**That makes two sentences in `README.md` false right now** — "exits zero, 357 tests, no API key"
-and "the same command runs in CI on every push … the judge's scenario rather than ours" — and the
-rules require a project that installs and runs consistently. It is drafted as **P9-S8** and it
-outranks the rest of P9, and arguably P8 too, because it is a ten-minute fix on a Stage One
-pass/fail criterion. `.github/workflows/gate.yml` was built to catch exactly this; it did, and
-nobody read it.
+**That made two sentences in `README.md` false** — "exits zero, 357 tests, no API key" and "the
+same command runs in CI on every push … the judge's scenario rather than ours" — on a public
+repository that invites judges to clone and run exactly that command.
+`.github/workflows/gate.yml` was built to catch this; it did, on every push, and nobody opened it.
+
+**P9-S8 is DONE — gate passed at `84cb86e`.** `./scripts/verify.sh ALL --offline` now exits zero
+with no `GOOGLE_API_KEY` and no `.env`: **357 passed, 5 deselected**. The fix was two lines of test
+setup, not new design: `test_p2_s3.py` had already solved this at P2-S3 by injecting a placeholder
+credential, on the grounds that constructing an `Agent` makes no request, and P7-S1 simply never
+applied it. A `needs_key` skip was rejected — it would have left `agent.as_tool()` composition
+unverified in the one environment that matters. Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**The count in that README sentence was right all along**: the command selects 357 tests and now
+passes all 357, so no number needed correcting. Only "exits zero" had to become true.
+
+**One item on the P9-S8 DoD is still open, and it needs a merge, not a commit:** *the `gate`
+workflow reports success on the commit carrying this fix.* The workflow triggers on pushes to
+`main` and on pull requests, so it has not run for this branch. Open a PR or merge, then check
+`gh run list --branch main` — do not mark that box from a local pass.
 
 **Local numbers on Windows, for whoever picks this up:** `verify.sh ALL --offline` reported
 `15 failed, 342 passed` here. Normalising *only* the corpus line endings to LF took it to
