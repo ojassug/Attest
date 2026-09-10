@@ -53,7 +53,7 @@ from attest.criteria.gaps import build_gap_list
 from attest.criteria.match import match_all
 from attest.gates import content_hash
 from attest.llm import have_credentials
-from attest.models import ApprovalRecord, Packet, Verdict
+from attest.models import ApprovalRecord, Packet, Polarity, Verdict
 from attest.packet.emit import ARTIFACT_NAME, PDF_NAME, emit_submission_artifact
 from attest.packet.justification import build_justification
 from attest.paths import data_dir
@@ -66,10 +66,34 @@ from attest.verifier import enforce_verification
 # deploy has an ephemeral filesystem.
 OUT_ROOT = Path(os.environ.get("ATTEST_OUT_DIR", "out"))
 
-VERDICT_STYLE = {
-    Verdict.MET: ("✅", "Met"),
-    Verdict.UNMET: ("❌", "Not met"),
-    Verdict.INSUFFICIENT: ("⚠️", "Insufficiently documented"),
+# The icon follows the verdict, because "satisfied / not satisfied / cannot tell" means the same
+# thing to a reviewer whichever way the criterion points.
+VERDICT_ICON = {
+    Verdict.MET: "✅",
+    Verdict.UNMET: "❌",
+    Verdict.INSUFFICIENT: "⚠️",
+}
+
+# The wording does not, and collapsing the two senses is the specific misreading this table exists
+# to prevent. Four of Highmark's ten criteria are contraindications, and the screen used to render
+# them as "✅ hho-05 — Seizure disorder or any history of seizure", which to anyone who is not a
+# clinician says the patient *has* a seizure disorder. It says the opposite: the record documents
+# that they do not.
+#
+# INSUFFICIENT is the pair worth reading twice. On an absent criterion it does not mean the finding
+# might be there — it means nobody wrote it down, and `match.py` is explicit that "an undocumented
+# contraindication is unknown, not ruled out". "Not ruled out" is that sentence in two words.
+VERDICT_WORDING = {
+    Polarity.PRESENT: {
+        Verdict.MET: "Met",
+        Verdict.UNMET: "Not met",
+        Verdict.INSUFFICIENT: "Insufficiently documented",
+    },
+    Polarity.ABSENT: {
+        Verdict.MET: "Ruled out",
+        Verdict.UNMET: "Present — contraindicated",
+        Verdict.INSUFFICIENT: "Not ruled out",
+    },
 }
 
 # Offered for download on the landing screen, never loaded into the pipeline. A judge opening the
@@ -111,6 +135,16 @@ def read_upload(uploaded) -> str:
     """
     text = uploaded.getvalue().decode("utf-8")
     return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def humanise(category: str) -> str:
+    """`treatment_resistance` → `Treatment resistance`.
+
+    Categories are pack data written for code to group by, and they reach the screen unchanged
+    everywhere else in this file. In a criterion label they are doing a different job — telling a
+    reviewer what kind of requirement they are looking at — so they get read as English.
+    """
+    return category.replace("_", " ").capitalize()
 
 
 def offer_samples(*, expanded: bool = False) -> None:
@@ -385,11 +419,29 @@ if report.rejected:
 
 for verdict in coverage.verdicts:
     criterion = by_id[verdict.criterion_id]
-    icon, label = VERDICT_STYLE[verdict.verdict]
+    icon = VERDICT_ICON[verdict.verdict]
+    label = VERDICT_WORDING[criterion.polarity][verdict.verdict]
 
-    with st.expander(f"{icon} **{criterion.id}** — {criterion.text}", expanded=False):
-        st.caption(f"{label} · {criterion.category} · policy {criterion.source_section}")
-        st.write(verdict.reasoning)
+    # The label answers "which criterion, what kind, and how did it land" — the three things a
+    # reviewer scans a list of ten for. The payer's wording used to be *in* this label: up to 524
+    # characters of policy legalese wrapping to four lines, ten of them stacked, which made the
+    # product's core screen the one nobody could read. It moves inside, where it is still on
+    # screen and still verbatim, and where reading it is a choice rather than a toll.
+    with st.expander(
+        f"{icon} **{criterion.id}** · {humanise(criterion.category)} — {label}", expanded=False
+    ):
+        st.markdown(f"**The payer's own words.** {criterion.text}")
+        # "Source:" rather than "Policy", because a section name is already a section name —
+        # Highmark's is literally "POLICY POSITION", and the old prefix rendered it twice.
+        st.caption(f"Source: {criterion.source_section}")
+
+        if criterion.polarity is Polarity.ABSENT:
+            st.caption(
+                "This is a contraindication: it is satisfied when the record documents the "
+                "finding is **absent**. Silence is not the same as ruled out."
+            )
+
+        st.markdown(f"**Attest's reading.** {verdict.reasoning}")
 
         if verdict.spans:
             st.markdown("**Evidence from the note**")

@@ -53,8 +53,14 @@ No API key is required. Every model call replays from `cassettes/`.
       out of the note.
 - [ ] **Match criteria** → three metrics appear. Confirm **10/10 criteria met** and that
       *Verified verbatim* shows equal numerator and denominator.
+- [ ] The ten criteria read as ten scannable lines — `✅ ps-01 · Provider qualification — Met` —
+      not as ten paragraphs of policy text. All ten should fit on one screen.
 - [ ] Open two or three criteria. Each shows the payer's own wording, the model's reasoning, and at
       least one quote marked *verified verbatim* with character offsets.
+- [ ] Open a contraindication — `ps-05a`, `ps-05b` or `ps-05c`. The label says **Ruled out**, never
+      *Met*, and inside it explains that a contraindication is satisfied when the record documents
+      the finding is absent. Read the label aloud: it must not sound like the patient has the
+      condition.
 - [ ] Section 3 reads **Nothing outstanding**.
 - [ ] The justification lists one claim per met criterion, each with span ids.
 - [ ] **Gate 1:** the approve button is greyed out. Confirm it cannot be clicked.
@@ -129,6 +135,7 @@ No API key is required. Every model call replays from `cassettes/`.
 - An approve button enabled with an empty clinician field.
 - A document downloadable before approval.
 - A quote on screen without the *verified verbatim* mark.
+- A contraindication labelled *Met*, which states the inverse of what was found.
 - A deadline shown without its source.
 - Results from one note still visible after uploading another.
 - A **Draft the appeal** button offered with no denial letter uploaded.

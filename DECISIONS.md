@@ -1404,3 +1404,68 @@ shown to test anything.
 **What would change our mind.** If Attest ever accepts a format where `\r` is data rather than a
 line ending — a fixed-width payer export, say — `read_upload` stops being the right place and the
 normalisation moves to the Markdown path only.
+
+## 2026-09-10 · A verdict is not a sentence until you know which way the criterion points
+
+**Decision (P9-S3).** The criterion label carries the id, the category and what the verdict *means*
+— `✅ hho-05 · Contraindication — Ruled out`. The payer's wording moves inside the expander, still
+verbatim. A criterion with `polarity: absent` gets its own wording table and a line saying how it
+is satisfied.
+
+### The tick meant the opposite of what a reader would take it for
+
+`Polarity` has existed since P1-S1, and its docstring is exactly right: "Collapsing both senses
+into one would make every contraindication read as unmet, so the distinction is explicit." The
+engine respects it — `match.py` tells the model a contraindication is satisfied by absence, and the
+verdicts are correct. **The screen then threw the distinction away**, rendering from the verdict
+alone:
+
+    ✅ hho-05 — Seizure disorder or any history of seizure with increased risk of future seizure
+
+To anyone who is not a clinician that says the patient *has* a seizure disorder. It says the
+opposite. Four of Highmark's ten criteria are `absent`, and three of PacificSource's, so the
+flagship demo case had four lines stating the inverse of the finding on the screen
+`Attest-PRODUCT.md` §9 calls "the product's core".
+
+`INSUFFICIENT` is the pair worth reading twice. On an absent criterion it does not mean the finding
+might be present — it means nobody wrote it down, and `match.py` already says "an undocumented
+contraindication is unknown, not ruled out". **"Not ruled out"** is that sentence in two words, and
+it is deliberately not reassuring.
+
+### The label was the whole policy text
+
+Up to 524 characters (`hho-03`), wrapping to four lines, ten stacked in a column, all collapsed —
+so the core screen showed **no evidence at rest** and cost ten clicks to reveal any. The id and the
+category, which are the two things a reviewer scans a list of ten for, were hidden inside.
+
+The wording moves in rather than being summarised. Quoting the payer verbatim is the product's
+argument, not decoration: the appeal cites this language back at them. A label that paraphrased the
+policy would be a paraphrase on the one screen built to refuse paraphrase.
+
+### The category is read as English, and nowhere else
+
+`humanise` turns `treatment_resistance` into `Treatment resistance` in the label only. Categories
+stay raw wherever code groups by them. A label is doing a different job from a key.
+
+### What the gate proves, and how it was checked
+
+`tests/test_p9_s3.py` asserts over *every* criterion in the pack rather than a chosen few, because
+the fault was a rendering rule that happened to be wrong for one polarity — the kind that hides
+until a pack nobody was looking at ships. `test_the_packs_still_contain_the_case_this_gate_exists_for`
+guards the fixture itself: if no pack has an absent criterion, the polarity tests assert nothing
+and would go on passing.
+
+Both behaviours were then temporarily reverted and the suite re-run. Polarity-blind wording fails
+`test_a_contraindication_that_was_ruled_out_is_not_labelled_met`; the policy text back in the label
+fails `test_no_criterion_label_is_longer_than_a_scannable_line`. Neither test passes vacuously.
+
+**What would change our mind.** If a pack ever ships a criterion whose polarity is genuinely
+ambiguous — "document either A or the absence of B" — the two-value table stops being enough, and
+the honest answer is a per-criterion display sentence in the pack rather than a third enum value
+the model has to infer.
+
+### Not fixed here
+
+The evidence quote is still the faintest thing in the expander, and the note itself is still a
+separate collapsed block rather than the place the spans are shown. That is P9-S6, and it is the
+one recommendation in `docs/uiux-review.md` worth building even if nothing else on the list is.
