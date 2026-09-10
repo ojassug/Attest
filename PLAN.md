@@ -487,3 +487,145 @@ every gate in `tests/` — it is simply no longer reachable from the screen.
 - [ ] **Test** `test_p9_s1.py::test_the_appeal_waits_for_a_separately_uploaded_denial` (marker `needs_model`)
 - [ ] **File** `docs/ui-checklist.md` walks the upload flow rather than a case picker
 - [ ] **Command** `./scripts/verify.sh P9-S1 --offline` exits zero
+
+## P9-S2 — The console survives a note it has never seen
+
+Two ways the demo produces a Python traceback in front of a judge, both opened wider by P9-S1's
+upload box. On a Windows checkout `.md` files carry CRLF, so `read_upload` decodes a different
+string than `Path.read_text` recorded the cassettes against — a guaranteed cache miss, a live call,
+and an auth error on a keyless deploy. Separately, `app.py` catches only `MissingFactError`, so
+every other failure reaches the page. An open uploader invites a note the cassettes do not have;
+the screen has to answer that in words rather than in a stack trace. See `docs/uiux-review.md` §0.
+
+**DoD**
+- [ ] **File** `.gitattributes` contains a rule pinning `*.md` to `eol=lf`
+- [ ] **File** `app.py` — `read_upload` normalises `\r\n` and bare `\r` to `\n` before returning, so
+      the uploaded text and the recorded text are the same string on every platform
+- [ ] **File** `app.py` — each of `extract_case`, `match_all`, `parse_denial` and `draft_rebuttals`
+      is called inside an exception handler that renders a Streamlit element and stops
+- [ ] **Test** `test_p9_s2.py::test_a_crlf_upload_decodes_to_the_same_text_as_the_committed_note`
+- [ ] **Test** `test_p9_s2.py::test_a_note_the_cassettes_do_not_have_explains_itself_instead_of_raising`
+- [ ] **Test** `test_p9_s2.py::test_a_storage_failure_does_not_reach_the_page`
+- [ ] **Test** `test_p9_s2.py::test_the_offered_sample_downloads_round_trip_through_the_uploader`
+- [ ] **Command** `./scripts/verify.sh P9-S2 --offline` exits zero
+
+## P9-S3 — A criterion says what it means
+
+The criteria section is the product's core (`Attest-PRODUCT.md` §9) and is currently the hardest
+screen to read: the expander label is the whole policy text — up to 524 characters — and four of
+the ten Highmark criteria carry `polarity: absent`, so a tick beside "Seizure disorder or any
+history of seizure" states the inverse of what was found. The polarity is already loaded and never
+reaches the label. See `docs/uiux-review.md` §2.4.
+
+**DoD**
+- [ ] **File** `app.py` — the criterion expander label carries the criterion id and category, and
+      does not interpolate `criterion.text`
+- [ ] **File** `app.py` — a verdict on a criterion whose polarity is `absent` is labelled with
+      wording distinct from a `present` criterion, and the full policy text renders inside
+- [ ] **Test** `test_p9_s3.py::test_a_contraindication_that_was_ruled_out_is_not_labelled_met`
+- [ ] **Test** `test_p9_s3.py::test_no_criterion_label_is_longer_than_a_scannable_line`
+- [ ] **Test** `test_p9_s3.py::test_the_payers_own_wording_is_still_on_screen_for_every_criterion`
+- [ ] **Test** `test_p9_s3.py::test_every_quote_on_screen_still_carries_the_verifiers_mark`
+- [ ] **Command** `./scripts/verify.sh P9-S3 --offline` exits zero
+
+## P9-S4 — The landing screen makes the case
+
+The judge-facing URL opens on sixty words and an empty viewport, and the only route forward is
+download-a-file-then-upload-it. On a phone the sidebar collapses, so the one instruction on screen
+names a surface the viewer cannot see and the synthetic-data notice — required open by
+`Attest-PRODUCT.md` §7 — never renders at all. The sample must reach the pipeline **through the
+uploader**, per `DECISIONS.md` 2026-09-10: a pre-filled upload, never a control that sets the pack.
+See `docs/uiux-review.md` §2.1, §2.2, §3.
+
+**DoD**
+- [ ] **File** `app.py` — the landing screen states the problem, the audience and the pipeline
+      before anything is uploaded, including at least three quantified `st.metric`
+- [ ] **File** `app.py` — the synthetic-data notice renders in the main column, not only the sidebar
+- [ ] **File** `.streamlit/config.toml` pins the theme base, the primary colour and
+      `client.toolbarMode`, so the recording does not depend on the viewer's operating system
+- [ ] **Test** `test_p9_s4.py::test_the_landing_screen_states_the_problem_before_any_upload`
+- [ ] **Test** `test_p9_s4.py::test_the_synthetic_data_notice_survives_a_collapsed_sidebar`
+- [ ] **Test** `test_p9_s4.py::test_a_sample_case_enters_the_pipeline_through_the_uploader`
+- [ ] **Test** `test_p9_s4.py::test_the_landing_screen_still_offers_no_case_to_pick` — the P9-S1
+      property, re-asserted against the new screen
+- [ ] **Test** `test_p9_s4.py::test_the_pack_is_still_chosen_after_the_note_has_been_read` (marker `needs_model`)
+- [ ] **Command** `./scripts/verify.sh P9-S4 --offline` exits zero
+
+## P9-S5 — The gates look like gates, and an approval shows its provenance
+
+Gate 1 renders as a text field and a dark-grey disabled button, and on approval the screen says
+only that a packet was generated — while `approver`, `approved_at` and `content_hash` are all
+computed on the same code path and written to `approval.json`. Section 5 asserts "The payer denied
+it" on every case, before Gate 1 is approved, and the appeal path depends on `coverage` rather than
+on `state["submission"]`. Gate 2 still holds; the sequencing does not. See `docs/uiux-review.md`
+§2.6, §2.7.
+
+**DoD**
+- [ ] **File** `app.py` — an approved packet renders the approver, the approval timestamp and the
+      leading characters of the stored content hash
+- [ ] **File** `app.py` — the denial uploader and the **Draft the appeal** button are not rendered
+      until a submission exists for the case
+- [ ] **File** `app.py` — section 5's heading does not assert a denial before a denial letter has
+      been uploaded
+- [ ] **Test** `test_p9_s5.py::test_the_appeal_is_not_offered_before_gate_1_is_approved`
+- [ ] **Test** `test_p9_s5.py::test_an_approved_packet_names_who_approved_it_and_against_what_hash`
+- [ ] **Test** `test_p9_s5.py::test_the_screen_does_not_claim_a_denial_that_has_not_arrived`
+- [ ] **Test** `test_p9_s5.py::test_both_gates_are_still_inert_until_a_clinician_is_named`
+- [ ] **Command** `./scripts/verify.sh P9-S5 --offline` exits zero
+
+## P9-S6 — The note shows its own evidence
+
+Every verified span already carries exact character offsets that the verifier guarantees are real.
+Rendering the note with those spans marked in place turns the product's central claim — no clinical
+sentence exists that cannot be underlined in the source — from a grey caption into a picture. No new
+model call, no new data. See `docs/uiux-review.md` §3.
+
+**DoD**
+- [ ] **File** `app.py` renders the note with every verified span marked at its recorded offsets,
+      attributed to the criterion it supports
+- [ ] **Test** `test_p9_s6.py::test_every_marked_span_matches_the_note_at_its_recorded_offsets`
+- [ ] **Test** `test_p9_s6.py::test_no_unverified_span_is_ever_marked`
+- [ ] **Test** `test_p9_s6.py::test_overlapping_spans_do_not_corrupt_the_rendered_note`
+- [ ] **Command** `./scripts/verify.sh P9-S6 --offline` exits zero
+
+## P9-S7 — The run shows the agent that produced it
+
+The first judging criterion names the SDK, and the console names Strands zero times: no subagent
+boundary, no tool call, no model tier, no elapsed time. The same strip carries the before/after
+measurement P8-S3 owes. It must not overclaim — a cassette replay has to read as a replay, or the
+trace becomes the dishonest part of an otherwise honest product. See `docs/uiux-review.md` §1.
+
+**DoD**
+- [ ] **File** `app.py` renders, for each completed stage, the specialist that ran it, the model
+      tier it used and the elapsed wall time
+- [ ] **File** `app.py` renders a completion strip carrying criteria met, quotes verified verbatim
+      and total elapsed time for the case
+- [ ] **Test** `test_p9_s7.py::test_the_trace_names_the_model_that_produced_each_stage`
+- [ ] **Test** `test_p9_s7.py::test_a_cassette_replay_is_shown_as_a_replay_not_as_a_live_call`
+- [ ] **Command** `./scripts/verify.sh P9-S7 --offline` exits zero
+
+## P9-S8 — The keyless gate is green again
+
+`README.md` tells a judge the whole suite replays "with no API key and no network" and that CI runs
+the same command "on a clean machine with no credentials". As of 2026-09-10 that is false and has
+been for at least five runs: `verify.sh ALL --offline` on `main` exits **2 failed, 355 passed**.
+
+Both failures are `test_p7_s1.py`, and both are the same shape — `build_orchestrator` constructs
+Strands `Agent`s, `Agent` construction calls `build_model()`, and `build_model()` raises without a
+credential. Neither test carries the `skipif` that `test_p0_s4.py` and `test_p2_s1.py` use for
+exactly this, so they are the only two tests in the repository that demand a key to check something
+structural. Composing four specialists and reading their descriptions is not a model question.
+
+This outranks the rest of P9. The hackathon rules require a project that "installs and runs
+consistently", judges are invited to clone and run this exact command, and the README hands them
+the command that fails. See `docs/uiux-review.md` §0.3.
+
+**DoD**
+- [ ] **File** `tests/test_p7_s1.py` — `test_the_orchestrator_composes_exactly_the_four_specialists`
+      and `test_every_specialist_advertises_what_it_is_for` no longer require a credential to
+      construct the orchestrator, or carry the same `needs_key` skip the other modules use
+- [ ] **Command** `./scripts/verify.sh ALL --offline` exits zero **with no `GOOGLE_API_KEY` and no
+      `.env` present**
+- [ ] **Command** the `gate` workflow's most recent run on `main` reports success
+- [ ] **File** `README.md` — the test count quoted beside the offline claim matches what that
+      command actually reports
