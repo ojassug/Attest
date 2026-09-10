@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete, plus P7-S1..S3.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. |
+| **Phase** | **P0–P6 complete, plus P7-S1..S3 and P9-S1.** Product is submittable; P7-S4 is blocked on AWS. |
+| **Next step** | `P8-S2` (architecture diagram), `P8-S4` (video), `P8-S5` (Devpost) — all mandatory. `P9` is open for further final-improvement steps. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -69,6 +69,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |
 | P8-S4 | Demo video                                 | TODO   | —     | —        | —     |
 | P8-S5 | Devpost submission                         | TODO   | —     | —        | —     |
+| P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| pending  | 09-10 |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
@@ -83,6 +84,43 @@ viability, so a missing architecture diagram risks not being scored at all.
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-10 — Atharv** *(session 6)*
+
+**P9 is a new phase — "Final improvements" — and it is deliberately open.** It collects changes to
+a product that already passes every gate, and more steps will be appended to it. `PLAN.md` says so
+in the phase header so the next session does not read the single step as the whole phase.
+
+**P9-S1 is DONE: the console no longer has preloaded cases.** The three-case radio is gone. A note
+is uploaded, intake reads it, and the policy pack is chosen by `find_pack(cpt, payer, plan)` from
+what the model extracted — so uploading a PacificSource note and a Highmark note into the same
+unchanged screen reaches two different policies. The denial letter is a second upload at step 5,
+which is also how it arrives in a practice. Reasoning in `DECISIONS.md`, 2026-09-10.
+
+**What this cost, and what it did not.** `tests/test_p6_s3.py` drove the app through the radio's
+session-state key, so its helpers were rewritten to upload the corpus files through `AppTest`'s
+`FileUploader.set_value()`. Every assertion in it is unchanged in substance — only the way a case
+reaches the screen differs. **No engine code changed**; the diff is `app.py`, two test modules, one
+pytest marker, and the docs.
+
+**The uploads read the committed corpus files byte-for-byte, which is what keeps the demo free.**
+Cassette keys hash the note text, so an uploaded `clean.md` hits the same cassette the radio used
+to. Re-type a note, export it via a PDF round-trip, or edit one character, and it is a live API
+call against a 20-request daily cap. If the hosted app ever asks for a key, this is the first
+thing to check.
+
+**A judge with no note of their own can still use the public deploy.** The landing screen offers
+the synthetic notes and the denial letter as *downloads* — they are never loaded into the pipeline,
+which is the whole point of the step. `test_the_landing_screen_hands_a_stranger_a_note_to_try`
+holds that door open, because an upload-only screen with nothing to upload would be untestable by
+exactly the audience P6-S4 deployed it for.
+
+**Not done, and it is a real gap:** the deployed app at <https://attest.streamlit.app> still runs
+the old picker until this branch is merged and redeployed, and nobody has walked the rewritten
+`docs/ui-checklist.md` against the deployed app. `docs/deploy.md` is emphatic that a 200 is not
+sufficient — the first deploy returned 200 over a `FileNotFoundError`.
 
 ---
 

@@ -11,8 +11,11 @@ The failure this module exists to catch is different — a UI that renders an ap
 gate never sees, or writes a document before anyone pressed anything. Those tests pass in
 `test_p4_s2.py` and would still pass with a broken screen in front of them.
 
-The app replays from committed cassettes, so this runs offline with no API key, exactly as a judge
-would see it.
+P9-S1 removed the preloaded case radio, so these tests now begin by uploading a note exactly as a
+user would — `AppTest` can drive `st.file_uploader` directly. Every assertion below is unchanged in
+substance; only the way the case gets on screen is different. Uploading the committed corpus files
+byte-for-byte matters: the cassettes were recorded from that exact text, so this still runs offline
+with no API key, exactly as a judge would see it.
 """
 
 from __future__ import annotations
@@ -23,11 +26,13 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from attest.packet.emit import ARTIFACT_NAME, PDF_NAME
+from attest.paths import data_dir
 from conftest import needs_model
 
 pytestmark = pytest.mark.p6_s3
 
 APP = str(Path(__file__).resolve().parents[1] / "app.py")
+CORPUS = data_dir() / "synthetic"
 
 # The pipeline replays from cassettes rather than calling a model, but it still reads and matches
 # every criterion in a pack. Streamlit's 3s default is tuned for widget scripts, not for this.
@@ -50,9 +55,18 @@ def click(at: AppTest, label: str) -> AppTest:
     raise AssertionError(f"no button labelled {label!r}; saw {[b.label for b in at.button]}")
 
 
-def select_case(at: AppTest, name: str) -> AppTest:
-    at.session_state["case_name"] = name
+def upload(at: AppTest, key: str, path: Path) -> AppTest:
+    """Put a real file into a real uploader, the way a user does.
+
+    Bytes are read from disk rather than synthesised so the uploaded text is identical to what the
+    cassettes were recorded against — a re-typed note would be a cache miss and a live API call.
+    """
+    at.get_by_key(key).set_value((path.name, path.read_bytes(), "text/markdown"))
     return at.run()
+
+
+def upload_note(at: AppTest, name: str) -> AppTest:
+    return upload(at, "note_file", CORPUS / "notes" / f"{name}.md")
 
 
 def body_text(at: AppTest) -> str:
@@ -69,12 +83,24 @@ def test_app_imports_without_error(app):
 # --------------------------------------------------------------------- it renders
 
 
-def test_the_landing_screen_names_the_payer_and_the_policy(app):
-    """A reviewer has to know which payer's rules are being applied before reading a verdict."""
+def test_the_landing_screen_asks_for_a_note_and_nothing_else(app):
+    """Nothing is preloaded, so the first screen has exactly one thing to do."""
     assert not app.exception
     assert "Prior authorization review" in [t.value for t in app.title]
+    assert any("Upload a clinical note" in i.value for i in app.info)
 
-    text = body_text(app)
+
+@needs_model
+def test_the_screen_names_the_payer_and_the_policy_once_the_note_is_read(app):
+    """A reviewer has to know which payer's rules are being applied before reading a verdict.
+
+    Which payer that is comes from the note, not from a control the reviewer set — so this can
+    only be asserted after intake has run.
+    """
+    at = click(upload_note(app, "clean"), "Run intake")
+    assert not at.exception
+
+    text = body_text(at)
     assert "PacificSource" in text
     assert "https://" in text  # the policy is linked, not merely named
 
@@ -87,7 +113,7 @@ def test_the_synthetic_data_banner_is_always_visible(app):
 @needs_model
 def test_criteria_coverage_shows_a_verdict_and_its_evidence(app):
     """The product's core, on screen: per-criterion verdicts with the quotes behind them."""
-    at = click(click(app, "Run intake"), "Match criteria")
+    at = click(click(upload_note(app, "clean"), "Run intake"), "Match criteria")
     assert not at.exception
 
     labels = [e.label for e in at.expander]
@@ -104,7 +130,7 @@ def test_criteria_coverage_shows_a_verdict_and_its_evidence(app):
 @needs_model
 def test_the_gap_case_asks_the_practice_a_question(app):
     """A gap is a question for the practice, and the UI has to actually ask it."""
-    at = click(click(select_case(app, "gap"), "Run intake"), "Match criteria")
+    at = click(click(upload_note(app, "gap"), "Run intake"), "Match criteria")
     assert not at.exception
 
     text = body_text(at)
@@ -122,7 +148,7 @@ def test_gate_1_writes_nothing_until_a_clinician_is_named(app, tmp_path):
     A UI that renders an enabled approve button with no approver would hand `emit_submission_artifact`
     a blank name — the emitter refuses that, but the reviewer would see a crash instead of a gate.
     """
-    at = click(click(app, "Run intake"), "Match criteria")
+    at = click(click(upload_note(app, "clean"), "Run intake"), "Match criteria")
 
     approve = [b for b in at.button if b.label.startswith("Approve and generate")]
     assert approve, "Gate 1 has no approval control"
@@ -133,7 +159,7 @@ def test_gate_1_writes_nothing_until_a_clinician_is_named(app, tmp_path):
 
 @needs_model
 def test_gate_1_emits_both_documents_once_approved(app, tmp_path):
-    at = click(click(app, "Run intake"), "Match criteria")
+    at = click(click(upload_note(app, "clean"), "Run intake"), "Match criteria")
 
     at.text_input(key="gate1_approver").set_value("Dr. L. Marchetti").run()
     at = click(at, "Approve and generate")
@@ -154,8 +180,13 @@ def test_gate_1_emits_both_documents_once_approved(app, tmp_path):
 
 @needs_model
 def test_gate_2_holds_the_appeal_the_same_way(app, tmp_path):
-    """The denial case runs the second half of the loop, and stops at the second gate."""
-    at = click(click(select_case(app, "denial"), "Run intake"), "Match criteria")
+    """The denial case runs the second half of the loop, and stops at the second gate.
+
+    The denial letter is a second upload, because in a practice it arrives days after the note as
+    its own document.
+    """
+    at = click(click(upload_note(app, "denial"), "Run intake"), "Match criteria")
+    at = upload(at, "denial_file", CORPUS / "denials" / "denial_001.md")
     at = click(at, "Draft the appeal")
     assert not at.exception
 
@@ -182,7 +213,7 @@ def test_running_a_case_files_it_in_the_case_store(app, tmp_path):
     """The sidebar's open-case list is the case store, not a UI-local list."""
     from attest.store import load_case
 
-    at = click(app, "Run intake")
+    at = click(upload_note(app, "clean"), "Run intake")
     assert not at.exception
 
     assert load_case("SYNTH-001", tmp_path / "sessions") is not None
