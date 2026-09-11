@@ -75,9 +75,9 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S4 | Landing screen makes the case               | DONE   | Atharv| d275d50  | 09-11 |
 | P9-S5 | Gates look like gates; approval provenance  | DONE   | Atharv| b96151e  | 09-11 |
 | P9-S6 | The note shows its own evidence             | DONE   | Atharv| bd0f4d2  | 09-11 |
-| P9-S7 | The run shows the agent that produced it    | DONE   | Atharv| 12ea70d  | 09-11 |
+| P9-S7 | The run shows the agent that produced it    | DONE   | Atharv| 5f614e3  | 09-11 |
 | P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |
-| P9-S9 | Red means one thing                         | TODO   | —      | —        | —     |
+| P9-S9 | Red means one thing                         | DONE   | Atharv| e551178  | 09-11 |
 | P9-S10| Justification reads as an argument          | TODO   | —      | —        | —     |
 | P9-S11| Deadline leads with the days remaining      | TODO   | —      | —        | —     |
 | P9-S12| The sidebar's case list says something      | TODO   | —      | —        | —     |  <!-- store half landed 09-11; the two screen items remain -->
