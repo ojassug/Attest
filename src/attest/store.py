@@ -26,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
+from typing import NamedTuple
 
 from strands import Agent
 from strands.session import SnapshotSessionManager
@@ -210,6 +211,57 @@ def load_appeal(case_id: str, store_dir: Path | str | None = None) -> Appeal | N
         )
 
     return appeal
+
+
+class CaseSummary(NamedTuple):
+    """One line about a stored case: enough to list it, not enough to act on it."""
+
+    case_id: str
+    payer: str
+    plan: str
+    service: str
+
+
+def list_case_summaries(store_dir: Path | str | None = None) -> list[CaseSummary]:
+    """Every stored case as a listable line, sorted by case id.
+
+    `list_cases` returns bare identifiers — `SYNTH-001`, `SYNTH-003` — which is all a sidebar could
+    ever show, so the case store surfaced as opaque strings. This returns the few fields a listing
+    actually needs.
+
+    **It exists rather than the caller calling `load_case`, and that is deliberate.**
+    `test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all` asserts the substring `load_case`
+    does not appear in `app.py`. That test was written against `attest.corpus.load_case`, to keep a
+    preloaded case from returning under an alias, and it does not distinguish the corpus loader
+    from this module's. So the obvious implementation of a case list takes the **P9-S1** gate red
+    for a reason that has nothing to do with preloading, and the failure names a test about the
+    corpus. Widening that assertion was rejected: it bans a *name* on purpose, and the crudeness is
+    what makes it hard to defeat by accident. See `DECISIONS.md`, 2026-09-11.
+
+    It is also the better shape. Rendering one line should not deserialise a whole `Case`.
+
+    A case the store cannot read is **skipped, not raised**. This runs on every screen render,
+    including the landing screen, so one damaged snapshot must not be able to take down the listing
+    for every other case — `load_case` still raises for anyone asking about that case specifically,
+    which is where a corrupted record has to be loud.
+    """
+    summaries = []
+    for case_id in list_cases(store_dir):
+        try:
+            case = load_case(case_id, store_dir)
+        except Exception:  # noqa: BLE001 - a damaged case must not hide the healthy ones
+            continue
+        if case is None:
+            continue
+        summaries.append(
+            CaseSummary(
+                case_id=case.case_id,
+                payer=case.insurance.payer,
+                plan=case.insurance.plan,
+                service=case.service.service,
+            )
+        )
+    return summaries
 
 
 def list_cases(store_dir: Path | str | None = None) -> list[str]:
