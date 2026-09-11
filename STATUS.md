@@ -79,7 +79,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |
 | P9-S9 | Red means one thing                         | DONE   | Atharv| e551178  | 09-11 |
 | P9-S10| Justification reads as an argument          | DONE   | Atharv| 5cc6e72  | 09-11 |
-| P9-S11| Deadline leads with the days remaining      | TODO   | —      | —        | —     |
+| P9-S11| Deadline leads with the days remaining      | DONE   | Atharv| 8f3edc7  | 09-11 |
 | P9-S12| The sidebar's case list says something      | TODO   | —      | —        | —     |  <!-- store half landed 09-11; the two screen items remain -->
 | P9-S13| The routing moment says it was derived      | TODO   | —      | —        | —     |
 
