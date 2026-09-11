@@ -627,8 +627,18 @@ else:
         "Assembled, not written. One claim per met criterion, each citing only spans the verifier "
         "confirmed — so there is no code path that can produce an unsupported sentence."
     )
+    span_to_criterion = {
+        span.span_id: v.criterion_id
+        for v in coverage.verdicts
+        for span in v.spans
+    }
     for claim in packet.justification.claims:
-        st.markdown(f"- {claim.text}  \n  *{', '.join(claim.supporting_span_ids)}*")
+        crit_id = span_to_criterion.get(claim.supporting_span_ids[0]) if claim.supporting_span_ids else None
+        crit = by_id.get(crit_id) if crit_id else None
+        if crit:
+            st.markdown(f"**Criterion {crit.id}** ({crit.category.replace('_', ' ').title()})")
+        st.markdown(claim.text)
+        st.caption(f"Supporting evidence spans: {', '.join(claim.supporting_span_ids)}")
 
     st.divider()
     st.subheader("🔒 Gate 1 — clinician approval")
