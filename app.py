@@ -60,7 +60,7 @@ from attest.packet.emit import ARTIFACT_NAME, PDF_NAME, emit_submission_artifact
 from attest.packet.justification import build_justification
 from attest.paths import data_dir
 from attest.policies.loader import find_pack
-from attest.store import list_cases, save_appeal, save_case
+from attest.store import list_case_summaries, save_appeal, save_case
 from attest.tools.pa_lookup import check_pa_required
 from attest.verifier import enforce_verification
 
@@ -324,10 +324,10 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Open cases")
-    stored = list_cases()
+    stored = list_case_summaries()
     if stored:
-        for case_id in stored:
-            st.write(f"`{case_id}`")
+        for s in stored:
+            st.write(f"`{s.case_id}` · {s.payer}")
     else:
         st.caption("None yet. Running a case files it here.")
 
@@ -337,9 +337,10 @@ with st.sidebar:
         "No real patient information is used anywhere in Attest.",
         icon="⚠️",
     )
-    if st.button("Reset this case", use_container_width=True):
-        reset_case()
-        st.rerun()
+    if uploaded is not None or "sample_upload" in st.session_state:
+        if st.button("Reset this case", use_container_width=True):
+            reset_case()
+            st.rerun()
 
 
 # ------------------------------------------------------------------ 0 · empty state
