@@ -1,19 +1,9 @@
 """Gate for P9-S12 — the sidebar's case list says something.
 
-**This module is incomplete on purpose, and P9-S12 is NOT done.** Two of its DoD items are
-screen-level and are being built elsewhere: each entry under **Open cases** carrying its payer, and
-**Reset this case** not rendering before a note has been uploaded. Neither
-`test_the_landing_screen_offers_nothing_to_reset` nor the sidebar half of
-`test_a_case_the_store_cannot_read_does_not_take_the_sidebar_down` exists yet. Do not read a green
-`verify.sh P9-S12` as a finished step — check the DoD in `PLAN.md`.
-
-What is here is the store half, landed early because it removes a trap rather than adding a
-feature. `test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all` bans the bare substring
-`load_case` in `app.py`, to stop a preloaded corpus case returning under an alias. But
-`attest.store.load_case` is the obvious way to render a payer beside a stored case id — so the
-obvious implementation of this step takes the **P9-S1** gate red, and the failure names a test
-about the corpus. `list_case_summaries` is the way through, and it exists now so that whoever
-builds the sidebar never meets the trap. See `DECISIONS.md`, 2026-09-11.
+Tests that:
+- A stored case is listed with its case ID and its payer
+- The landing screen offers nothing to reset (no "Reset this case" button when no note is loaded)
+- A case the store cannot read does not take the sidebar down (resilient listing across healthy cases)
 """
 
 from __future__ import annotations
@@ -23,11 +13,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from streamlit.testing.v1 import AppTest
 
 from attest.models import Case, InsuranceInfo, ServiceRequest
+from attest.paths import data_dir
 from attest.store import list_case_summaries, save_case
 
 pytestmark = pytest.mark.p9_s12
+
+APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
+APP = str(APP_PATH)
+CORPUS = data_dir() / "synthetic"
+TIMEOUT = 90
 
 
 def a_case(case_id: str, payer: str) -> Case:
@@ -46,7 +43,26 @@ def a_case(case_id: str, payer: str) -> Case:
 @pytest.fixture
 def store(tmp_path, monkeypatch) -> Path:
     monkeypatch.setenv("ATTEST_STORE_DIR", str(tmp_path / "sessions"))
+    monkeypatch.setenv("ATTEST_OUT_DIR", str(tmp_path / "out"))
     return tmp_path / "sessions"
+
+
+@pytest.fixture
+def app(store):
+    return AppTest.from_file(APP, default_timeout=TIMEOUT).run()
+
+
+def click(at: AppTest, label: str) -> AppTest:
+    for button in at.button:
+        if button.label.startswith(label):
+            return button.click().run()
+    raise AssertionError(f"no button labelled {label!r}; saw {[b.label for b in at.button]}")
+
+
+def upload_note(at: AppTest, name: str) -> AppTest:
+    path = CORPUS / "notes" / f"{name}.md"
+    at.get_by_key("note_file").set_value((path.name, path.read_bytes(), "text/markdown"))
+    return at.run()
 
 
 def test_a_stored_case_is_listed_with_its_payer(store):
@@ -60,15 +76,29 @@ def test_a_stored_case_is_listed_with_its_payer(store):
     assert [s.payer for s in summaries] == ["PacificSource", "Highmark Health Options"]
     assert all(s.service for s in summaries), "a listing with no service names nothing useful"
 
+    # Also verify on screen that the sidebar renders payer beside case ID
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT).run()
+    assert not at.exception
+    text = "\n".join(el.value for el in at.markdown)
+    assert "SYNTH-001" in text and "PacificSource" in text
+    assert "SYNTH-003" in text and "Highmark Health Options" in text
 
-def test_a_damaged_case_does_not_hide_the_healthy_ones(store):
-    """This runs on every render, including the landing screen, so it may not fail loudly.
 
-    `load_case` raises on a snapshot that no longer satisfies `Case` — correctly, because anyone
-    asking about *that* case must not get a half-populated record. But a listing is a different
-    question, and one corrupted record must not be able to empty a practice's case list. The
-    damaged case is skipped; every other case still appears.
-    """
+def test_the_landing_screen_offers_nothing_to_reset(app):
+    """Before an upload or sample is loaded, 'Reset this case' is not rendered."""
+    assert not app.exception
+    reset_buttons = [b for b in app.button if b.label.startswith("Reset this case")]
+    assert len(reset_buttons) == 0, "Reset this case button was rendered on landing screen"
+
+    # Once a note is uploaded, the reset button appears
+    at = upload_note(app, "clean")
+    assert not at.exception
+    reset_buttons_after = [b for b in at.button if b.label.startswith("Reset this case")]
+    assert len(reset_buttons_after) == 1
+
+
+def test_a_case_the_store_cannot_read_does_not_take_the_sidebar_down(store):
+    """A corrupted case snapshot is skipped and does not crash the sidebar on render."""
     save_case(a_case("SYNTH-001", "PacificSource"))
     save_case(a_case("SYNTH-003", "Highmark Health Options"))
 
@@ -80,6 +110,13 @@ def test_a_damaged_case_does_not_hide_the_healthy_ones(store):
             encoding="utf-8",
         )
 
+    # list_case_summaries skips damaged case
     summaries = list_case_summaries()
-
     assert [s.case_id for s in summaries] == ["SYNTH-003"]
+
+    # Streamlit app renders without exception and displays the healthy case in the sidebar
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT).run()
+    assert not at.exception
+    text = "\n".join(el.value for el in at.markdown)
+    assert "SYNTH-003" in text and "Highmark Health Options" in text
+    assert "SYNTH-001" not in text
