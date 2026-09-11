@@ -80,7 +80,7 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S9 | Red means one thing                         | TODO   | —      | —        | —     |
 | P9-S10| Justification reads as an argument          | TODO   | —      | —        | —     |
 | P9-S11| Deadline leads with the days remaining      | TODO   | —      | —        | —     |
-| P9-S12| The sidebar's case list says something      | TODO   | —      | —        | —     |
+| P9-S12| The sidebar's case list says something      | TODO   | —      | —        | —     |  <!-- store half landed 09-11; the two screen items remain -->
 | P9-S13| The routing moment says it was derived      | TODO   | —      | —        | —     |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
