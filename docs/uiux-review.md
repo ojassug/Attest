@@ -293,6 +293,11 @@ Mapped to the steps drafted in `PLAN.md`.
 | **2 — credibility** | **P9-S5** | The gates look like gates; the approval shows who, when and against what hash; section 5 stops asserting a denial that has not happened. |
 | **3 — marquee** | **P9-S6** | The note renders with its verified spans highlighted in place. The strongest engineering claim, made visible without narration. |
 | **3 — upside** | **P9-S7** | The agent becomes visible: which subagent, which tool, which model, how long — plus the before/after strip that P8-S3 owes. |
+| **2 — correctness** | **P9-S9** | Red stops meaning both "something is wrong" and "click this". §2.3. |
+| **3 — polish** | **P9-S10** | The justification stops reading as legal boilerplate, without its construction moving an inch. §2.5. |
+| **3 — polish** | **P9-S11** | The appeal leads with the days remaining rather than with its own disclaimer. §2.8. |
+| **3 — polish** | **P9-S12** | The sidebar's case list carries a payer instead of an opaque id. §2.9. |
+| **1 — marquee** | **P9-S13** | The routing moment says it was derived from the document, not configured. §1. |
 
 ### The landing screen, concretely
 
@@ -360,6 +365,13 @@ Read the tiers above accordingly:
   has to double as the architecture diagram — `docs/architecture.svg` exists and P8-S2 is closed —
   so it can be built for the landing screen alone.
 - **P9-S5 through P9-S7 are upside.** Build them if P8 is genuinely finished, and not before.
+
+**Added 2026-09-11.** Five steps — **P9-S9** through **P9-S13** — close the findings above that no
+step covered: §2.3, §2.5, §2.8, §2.9, and §1's third consequence. They are contract only; no work
+has started on any of them. **P9-S13 is ranked with P9-S4 rather than with the polish steps**,
+because §1 names it as one of the three diagnoses and it makes P9-S1 — the step this whole console
+was rebuilt for — visible for the first time. The rest sit below P9-S5, and all of them still sit
+below P8.
 
 Steps are taken **one at a time, in one session**. An earlier draft of this document sketched a
 parallel split by file; that is not how the work is being done, and the ordering above is the whole

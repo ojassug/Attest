@@ -1538,3 +1538,55 @@ GitHub's sanitiser cannot strip the styling; an explicit white background so it 
 None of these were lies when written. That is the point: a README is a claim surface, and on a
 public repository a judge is invited to check it. `P9-S8` was the same failure in CI, and the same
 lesson — **the numbers in prose have to be produced by running the thing.**
+
+## 2026-09-11 · Five steps that close the review, and one gate that bans the obvious fix
+
+**Decision (P9 contract).** `PLAN.md` gains `P9-S9` through `P9-S13`. Nothing was implemented; the
+markers, the board rows and the tier table moved in the same commit as the headings.
+
+**Why the phase grew rather than the existing steps.** `docs/uiux-review.md` produced more findings
+than P9-S2..S7 covered, and the uncovered ones were not offcuts. §2.3 is a colour saying two
+incompatible things on the one screen that decides whether a practice gets paid. §2.5 is the
+product's safety argument — one claim per met criterion, assembled from verified spans — rendered
+so it is indistinguishable from boilerplate. §2.8 is a deadline banner that leads with its own
+disclaimer and never states the number anyone acts on. §2.9 is the case store, one of the more
+interesting things built, surfacing as two opaque strings. And §1's third consequence is the
+routing moment: P9-S1 exists to demonstrate that Attest works out whose rules apply from a document
+it has not seen, and on screen that is one green bar identical to every other green bar.
+
+Folding these into P9-S4 or P9-S5 would have made two already-large steps larger and broken rule 4.
+Leaving them in the review only would have left them as prose nobody is gated on, which is the
+failure mode this repository's whole protocol exists to prevent.
+
+### A DoD that records a landmine instead of letting the next session find it
+
+`test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all` asserts the substring `load_case` does
+not appear in `app.py`. It was written against `attest.corpus.load_case` and it does not
+distinguish that from `attest.store.load_case`, which exists, is public, and is exactly what you
+reach for to render a payer beside a stored case id in P9-S12.
+
+So the obvious implementation of P9-S12 takes the **P9-S1** gate red, for a reason that has nothing
+to do with preloading, and the failure names a test about the corpus. That is a full session lost
+to a red herring. P9-S12's DoD therefore asks for a new store helper that returns id-and-payer
+summaries, and says why in the step itself.
+
+**Widening the P9-S1 assertion was considered and rejected.** It could match `attest.corpus` or an
+import line rather than the bare name, and it would be a smaller diff. But the test is deliberately
+crude — it bans a *name*, so that a corpus path cannot return under an alias — and the crudeness is
+what makes it hard to defeat by accident. Loosening an earlier gate to make a later step convenient
+is the move the protocol exists to make expensive. The helper is also the better design: rendering
+one sidebar line should not deserialise a whole `Case`.
+
+**What would change our mind.** If a second step also needs a stored `Case` in full on screen, the
+ban has outlived its shape and should become an import-level assertion — recorded here, argued
+there, not done quietly.
+
+### The UI work is leaving this protocol, and the board says so
+
+The eight open P9 steps are being built in a separate UI tool rather than session by session in
+this repository. That is a real change to how work arrives and it is written into `STATUS.md`'s
+current position and handoff note, because the protocol's one assumption is that whoever picks up
+the board next can trust it. A second session starting `P9-S4` from a `TODO` row would be two
+people editing `app.py` in parallel — the exact thing this project has avoided since P9-S1.
+
+The DoDs do not change because of it. Whatever comes back is measured by the same gate.
