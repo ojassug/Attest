@@ -778,6 +778,13 @@ else:
                             )
                             st.markdown(f"> {prior_rebuttal.argument}")
 
+    today = datetime.now(timezone.utc).date()
+    days_left = max(0, (appeal.deadline - today).days)
+
+    dl_col1, dl_col2 = st.columns(2)
+    dl_col1.metric("Appeal deadline", appeal.deadline.isoformat())
+    dl_col2.metric("Days remaining", f"{days_left} days", help=f"{pack.appeal_window_days} days from determination date.")
+
     st.info(
         f"**Appeal deadline: {appeal.deadline.isoformat()}** — "
         f"{pack.appeal_window_days} days from the determination. "
