@@ -238,12 +238,24 @@ def note_key(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
+class SampleUpload:
+    """Simulate an uploaded file for a sample case from the synthetic corpus."""
+
+    def __init__(self, name: str, data: bytes):
+        self.name = name
+        self._data = data
+
+    def getvalue(self) -> bytes:
+        return self._data
+
+
 def case_state() -> dict:
     return st.session_state.setdefault("results", {}).setdefault(st.session_state["note_key"], {})
 
 
 def reset_case() -> None:
     st.session_state.setdefault("results", {}).pop(st.session_state.get("note_key"), None)
+    st.session_state.pop("sample_upload", None)
 
 
 # ------------------------------------------------------------------------- sidebar
@@ -281,15 +293,62 @@ with st.sidebar:
 
 # ------------------------------------------------------------------ 0 · empty state
 
+if uploaded is not None:
+    st.session_state.pop("sample_upload", None)
+elif "sample_upload" in st.session_state:
+    uploaded = st.session_state["sample_upload"]
+
 st.title("Prior authorization review")
 
 if uploaded is None:
     st.info("Upload a clinical note in the sidebar to begin.", icon="📄")
-    st.caption(
-        "Attest reads the note, works out which payer's policy applies, checks the record against "
-        "that policy criterion by criterion, and stops for a clinician's approval before anything "
-        "is submitted."
+
+    st.markdown(
+        "**The problem.** Prior authorization (PA) is the largest administrative burden in "
+        "outpatient specialty care, consuming immense staff time and delaying patient treatment. "
+        "Solo and small practices absorb this directly because they have no dedicated PA departments."
     )
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Weekly requests", "~39–43", help="PA requests completed per physician per week (AMA surveys)")
+    m2.metric("Staff time spent", "~13 hrs/wk", help="Physician and staff hours consumed by PA weekly (AMA)")
+    m3.metric("Denial rate", "~31%", help="Physicians reporting requests often or always denied")
+
+    st.subheader("Target audience")
+    st.write(
+        "Built for office managers, solo clinicians, and administrative staff at 1–10 provider "
+        "specialty practices (behavioral health, physical therapy, pain, neurology) who personally handle PAs."
+    )
+
+    st.subheader("End-to-end pipeline")
+    st.markdown(
+        "1. **Intake & PA lookup** — Ingests clinical note, extracts case details, and checks if PA is required under payer policy.\n"
+        "2. **Criteria matching & verifier** — Evaluates each policy criterion, strictly verifying verbatim source evidence quotes.\n"
+        "3. **Gap identification** — Surfaces missing documentation as targeted clinician questions.\n"
+        "4. **Clinician approval (Gate 1) & Submission** — Secure human sign-off with cryptographic content hash before emitting PDF/Markdown.\n"
+        "5. **Denial parsing & appeal (Gate 2)** — Parses denial letter, drafts policy-cited rebuttals, enforces Gate 2 approval, and saves precedent."
+    )
+
+    st.warning(
+        "**Synthetic data only.** Every note and denial letter in this demo is fabricated. "
+        "No real patient information is used anywhere in Attest.",
+        icon="⚠️",
+    )
+
+    st.subheader("Try a sample note or download one below")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Load sample: PacificSource TMS (clean)", use_container_width=True):
+            sample_path = data_dir() / "synthetic" / "notes" / "clean.md"
+            if sample_path.exists():
+                st.session_state["sample_upload"] = SampleUpload(sample_path.name, sample_path.read_bytes())
+                st.rerun()
+    with col2:
+        if st.button("Load sample: Highmark TMS (denial)", use_container_width=True):
+            sample_path = data_dir() / "synthetic" / "notes" / "denial.md"
+            if sample_path.exists():
+                st.session_state["sample_upload"] = SampleUpload(sample_path.name, sample_path.read_bytes())
+                st.rerun()
 
     offer_samples()
     st.stop()
