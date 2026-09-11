@@ -639,3 +639,118 @@ docstring, and solved it by injecting a placeholder key because constructing an 
 request. A `needs_key` skip would have left composition unchecked in precisely the environment
 that matters, and threading a model factory through five functions would have been a second
 solution to a solved problem.
+
+## P9-S9 — Red means one thing
+
+`REQUIRED` renders through `st.error`, so the normal path — the entire reason the product exists —
+is styled as a failure. The comment above that dispatch table defends `UNKNOWN` not being green,
+which is right and must stay; it does not follow that `REQUIRED` should be red. Compounding it,
+Streamlit's default primary colour is the same red, so on that one screen red means both "something
+is wrong" and "click this". See `docs/uiux-review.md` §2.3. The palette half is P9-S4's
+`.streamlit/config.toml`; this step is the semantics.
+
+**DoD**
+- [ ] **File** `app.py` — the PA-determination dispatch renders `REQUIRED` through an element that
+      is not `st.error`
+- [ ] **File** `app.py` — `UNKNOWN` still renders through `st.warning` and `NOT_REQUIRED` through
+      `st.success`, unchanged. "We could not find a policy" must never read as "no authorization
+      needed"; that is P2-S2's whole reason for existing and no styling change may weaken it
+- [ ] **Test** `test_p9_s9.py::test_a_required_authorization_is_not_styled_as_a_failure`
+- [ ] **Test** `test_p9_s9.py::test_an_unknown_requirement_is_still_not_styled_as_a_success`
+- [ ] **Test** `test_p9_s9.py::test_a_clean_intake_renders_no_error_element_at_all` — on a case
+      where nothing went wrong, nothing on screen may claim something did
+- [ ] **Command** `./scripts/verify.sh P9-S9 --offline` exits zero
+
+## P9-S10 — The justification reads as an argument, not as boilerplate
+
+Ten claims, each carrying up to 400 characters of quoted policy, each closing with the same clause
+— *"The record documents this for the requested repetitive transcranial magnetic stimulation"* —
+repeated verbatim ten times down one page, with the span ids beneath as unexplained grey italics.
+See `docs/uiux-review.md` §2.5.
+
+**The construction is the product's safety argument and must not change.** One claim per met
+criterion, assembled from verified spans only, so there is no code path that can produce an
+unsupported sentence. This step changes *how the screen renders that list* and nothing else — the
+packet, the artifact and the hash a clinician approves must be byte-identical afterwards.
+
+**DoD**
+- [ ] **File** `app.py` — each claim renders grouped under the criterion it answers, and the span
+      ids carry a label naming what they are
+- [ ] **File** `src/attest/packet/justification.py` — unchanged by this step
+- [ ] **Test** `test_p9_s10.py::test_the_claims_on_screen_are_exactly_the_claims_in_the_packet` —
+      the screen may reorder or group; it may never add, drop or reword a claim
+- [ ] **Test** `test_p9_s10.py::test_every_claim_on_screen_still_names_the_spans_it_cites`
+- [ ] **Test** `test_p9_s10.py::test_the_approved_content_hash_does_not_move` — Gate 1 binds a hash
+      over the packet, so a presentation change that shifted it would invalidate every prior
+      approval and prove the change was not presentation
+- [ ] **Command** `./scripts/verify.sh P9-S10 --offline` exits zero
+
+## P9-S11 — The deadline leads with the number a practice acts on
+
+The appeal banner mixes a hard fact with a longer disclaimer — *"Appeal deadline: 2026-10-02 — 60
+days from the determination. Window source: NOT STATED in policy HHO-DE-MP-1147. Placeholder
+pending confirmation…"* — so the box reads as a caveat rather than as *we are already tracking your
+clock*. And it never states days remaining, which is the number anyone actually acts on. See
+`docs/uiux-review.md` §2.8.
+
+The honesty stays. P5-S4 is explicit that an invented deadline on an appeal is worse than no
+deadline and that a reader must be able to tell them apart; the proportion is what is wrong, not
+the disclosure.
+
+**DoD**
+- [ ] **File** `app.py` — the appeal deadline renders the days remaining as an `st.metric`
+      alongside the date
+- [ ] **File** `app.py` — the window's provenance still renders in full, and a window the pack does
+      not state is still labelled a placeholder
+- [ ] **Test** `test_p9_s11.py::test_the_days_remaining_agree_with_the_deadline_on_the_appeal`
+- [ ] **Test** `test_p9_s11.py::test_an_undisclosed_window_still_says_it_is_a_placeholder` —
+      P5-S4's standing property, re-asserted against the new layout
+- [ ] **Test** `test_p9_s11.py::test_a_deadline_already_past_does_not_render_a_negative_countdown`
+- [ ] **Command** `./scripts/verify.sh P9-S11 --offline` exits zero
+
+## P9-S12 — The sidebar's case list says something
+
+**Open cases** lists bare identifiers — `SYNTH-001`, `SYNTH-003` — with no payer, no state, no
+deadline, so one of the more interesting things built surfaces as two opaque strings. And **Reset
+this case** is offered on the landing screen, where there is no case to reset. See
+`docs/uiux-review.md` §2.9.
+
+**The landmine, recorded before the work starts.** The obvious implementation reaches for
+`attest.store.load_case`, and `test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all` bans the
+bare substring `load_case` in `app.py` — it was written against `attest.corpus.load_case` and does
+not distinguish the two. Using it would take the P9-S1 gate red for a reason that has nothing to do
+with preloading. So the summary comes from a new store helper instead, which is the better shape
+anyway: rendering a sidebar line should not deserialise a whole `Case`.
+
+**DoD**
+- [ ] **File** `src/attest/store.py` — a function returning, for every stored case, the case id and
+      the payer, without the caller naming `load_case`
+- [ ] **File** `app.py` — each entry under **Open cases** carries its payer, and `app.py` still
+      contains no occurrence of `load_case`
+- [ ] **File** `app.py` — **Reset this case** is not rendered before a note has been uploaded
+- [ ] **Test** `test_p9_s12.py::test_a_stored_case_is_listed_with_its_payer`
+- [ ] **Test** `test_p9_s12.py::test_the_landing_screen_offers_nothing_to_reset`
+- [ ] **Test** `test_p9_s12.py::test_a_case_the_store_cannot_read_does_not_take_the_sidebar_down` —
+      the error boundary P9-S2 built, applied to the one element that renders on every screen
+- [ ] **Command** `./scripts/verify.sh P9-S12 --offline` exits zero
+
+## P9-S13 — The routing moment says it was derived, not configured
+
+Uploading a PacificSource note and a Highmark note into the same unchanged screen reaches two
+different policy packs with materially different bars — 2 antidepressant trials plus augmentation
+versus 4 trials plus a psychotherapy failure. `docs/ui-checklist.md` calls this "the moment the
+demo exists to show". On screen it is one green `st.success` bar, visually identical to every other
+success message in the app, and **nothing says *nobody told it this — it worked it out from the
+document***. See `docs/uiux-review.md` §1.
+
+This is P9-S1's whole point, and it is currently asserted in `tests/` and invisible on screen.
+
+**DoD**
+- [ ] **File** `app.py` — the policy-match panel names the payer, plan and CPT that intake
+      extracted, and states that the pack was selected from them rather than chosen
+- [ ] **Test** `test_p9_s13.py::test_the_policy_panel_shows_what_the_match_was_made_from`
+- [ ] **Test** `test_p9_s13.py::test_two_payers_reach_two_packs_through_the_same_screen`
+      (marker `needs_model`) — P9-S1's property, made visible rather than only asserted
+- [ ] **Test** `test_p9_s13.py::test_an_unlisted_payer_still_stops_the_review` — the panel must not
+      become a place that claims a match that did not happen
+- [ ] **Command** `./scripts/verify.sh P9-S13 --offline` exits zero

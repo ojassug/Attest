@@ -12,8 +12,8 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. |
-| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left.** P8-S5 needs an AWS Builder ID nobody has obtained. Then `P9-S4`. Steps are being taken **one at a time, in one session** — no parallel branches. |
+| **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. P9 now carries **thirteen** steps; the five open UI ones added 09-11 are contract only, with no work started. |
+| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left.** P8-S5 needs an AWS Builder ID nobody has obtained. **Every open P9 step is a UI/UX step and is being built outside this repo's session protocol — see the 09-11 handoff note before starting one.** |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -77,6 +77,11 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
 | P9-S7 | The run shows the agent that produced it    | TODO   | —     | —        | —     |
 | P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |
+| P9-S9 | Red means one thing                         | TODO   | —      | —        | —     |
+| P9-S10| Justification reads as an argument          | TODO   | —      | —        | —     |
+| P9-S11| Deadline leads with the days remaining      | TODO   | —      | —        | —     |
+| P9-S12| The sidebar's case list says something      | TODO   | —      | —        | —     |
+| P9-S13| The routing moment says it was derived      | TODO   | —      | —        | —     |
 
 **Submittable line:** everything through `P6-S4` is required, and **P0–P6 are now complete**.
 
@@ -91,6 +96,59 @@ viability, so a missing architecture diagram risks not being scored at all.
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+---
+
+**2026-09-11 — Atharv** *(session 8)*
+
+**No step changed status this session. What changed is the contract: P9 gained five steps,
+`P9-S9` through `P9-S13`, and every one of them is drafted rather than started.**
+
+**Read this before you pick up a P9 step.** The eight open UI steps — `P9-S4`..`P9-S7` and the five
+new ones — **are being built outside this session protocol**, in a separate UI tool, by Atharv.
+Do not start one. If you have time for P9, the useful thing is to review what comes back against
+the DoDs below, not to implement in parallel; two sessions editing `app.py` is exactly the parallel
+branching this project has avoided since P9-S1.
+
+**Where the five new steps came from.** `docs/uiux-review.md` had findings that no step covered:
+§2.3 (red means both "wrong" and "click this"), §2.5 (the justification reads as boilerplate),
+§2.8 (the deadline banner leads with a disclaimer and never states days remaining), §2.9 (the
+sidebar lists opaque case ids, and offers Reset where there is no case), and §1's third consequence
+(the routing moment — the thing P9-S1 exists to demonstrate — is one green bar identical to every
+other green bar). Four steps existed for the rest of the review; these five close it. The tier
+table in `docs/uiux-review.md` §3 now lists all eight open steps in priority order.
+
+**One landmine is recorded in P9-S12's DoD rather than discovered later.**
+`test_p9_s1.py::test_the_app_cannot_reach_the_corpus_at_all` bans the bare substring `load_case`
+in `app.py`. It was written against `attest.corpus.load_case`, but `attest.store.load_case` also
+exists and is the obvious way to render a payer beside a stored case id — so the obvious
+implementation takes the P9-S1 gate red for a reason that has nothing to do with preloading. The
+DoD therefore asks for a new store helper instead, which is the better shape anyway.
+
+**Markers landed in the same commit as the headings, deliberately.**
+`test_p0_s3.py::test_every_step_has_a_marker` reads step ids straight out of `PLAN.md`, and
+`test_status_covers_all_plan_steps` requires one board row per step in plan order. Five headings
+committed alone would have taken the P0 gate — and with it every cumulative run — red. Same
+sequencing session 7 used for P9-S2..S7.
+
+**Baseline verified before any of it:** `./scripts/verify.sh ALL --offline` — **366 passed,
+5 deselected**, exit 0, at `cbd80fe`. CI is green on `main` for the first time in six runs.
+
+**Three stale doc claims were also corrected** (commit `6cdde7d`), all found by reading rather than
+by a gate. `docs/setup.md` still named `test_p2_s3.py::test_pa_tool_is_registered` as a known open
+item leaving a keyless run "one test short" — P2-S3 closed that when it was written and P9-S8
+closed the last holdout yesterday; `README.md` had been corrected for the same sentence at P8-S1
+and this copy was missed. The same file still carried the AWS $50 credit as outstanding with a
+**Sep 11** deadline — today — which `PLAN.md` and `STATUS.md` were corrected for yesterday
+precisely because reading it as open had already cost a session a wrong reminder. And
+`build/lib/attest/` had been tracked since `6980544`, a second drifting copy of every engine module
+already missing `demo.py`, on a repo the README invites judges to clone. Untracked and gitignored,
+along with `.claude/`.
+
+**Still outstanding, and not code:** `P8-S4` (video) and `P8-S5` (Devpost, needs an **AWS Builder
+ID** nobody has obtained). **Sep 14, 5:00pm PT.** Also unpruned, because the sandbox refused the
+command: `origin/claude/attest-uiux-review-0d3f38` and `origin/worktree-p9-s1-upload` are both
+fully merged, and a stale worktree sits at `.claude/worktrees/p9-s1-upload`.
 
 ---
 
