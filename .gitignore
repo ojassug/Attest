@@ -11,3 +11,14 @@ sessions/
 
 # Secrets — never commit
 .env
+
+# Build output. `build/lib/attest/` was committed by accident in 6980544 (the deploy fix) and
+# sat in the repo as a second, drifting copy of every engine module - by 09-11 it was already
+# missing `demo.py`. Judges are invited to clone this repo; a stale duplicate of the package is
+# the last thing that should greet them.
+build/
+dist/
+
+# Claude Code's local scratch, including any git worktrees it creates. A worktree is an
+# embedded repository; `git add -A` commits it as a gitlink that nobody else can resolve.
+.claude/
