@@ -575,11 +575,18 @@ if st.button("Approve and generate submission", type="primary", disabled=not app
     with guarded("Generating the submission"):
         emit_submission_artifact(approved, out)
     state["submission"] = out
+    state["submission_approval"] = approved.approval
     st.rerun()
 
 if "submission" in state:
     out = state["submission"]
     st.success("Submission packet approved and generated.", icon="✅")
+    if "submission_approval" in state:
+        appr = state["submission_approval"]
+        st.caption(
+            f"Approved by **{appr.approver}** on {appr.approved_at.strftime('%Y-%m-%d %H:%M:%S UTC')} · "
+            f"Content hash `{appr.content_hash[:12]}`"
+        )
     d1, d2 = st.columns(2)
     d1.download_button(
         "Download submission (Markdown)",
@@ -593,11 +600,17 @@ if "submission" in state:
         file_name=f"{packet.case_id}-{PDF_NAME}",
         use_container_width=True,
     )
+else:
+    st.stop()
 
 
 # ------------------------------------------------------------ 6 · denial and Gate 2
 
-st.header("5 · The payer denied it")
+if st.session_state.get("denial_file") is None:
+    st.header("5 · If a denial arrives")
+else:
+    st.header("5 · The payer denied it")
+
 st.caption(
     "A denial arrives days later as its own document, so it is uploaded separately rather than "
     "shipped alongside the note."
@@ -697,10 +710,17 @@ if st.button("Approve and send appeal", type="primary", disabled=not appeal_appr
         # Stored so it becomes precedent for the next case that hits the same criterion.
         save_appeal(approved_appeal)
     state["appeal_artifact"] = artifact
+    state["appeal_approval"] = approved_appeal.approval
     st.rerun()
 
 if "appeal_artifact" in state:
     st.success("Appeal approved, generated, and filed as precedent.", icon="✅")
+    if "appeal_approval" in state:
+        appr = state["appeal_approval"]
+        st.caption(
+            f"Approved by **{appr.approver}** on {appr.approved_at.strftime('%Y-%m-%d %H:%M:%S UTC')} · "
+            f"Content hash `{appr.content_hash[:12]}`"
+        )
     st.download_button(
         "Download appeal (Markdown)",
         state["appeal_artifact"].read_text(encoding="utf-8"),

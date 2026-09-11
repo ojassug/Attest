@@ -186,6 +186,8 @@ def test_gate_2_holds_the_appeal_the_same_way(app, tmp_path):
     its own document.
     """
     at = click(click(upload_note(app, "denial"), "Run intake"), "Match criteria")
+    at.text_input(key="gate1_approver").set_value("Dr. L. Marchetti").run()
+    at = click(at, "Approve and generate")
     at = upload(at, "denial_file", CORPUS / "denials" / "denial_001.md")
     at = click(at, "Draft the appeal")
     assert not at.exception
