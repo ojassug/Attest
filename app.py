@@ -496,7 +496,13 @@ else:
         )
         st.stop()
 
-    st.success(f"**Policy matched — {pack.payer}** · {pack.plan} · {pack.service}", icon="📕")
+    cpt_display = ", ".join(case.service.cpt_codes)
+    st.success(
+        f"**Policy matched — {pack.payer}** · {pack.plan} · {pack.service}\n\n"
+        f"Derived automatically from extracted document attributes (Payer: **{case.insurance.payer}**, "
+        f"Plan: **{case.insurance.plan}**, CPT: **{cpt_display}**) — selected from policy repository, not configured.",
+        icon="📕",
+    )
     st.caption(
         f"Criteria from [{pack.source_title}]({pack.source_url}), retrieved {pack.retrieved_date}"
     )
