@@ -29,7 +29,7 @@ from a gate failure: a non-zero gate must only ever mean tests failed.
 
 ## Running the gate
 
-The whole suite replays from `cassettes/` — no API key, no network, about 1.5 seconds:
+The whole suite replays from `cassettes/` — no API key, no network, about fifteen seconds:
 
 ```bash
 ./scripts/verify.sh P3 --offline     # a phase, plus every phase before it
@@ -38,10 +38,14 @@ The whole suite replays from `cassettes/` — no API key, no network, about 1.5 
 
 Two things that are easy to trip over:
 
-- **One test still needs a key to be *present*.** `test_p2_s3.py::test_pa_tool_is_registered`
-  builds an `Agent`, and `build_model()` refuses to construct without a credential — even though
-  it makes no request, so any dummy string satisfies it. A genuinely keyless run is one test
-  short. This is a known open item, recorded in `DECISIONS.md`.
+- **A keyless run is a full run, and that is now load-bearing.** `build_model()` refuses to
+  construct without a credential on purpose, so any test that builds an `Agent` needs a key to be
+  *present* — never a request to be made. `test_p2_s3.py` settled this at P2-S3 by injecting a
+  placeholder string, and P9-S8 applied the same two lines to `test_p7_s1.py`, which was the last
+  holdout. `./scripts/verify.sh ALL --offline` now exits zero with **no `GOOGLE_API_KEY` and no
+  `.env`** — CI runs exactly that on every push. If it ever needs a key again, a live call has
+  crept back in; find it rather than adding one. *(Corrected 2026-09-11: this bullet named
+  `test_pa_tool_is_registered` as a known open item for a day after P9-S8 closed it.)*
 - **Never remove the explicit `encoding="utf-8"` from a file read.** Python otherwise uses the
   locale default, which is cp1252 on Windows. That crashes on the policy text and — far worse —
   silently changes the cassette cache key, so a machine holding every cassette starts demanding
@@ -121,8 +125,9 @@ deferred to P7.
 ## Submission accounts (P8-S5, not needed to build)
 
 - **AWS Builder ID** — required Devpost field. <https://profile.aws.amazon.com>
-- **AWS $50 credit** — form closes **Sep 11, 2026, 12:00pm PT**. Worth requesting even though the
-  build uses Gemini, since a P7 AgentCore deployment would consume it.
+- **AWS credit** — **closed.** The $50 form was submitted 09-08 and the credit approved 09-10:
+  **$170 total, expiring Oct 31.** The Sep 11 form deadline no longer applies to anything, and
+  reading it as open has already cost one session a wrong reminder. See `STATUS.md`.
 
 | Item | Status |
 |---|---|
@@ -130,4 +135,4 @@ deferred to P7.
 | **Rotate the Gemini key** | **outstanding** — it was pasted into a chat transcript on 09-08. Regenerate at <https://aistudio.google.com/apikey> and update `.env`. Low stakes (free-tier key, gitignored), but worth closing. |
 | Enable Gemini billing | recommended before P4/P5 — removes the 20/day ceiling |
 | AWS Builder ID | **outstanding** — required Devpost field, free, no AWS account needed |
-| AWS $50 credit request | **outstanding** — closes Sep 11, 12:00pm PT. Only useful if P7 AgentCore happens. |
+| AWS credit request | **done** — submitted 09-08, approved 09-10: $170, expires Oct 31. |
