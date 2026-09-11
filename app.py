@@ -462,7 +462,7 @@ else:
         )
         # UNKNOWN is deliberately not styled as a negative. "We could not find a policy" must never
         # read to a practice as "no authorization needed" - that is what causes an unpaid service.
-        {"required": st.error, "not_required": st.success, "unknown": st.warning}[
+        {"required": st.info, "not_required": st.success, "unknown": st.warning}[
             determination.requirement.value
         ](f"**{determination.requirement.value.replace('_', ' ').title()}** — {determination.rationale}")
         if determination.citation:
