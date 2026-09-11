@@ -72,8 +72,8 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P9-S1 | Upload-driven intake, nothing preloaded    | DONE   | Atharv| ec06236  | 09-10 |
 | P9-S2 | Console survives a note it has never seen   | DONE   | ojassug| f906041  | 09-10 |
 | P9-S3 | A criterion says what it means              | DONE   | ojassug| 2436618  | 09-10 |
-| P9-S4 | Landing screen makes the case               | DONE   | Atharv| 2e605d8  | 09-11 |
-| P9-S5 | Gates look like gates; approval provenance  | TODO   | —     | —        | —     |
+| P9-S4 | Landing screen makes the case               | DONE   | Atharv| d275d50  | 09-11 |
+| P9-S5 | Gates look like gates; approval provenance  | DONE   | Atharv| 960d7b2  | 09-11 |
 | P9-S6 | The note shows its own evidence             | TODO   | —     | —        | —     |
 | P9-S7 | The run shows the agent that produced it    | TODO   | —     | —        | —     |
 | P9-S8 | The keyless gate is green again             | DONE   | ojassug| 84cb86e  | 09-10 |

@@ -175,6 +175,8 @@ def test_an_unlisted_payer_stops_the_review_instead_of_guessing(app, monkeypatch
 def test_the_appeal_waits_for_a_separately_uploaded_denial(app):
     """A denial arrives days after the note, so it cannot ride along with it."""
     at = click(click(upload_note(app, "denial"), "Run intake"), "Match criteria")
+    at.text_input(key="gate1_approver").set_value("Dr. L. Marchetti").run()
+    at = click(at, "Approve and generate")
     assert not at.exception
 
     assert at.get_by_key("denial_file") is not None
@@ -184,6 +186,8 @@ def test_the_appeal_waits_for_a_separately_uploaded_denial(app):
 @needs_model
 def test_uploading_the_denial_letter_unlocks_the_appeal(app):
     at = click(click(upload_note(app, "denial"), "Run intake"), "Match criteria")
+    at.text_input(key="gate1_approver").set_value("Dr. L. Marchetti").run()
+    at = click(at, "Approve and generate")
     at = upload(at, "denial_file", CORPUS / "denials" / "denial_001.md")
     assert not at.exception
 
