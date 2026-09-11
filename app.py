@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,10 +50,11 @@ from attest.appeal.draft import draft_rebuttals
 from attest.appeal.emit import emit_appeal_artifact
 from attest.appeal.parse import parse_denial
 from attest.appeal.precedent import find_precedents
+from attest.cache import mode as cache_mode
 from attest.criteria.gaps import build_gap_list
 from attest.criteria.match import match_all
 from attest.gates import content_hash
-from attest.llm import have_credentials
+from attest.llm import have_credentials, model_id
 from attest.models import ApprovalRecord, CriteriaCoverage, Packet, Polarity, Verdict
 from attest.packet.emit import ARTIFACT_NAME, PDF_NAME, emit_submission_artifact
 from attest.packet.justification import build_justification
@@ -426,12 +428,21 @@ else:
     if "case" not in state:
         if st.button("Run intake", type="primary"):
             with st.spinner("Reading the note…"):
+                t0 = time.perf_counter()
                 with guarded("Reading the note", model_backed=True):
                     state["case"] = extract_case(note_text)
                 with guarded("Filing the case"):
                     save_case(state["case"])
+                state["intake_time"] = time.perf_counter() - t0
             st.rerun()
         st.stop()
+
+    intake_dur = state.get("intake_time", 0.0)
+    replay_tag = "Cassette replay" if cache_mode() != "off" else "Live API call"
+    st.caption(
+        f"🤖 **Specialist:** Intake Specialist (Strands Agent) · **Model:** `{model_id('fast')}` (fast tier) · "
+        f"**Time:** {intake_dur:.2f}s · **Mode:** {replay_tag}"
+    )
 
     case = state["case"]
     left, right = st.columns(2)
@@ -497,6 +508,7 @@ else:
     if "coverage" not in state:
         if st.button("Match criteria", type="primary"):
             with st.spinner("Reading each criterion against the note…"):
+                t0 = time.perf_counter()
                 with guarded("Matching the criteria", model_backed=True):
                     raw = match_all(pack, note_text, case_id=case.case_id)
                     # The verifier runs before anything is displayed, not after. A quote that cannot be
@@ -504,6 +516,7 @@ else:
                     # guard with the match it checks: a verification failure is not a result either.
                     state["verified"] = enforce_verification(raw, note_text)
                     state["coverage"] = state["verified"].coverage
+                state["match_time"] = time.perf_counter() - t0
             st.rerun()
         st.stop()
 
@@ -511,10 +524,18 @@ else:
     report = state["verified"].report
     by_id = {c.id: c for c in pack.criteria}
 
+    match_dur = state.get("match_time", 0.0)
+    replay_tag = "Cassette replay" if cache_mode() != "off" else "Live API call"
+    st.caption(
+        f"🤖 **Specialist:** Criteria Specialist (Strands Agent) · **Model:** `{model_id('reasoning')}` (reasoning tier) · "
+        f"**Time:** {match_dur:.2f}s · **Mode:** {replay_tag}"
+    )
+
     met = sum(1 for v in coverage.verdicts if v.verdict is Verdict.MET)
     spans = [s for v in coverage.verdicts for s in v.spans]
+    total_time = state.get("intake_time", 0.0) + state.get("match_time", 0.0)
 
-    a, b, c = st.columns(3)
+    a, b, c, d = st.columns(4)
     a.metric("Criteria met", f"{met}/{len(coverage.verdicts)}")
     b.metric("Evidence quotes", len(spans))
     c.metric(
@@ -522,6 +543,11 @@ else:
         f"{sum(1 for s in spans if s.verified)}/{len(spans)}",
         help="Every quote is checked character by character against the note before it may "
         "enter any document. Paraphrase is rejected on purpose.",
+    )
+    d.metric(
+        "Total elapsed time",
+        f"{total_time:.2f}s",
+        help="Combined wall time across Intake and Criteria Matching specialist stages.",
     )
 
     if report.rejected:
@@ -689,17 +715,26 @@ else:
     if "appeal" not in state:
         if st.button("Draft the appeal", type="primary"):
             with st.spinner("Reading the denial and building the rebuttals…"):
+                t0 = time.perf_counter()
                 with guarded("Reading the denial", model_backed=True):
                     denial = parse_denial(denial_text, pack, case_id=case.case_id)
                 with guarded("Drafting the rebuttals", model_backed=True):
                     rebuttals = draft_rebuttals(denial.contested, coverage, pack)
                     state["denial"] = denial
                     state["appeal"] = build_appeal(denial, rebuttals, pack)
+                state["appeal_time"] = time.perf_counter() - t0
             st.rerun()
         st.stop()
 
     appeal = state["appeal"]
     denial = state["denial"]
+
+    appeal_dur = state.get("appeal_time", 0.0)
+    replay_tag = "Cassette replay" if cache_mode() != "off" else "Live API call"
+    st.caption(
+        f"🤖 **Specialist:** Denial & Appeal Specialist (Strands Agent) · **Model:** `{model_id('reasoning')}` (reasoning tier) · "
+        f"**Time:** {appeal_dur:.2f}s · **Mode:** {replay_tag}"
+    )
 
     st.subheader("What the payer contests")
     for contested in denial.contested:
