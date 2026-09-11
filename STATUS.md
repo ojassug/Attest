@@ -97,6 +97,31 @@ viability, so a missing architecture diagram risks not being scored at all.
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
 
+**2026-09-11 — Atharv** *(session 9)*
+
+**Phase 9 is complete.** All nine UI/UX steps — `P9-S4`, `P9-S5`, `P9-S6`, `P9-S7`, `P9-S9`, `P9-S10`,
+`P9-S11`, `P9-S12`, and `P9-S13` — are fully implemented, verified, committed, and green.
+
+1. **`P9-S4`** (`d275d50`): Landing screen presents problem statement, target audience, 5-stage pipeline,
+   AMA metrics, synthetic data notice, sample loaders, and pinned light theme config.
+2. **`P9-S5`** (`b96151e`): Approval provenance (named clinician, timestamp, content hash) rendered
+   at Gate 1 and Gate 2. Section 5 gated behind Gate 1 submission.
+3. **`P9-S6`** (`bd0f4d2`): Clinical note displays verbatim verified evidence highlighted in-place with
+   interval segmentation and criterion attribution.
+4. **`P9-S7`** (`5f614e3`): Stage execution trace (Strands agent, model tier, model ID, elapsed time,
+   Cassette replay vs Live mode) and completion summary metric strip.
+5. **`P9-S9`** (`e551178`): REQUIRED determination styled as `st.info` instead of `st.error`.
+6. **`P9-S10`** (`5cc6e72`): Justification claims grouped under met criteria with labeled evidence spans;
+   Gate 1 content hash and artifact completely unchanged.
+7. **`P9-S11`** (`8f3edc7`): Appeal deadline renders days remaining metric alongside deadline date and
+   full provenance/placeholder disclosure.
+8. **`P9-S12`** (`ee1050c`): Sidebar lists stored cases with payer (`list_case_summaries`), without naming
+   `load_case`. "Reset this case" button gated behind active case.
+9. **`P9-S13`** (`21d7e99`): Policy match panel displays extracted payer, plan, and CPT, explicitly stating
+   dynamic derivation from document attributes.
+
+**Verification status:** `./scripts/verify.sh ALL --offline` — **395 passed, 5 deselected**, exit 0.
+
 ---
 
 **2026-09-11 — Atharv** *(session 8)*
