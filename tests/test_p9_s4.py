@@ -24,6 +24,10 @@ APP = str(APP_PATH)
 CORPUS = data_dir() / "synthetic"
 TIMEOUT = 90
 
+# Pinned deliberately. If the landing page ever cites a different URL, that is a claim about
+# where the numbers came from and it should have to be argued for in a diff, not drift.
+AMA_SURVEY_URL = "https://www.ama-assn.org/system/files/prior-authorization-survey.pdf"
+
 
 @pytest.fixture
 def app(tmp_path, monkeypatch):
@@ -44,11 +48,23 @@ def body_text(at: AppTest) -> str:
 
 
 def test_the_landing_screen_states_the_problem_before_any_upload(app):
-    """The landing screen states problem, audience, pipeline, and at least three metrics."""
+    """The landing screen states problem, audience, pipeline, and at least three sourced figures."""
     assert not app.exception
-    assert len(app.metric) >= 3, f"expected at least 3 metrics on landing screen, got {len(app.metric)}"
-    
+
     text = body_text(app)
+
+    # The three figures used to be `st.metric` calls and this gate counted `app.metric`. They stopped
+    # being metrics on 2026-09-12, when the "?" had to become a real anchor to the AMA survey - a
+    # thing `st.metric(help=...)` cannot render. The requirement in the docstring never changed, so
+    # the assertion is re-pointed at it rather than dropped: three quantified figures, still here.
+    labels = [name for name in ("Weekly requests", "Staff time spent", "Denial rate") if name in text]
+    assert len(labels) == 3, f"expected three quantified figures on the landing screen, got {labels}"
+    assert "~39" in text and "13 hrs/wk" in text and "31%" in text, "the figures must be quantified"
+
+    # And the part that is new: each figure has to carry the source it was quoted from. These are the
+    # AMA's numbers, not ours, so a reader must be able to get from the claim to the survey.
+    assert text.count("burden-help-icon") >= 3, "each figure must carry its own source link"
+    assert text.count(AMA_SURVEY_URL) >= 3, f"each figure must cite {AMA_SURVEY_URL}"
     # Problem context
     assert "Prior authorization" in text or "prior authorization" in text
     # Audience context

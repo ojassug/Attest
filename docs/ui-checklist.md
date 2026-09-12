@@ -40,6 +40,10 @@ No API key is required. Every model call replays from `cassettes/`.
       offered. Download one and confirm it opens as the note you expected.
 - [ ] No payer, plan or policy is named anywhere yet. The app has read nothing, so it must claim
       nothing.
+- [ ] Hover the `?` beside **Weekly requests**, **Staff time spent** and **Denial rate**. Each
+      explains its figure and names the AMA survey beneath it. Click one: it opens the AMA Prior
+      Authorization Physician Survey in a **new tab**, and the console is still here behind it.
+      The numbers are quoted, not ours — §7 requires the sourcing be reachable, not just stated.
 
 ## 1 · Fully documented case (`clean.md`)
 

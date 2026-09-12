@@ -1590,3 +1590,58 @@ the board next can trust it. A second session starting `P9-S4` from a `TODO` row
 people editing `app.py` in parallel — the exact thing this project has avoided since P9-S1.
 
 The DoDs do not change because of it. Whatever comes back is measured by the same gate.
+
+---
+
+## 2026-09-12 · A borrowed statistic needs a way back to whoever measured it
+
+**Decision.** The three burden figures on the landing screen — weekly requests, staff time, denial
+rate — now carry their source as a link. The `?` after each label is an anchor to the AMA's Prior
+Authorization Physician Survey, opening in a new tab. It stops being a hover-only gloss and becomes
+the way out to the evidence.
+
+**Why.** Those numbers are the whole argument for the product: they are the reason a solo practice
+should care that PA is automatable. They are also *not ours*. We did not survey anyone — the AMA
+did, annually, and we are quoting it. A quoted number with no path back to its source asks the
+reader to take the pitch on trust, which is a strange thing to ask on the landing screen of a tool
+whose entire premise is that claims should be checkable against a cited source. The app makes every
+criterion verdict quote its policy text verbatim; the marketing copy above it should be held to the
+same standard.
+
+**Why the survey PDF and not the research hub.** `.../prior-authorization/prior-authorization-research-reports`
+is AMA's curated landing page and is the more obvious "webpage" to link. It also does not state any
+of the three figures — it links onward to the PDF that does. Sending a reader who clicked `?` on a
+denial rate to a page that does not contain a denial rate is a worse answer than a PDF that does.
+`/system/files/prior-authorization-survey.pdf` is the document AMA's own press releases cite, and
+AMA republishes it at that same path each year, so the link tracks the current fielding.
+
+**Why the icon was rebuilt rather than configured.** `st.metric(help=...)` renders the `?` as inert
+chrome — Streamlit owns the markup and the tooltip is hover-only, so there is no supported way to
+make the icon itself a link. Putting a markdown link *inside* the tooltip was tried in thinking and
+rejected: the bubble is dismissed on mouse-leave, so the link is a moving target the cursor has to
+chase. The row is therefore hand-rolled to match `st.metric`'s own typography (0.875rem label,
+2.25rem value, Streamlit's `rgb(49, 51, 63)`), so the landing screen does not visibly shift. The
+tooltip carries `pointer-events: none` for the same reason the markdown link failed: it must never
+sit between the cursor and the anchor it is describing.
+
+**On the numbers themselves.** They are ranges (`~39–43`, `~13 hrs/wk`, `~31%`) because the survey
+is annual and the figures move — 43 requests a week in the 2023 fielding, 39 in 2024, 40 in 2025;
+12–13 hours across the same years; 27% reporting "often or always denied" in 2023 against 32% in
+2025. The `~` and the range are doing honest work: they are how you cite a moving annual number
+without implying a precision the source does not claim.
+
+**The P9-S4 gate was re-pointed, and this is not the thing the protocol forbids.** That gate
+asserted `len(app.metric) >= 3`. Leaving `st.metric` takes it to zero, so it had to change, and the
+rule from 2026-09-11 is that loosening an earlier gate to make a later step convenient is exactly
+the move this protocol exists to make expensive. The distinction: that gate's *docstring* asks for
+"at least three quantified metrics" on the landing screen, and three quantified figures are still
+there. What died was the mechanism it happened to count, not the requirement. So the assertion now
+reads the figures off the rendered markup, still demands three, still demands they carry numbers —
+and additionally demands each one cite the survey, with the URL pinned in the test. The gate came
+out of this strictly harder to pass than it went in. That is the test to apply next time: a gate
+may be re-pointed at its own docstring, never widened away from it.
+
+**What would change our mind.** If AMA moves the PDF and the link 404s, the hub page becomes the
+right target despite not carrying the figures — a stale link is worse than an indirect one. And if
+a fourth figure ever appears here from a different body, the source stops being uniform and each
+`?` needs its own URL rather than the shared constant.
