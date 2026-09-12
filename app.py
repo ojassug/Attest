@@ -109,7 +109,7 @@ SAMPLE_NOTES = {
 }
 SAMPLE_DENIAL = "denials/denial_001.md"
 
-st.set_page_config(page_title="Attest — prior authorization", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Attest — prior authorization", layout="wide")
 
 
 # --------------------------------------------------------------------------- state
@@ -312,7 +312,41 @@ def reset_case() -> None:
 # ------------------------------------------------------------------------- sidebar
 
 with st.sidebar:
-    st.title("🩺 Attest")
+    # A wordmark, not an emoji. The stethoscope was decoration: a pictogram of a doctor, shown to
+    # a doctor, by software that is meant to be reading their note. What replaces it has to make
+    # the name register as a name without becoming ornament in its own right — so it is still only
+    # type, set in the darkest ink on the page with the tracking pulled in, plus one rule in the
+    # primary colour this app already uses everywhere else. The rule earns its three pixels by
+    # doing a second job: it parts the name from the tagline, so the two read as a masthead rather
+    # than as two consecutive lines of sidebar text.
+    st.markdown(
+        """
+        <div class="attest-mark">
+          <span class="attest-mark-name">Attest</span>
+          <span class="attest-mark-rule"></span>
+        </div>
+        <style>
+        .attest-mark { margin: 0.15rem 0 0.55rem; }
+        .attest-mark-name {
+            display: block;
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            line-height: 1.05;
+            color: #0f1729;
+        }
+        .attest-mark-rule {
+            display: block;
+            width: 30px;
+            height: 3px;
+            margin-top: 0.55rem;
+            border-radius: 2px;
+            background: #2563eb;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("Prior authorization, end to end — for practices without PA staff.")
 
     uploaded = st.file_uploader(
