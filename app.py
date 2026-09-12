@@ -36,6 +36,7 @@ only for a note whose text matches what was recorded. Any other note is a live c
 from __future__ import annotations
 
 import hashlib
+import html
 import os
 import time
 from contextlib import contextmanager
@@ -309,6 +310,150 @@ def reset_case() -> None:
     st.session_state.pop("sample_upload", None)
 
 
+# ----------------------------------------------------------------- landing figures
+
+# The three numbers on the landing screen are the AMA's, not ours: they come from its annual Prior
+# Authorization Physician Survey. A claim about how much of someone else's week PA eats is worth
+# only as much as the reader's ability to go and check it, and `st.metric(help=...)` renders the
+# "?" as inert chrome - it explains the number on hover and the trail stops there. So the icon is
+# rebuilt below as a real anchor. Hovering still explains; clicking now opens the survey itself.
+AMA_PA_SURVEY_URL = "https://www.ama-assn.org/system/files/prior-authorization-survey.pdf"
+AMA_PA_SURVEY_NAME = "AMA Prior Authorization Physician Survey"
+
+# Ranges, not point estimates, because the survey runs yearly and the figures move: 43 requests a
+# week in the 2023 fielding, 39 in 2024, 40 in 2025; 12-13 hours across the same years. A range is
+# the honest way to cite a moving annual number, and the "~" keeps it from reading as precision the
+# source does not claim.
+BURDEN_FIGURES = (
+    ("Weekly requests", "~39–43", "PA requests completed per physician per week."),
+    ("Staff time spent", "~13 hrs/wk", "Physician and staff hours consumed by PA weekly."),
+    ("Denial rate", "~31%", "Physicians reporting requests often or always denied."),
+)
+
+BURDEN_FIGURE_CSS = """
+<style>
+/* The bubble is absolutely positioned and hangs below the row, so any Streamlit ancestor that
+   clips its overflow would shear it off. `:has()` keeps the exemption to the one container that
+   actually holds these figures rather than loosening clipping across the page. */
+.stMarkdown:has(.burden-figures),
+[data-testid="stMarkdownContainer"]:has(.burden-figures) {
+    overflow: visible;
+}
+.burden-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 0.5rem 0 0.25rem;
+}
+.burden-figure-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgb(49, 51, 63);
+}
+.burden-figure-value {
+    font-size: 2.25rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: rgb(49, 51, 63);
+    white-space: nowrap;
+}
+.burden-help {
+    position: relative;
+    display: inline-flex;
+    margin-left: 0.35rem;
+}
+/* Scoped past Streamlit's own `.st-emotion-cache-… a` rule, which otherwise paints the icon in the
+   app's link blue and underlines the "?". Three classes plus the element beats its one class plus
+   element, so specificity settles it and no `!important` is needed. */
+.burden-figures .burden-help a.burden-help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: 1px solid rgba(49, 51, 63, 0.4);
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    color: rgba(49, 51, 63, 0.7);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+.burden-figures .burden-help a.burden-help-icon:hover,
+.burden-figures .burden-help a.burden-help-icon:focus-visible {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+.burden-help-bubble {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 228px;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    background: #0f1729;
+    color: #e8ecf4;
+    font-size: 0.76rem;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+}
+.burden-help:hover .burden-help-bubble,
+.burden-help-icon:focus-visible + .burden-help-bubble {
+    opacity: 1;
+    visibility: visible;
+}
+.burden-help-cue {
+    display: block;
+    margin-top: 0.3rem;
+    color: #93b4fb;
+    font-weight: 600;
+}
+</style>
+"""
+
+
+def burden_figures() -> None:
+    """Render the landing figures, each "?" a link out to the AMA survey behind the number.
+
+    Typography tracks `st.metric` on purpose - 0.875rem label, 2.25rem value, Streamlit's own
+    rgb(49, 51, 63) - so the row still reads as the widget it replaces and the landing screen does
+    not visibly shift. Two details are load-bearing rather than cosmetic. The tooltip carries
+    `pointer-events: none` so it can never sit between the cursor and the anchor it describes, and
+    the whole source line is folded into `aria-label` so a screen reader hears where the link goes
+    without having to reach the hover-only bubble.
+    """
+    cue = f"{AMA_PA_SURVEY_NAME} ↗"
+    cards = "".join(
+        "<div class='burden-figure'>"
+        f"<div class='burden-figure-label'>{html.escape(label)}"
+        "<span class='burden-help'>"
+        f"<a class='burden-help-icon' href='{AMA_PA_SURVEY_URL}' target='_blank' "
+        "rel='noopener noreferrer' "
+        f"aria-label='{html.escape(note)} Source: {AMA_PA_SURVEY_NAME}, opens in a new tab.'>?</a>"
+        f"<span class='burden-help-bubble'>{html.escape(note)}"
+        f"<span class='burden-help-cue'>{html.escape(cue)}</span></span>"
+        "</span></div>"
+        f"<div class='burden-figure-value'>{html.escape(value)}</div>"
+        "</div>"
+        for label, value, note in BURDEN_FIGURES
+    )
+    st.markdown(
+        f"<div class='burden-figures'>{cards}</div>{BURDEN_FIGURE_CSS}",
+        unsafe_allow_html=True,
+    )
+
+
 # ------------------------------------------------------------------------- sidebar
 
 with st.sidebar:
@@ -395,10 +540,7 @@ if uploaded is None:
         "Solo and small practices absorb this directly because they have no dedicated PA departments."
     )
 
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Weekly requests", "~39–43", help="PA requests completed per physician per week (AMA surveys)")
-    m2.metric("Staff time spent", "~13 hrs/wk", help="Physician and staff hours consumed by PA weekly (AMA)")
-    m3.metric("Denial rate", "~31%", help="Physicians reporting requests often or always denied")
+    burden_figures()
 
     st.subheader("Target audience")
     st.write(
