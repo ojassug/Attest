@@ -116,11 +116,19 @@ flash pricing the entire project is a few dollars. Recommended before P4/P5.
 `attest.llm.with_retry` also handles transient `503 high demand`, which the free tier returns
 unpredictably. Permanent errors (bad key, retired model) are re-raised immediately.
 
-## Switching to Amazon Bedrock
+## The provider is Gemini, and there is no AWS account in this setup
 
-Nothing outside `src/attest/llm.py` names a provider. To move to Bedrock, swap the constructor in
-`build_model()` for `BedrockModel` and set the region. See `DECISIONS.md` for why Bedrock was
-deferred to P7.
+**Amazon Bedrock and AgentCore were dropped from the architecture on 2026-09-13.** This section
+used to explain how to switch to Bedrock; the switch is not planned and the `bedrock-agentcore`
+dependency has been removed from `pyproject.toml`. `strands-agents` is the only AWS SDK here, and
+a Google AI Studio key is the only credential the project has ever required. Reasoning in
+`DECISIONS.md`.
+
+Nothing outside `src/attest/llm.py` names a provider, and that stays true — it is what made
+dropping a cloud runtime cost no engine code. If a provider ever does change, `build_model()` is
+the one place to change it, and four things move together: the model ids, the credential check,
+the constructor, and `is_retryable`, which matches Gemini's `429 RESOURCE_EXHAUSTED` / `503`
+strings that another provider would never emit.
 
 ## Submission accounts (P8-S5, not needed to build)
 

@@ -12,8 +12,9 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 | | |
 |---|---|
-| **Phase** | **P0–P6 complete, plus P7-S1..S3, P8-S1..S2, and P9-S1..S3 + S8.** Product is submittable; P7-S4 is blocked on AWS. P9 now carries **thirteen** steps; the five open UI ones added 09-11 are contract only, with no work started. |
-| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left.** P8-S5 needs an AWS Builder ID nobody has obtained. **Every open P9 step is a UI/UX step and is being built outside this repo's session protocol — see the 09-11 handoff note before starting one.** |
+| **Phase** | **P0–P6 complete, plus P7-S1..S2, P8-S1..S2, and all thirteen P9 steps.** Product is submittable. **P7-S3 and P7-S4 are `SUPERSEDED` as of 09-13** — Bedrock and AgentCore are out of the architecture entirely. |
+| **Architecture** | **Strands Agents is the only AWS SDK. No Bedrock, no AgentCore, no AWS account needed to build, test or run this.** The model provider is **Gemini** via a Google AI Studio key, permanently rather than provisionally. Decided 09-13; see `DECISIONS.md`. |
+| **Next step** | **`P8-S4` (video) and `P8-S5` (Devpost) are the only mandatory work left, and neither is code.** P8-S5 needs an AWS Builder ID nobody has obtained. |
 | **Blocking constraint** | Gemini free tier: **20 requests/day per model**. Four models spent on 09-08. |
 | **Submission deadline** | **Sep 14, 2026, 5:00pm PT** |
 | **Public demo URL** | **<https://attest.streamlit.app>** — live, public, no key needed |
@@ -23,7 +24,12 @@ Then run `./scripts/verify.sh <last DONE step>` to confirm the baseline is real 
 
 ## Status values
 
-`TODO` · `IN_PROGRESS` · `BLOCKED` · `DONE`
+`TODO` · `IN_PROGRESS` · `BLOCKED` · `DONE` · `SUPERSEDED`
+
+`SUPERSEDED` means the step was withdrawn from the contract by a recorded decision — not that
+it failed, and not that it is outstanding work. Its row stays because `test_p0_s3.py` requires
+`PLAN.md` and `STATUS.md` to agree step for step, and because a board that silently drops a
+step tells the next session less than one that says what became of it.
 
 A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Record the commit SHA it passed at.
 
@@ -62,8 +68,8 @@ A step becomes `DONE` only when `./scripts/verify.sh <STEP_ID>` exits zero. Reco
 | P6-S4 | Public deploy for judges                   | DONE   | Atharv| 1593eb7  | 09-09 |
 | P7-S1 | Orchestrator with specialist subagents     | DONE   | Atharv| f8e50fb  | 09-09 |
 | P7-S2 | Physical-therapy extensibility pack        | DONE   | Atharv| f8e50fb  | 09-09 |
-| P7-S3 | AgentCore entrypoint                       | DONE   | Atharv| f8e50fb  | 09-09 |
-| P7-S4 | Deploy to AgentCore Runtime                | BLOCKED| —     | —        | —     |
+| P7-S3 | AgentCore entrypoint                       | SUPERSEDED | — | ~f8e50fb~| 09-13 |
+| P7-S4 | Deploy to AgentCore Runtime                | SUPERSEDED | — | —        | 09-13 |
 | P8-S1 | README                                     | DONE   | ojassug| 045760b  | 09-10 |
 | P8-S2 | Architecture diagram                       | DONE   | ojassug| 045760b  | 09-10 |
 | P8-S3 | Impact metrics                             | TODO   | —     | —        | —     |
@@ -96,6 +102,97 @@ viability, so a missing architecture diagram risks not being scored at all.
 ## HANDOFF NOTES
 
 *The only prose in this file. Say exactly what you were doing when you stopped, especially if mid-step.*
+
+**2026-09-13 — ojassug** *(session 10)*
+
+**The architecture changed, and this is the note that says so. Read this before `DECISIONS.md`.**
+
+**Attest uses the Strands Agents SDK and nothing else from AWS. There is no Amazon Bedrock and no
+AgentCore. The model provider is Gemini, via a free Google AI Studio key, and that is now the
+architecture rather than a stopgap waiting on an AWS account.**
+
+**No engine code changed and the product is unaffected.** The loop still runs end to end, the
+public console is still live and keyless, and `./scripts/verify.sh ALL --offline` exits zero at
+**380 passed, 5 deselected** — run against this exact tree before it was committed. Nothing about the pipeline, the verifier, the
+gates or either artifact moved. `python -m attest.demo --case clean` was also walked end to end
+with no key and still stops at Gate 1.
+
+### What was removed
+
+| | |
+|---|---|
+| `agent_runtime.py` | deleted — the AgentCore entrypoint, `DONE` at `f8e50fb`, fifteen tests |
+| `tests/test_p7_s3.py` | deleted with it |
+| `bedrock-agentcore` | removed from `pyproject.toml` dependencies |
+| `P7-S3`, `P7-S4` | `SUPERSEDED` on the board and in `PLAN.md` — rows and markers **kept** |
+
+**The dependency was the real reason to act rather than just re-label the plan.** `pyproject.toml`
+declared `bedrock-agentcore` and `test_p0_s3.py` *asserted* that it did, so a README saying "no
+AgentCore" would have shipped alongside a `pip install -e .` that pulls an AgentCore SDK into every
+judge's clone. That assertion is now inverted: `FORBIDDEN_DEPS` in `test_p0_s3.py` fails the **P0**
+gate — and therefore every cumulative gate — if `bedrock-agentcore` ever comes back. The
+architecture claim is enforced by a gate, not by a sentence.
+
+**P7-S3 and P7-S4 keep their rows, their headings and their pytest markers on purpose.**
+`test_p0_s3.py::test_status_covers_all_plan_steps` requires `PLAN.md` and `STATUS.md` to agree step
+for step and in order, so deleting either would take the P0 gate red. Registered markers with no
+tests behind them are harmless — `verify.sh` ORs markers cumulatively, so nothing ever
+zero-collects. Do not "tidy" these away.
+
+**Nothing the product promises was lost with `agent_runtime.py`.** The rule it existed to
+demonstrate headlessly — no artifact emitted without a clinician approving a named content hash —
+was never located in that module. It lives in `attest.gates`, and `python -m attest.demo --case
+clean` still shows it with no browser and no key.
+
+### A stale claim was found on the way, and it was on the public README
+
+`README.md` said the suite was **366 tests**, in three places. The true count at `1412f05` was
+**395** — session 9 recorded that correctly on this board and the README was simply never updated.
+It now reads **380**, and that number was checked from both ends rather than inferred:
+`pytest --collect-only` on a detached worktree at `1412f05` reports `380/385 collected` *because*
+`test_p7_s3.py` cannot import `bedrock_agentcore` when it is not installed. 395 − 15 = 380.
+
+**This is the fourth time a README number has drifted** (357 → 366 → 395 → 380). The board is
+updated every session; the README is not. If you change the suite, grep `README.md` for the count.
+
+### Files touched
+
+Docs: `README.md` (new **"The architecture, stated plainly"** section under *How it works*, tech
+stack, roadmap, getting started, hackathon context, three test counts), `PLAN.md` (P7 header,
+P0-S1, P0-S3 DoD, P7-S3/S4), `STATUS.md`, `DECISIONS.md` (appended), `Attest-PRODUCT.md` (§1.7 and
+§8 only), `docs/setup.md`, `docs/architecture.svg`.
+
+**`Attest-PRODUCT.md` §1.3 and §1.5 still mention AgentCore and must keep doing so.** They quote
+the hackathon's own rules — that AgentCore is *optional* and that "a live demo and/or AgentCore
+deployment" strengthens Technical Implementation. Those are facts about the contest, not claims
+about our stack, and editing them would make the file misstate the rules it exists to record. Only
+§1.7 and §8, which are where *we* said we would prioritise a deployment, were rewritten.
+
+**`docs/architecture.svg`** no longer draws a dashed "not deployed" AgentCore box. Panel 3 is now
+*"WHERE IT RUNS, AND ON WHAT"*, and the third box states the stack: Strands Agents + Gemini, no
+Bedrock, no AgentCore, no AWS account.
+
+### What is still outstanding — unchanged by any of this
+
+**`P8-S4` (demo video) and `P8-S5` (Devpost).** Neither is code. P8-S5 still needs an **AWS Builder
+ID**, which nobody has obtained and which remains the one human errand. **Deadline: Sep 14, 2026,
+5:00pm PT.**
+
+Still unpruned, because an earlier session's sandbox refused the command:
+`origin/claude/attest-uiux-review-0d3f38` and `origin/worktree-p9-s1-upload` are both fully merged,
+and a stale worktree sits at `.claude/worktrees/p9-s1-upload`.
+
+**One thing to know if you rebuild the venv:** `boto3` and `botocore` are still installed. They are
+transitive dependencies of `strands-agents-tools`, not ours, and their presence is not a leftover
+of this change — we declare neither, and no module imports either. `README.md` says so explicitly
+rather than claiming "no boto3", which would have been the easy sentence and a false one.
+
+**Two more README claims were corrected while checking the first.** The suite is timed at
+"under two minutes", not "about thirty seconds": it ran **103s** and **108s** on Windows here, and
+the old figure dated from when the suite was 297 tests. If you re-time it on Linux and it is much
+faster, tighten the claim — but measure before writing a number.
+
+---
 
 **2026-09-11 — Atharv** *(session 9)*
 

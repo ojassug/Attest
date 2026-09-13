@@ -12,7 +12,6 @@ license = "Apache-2.0"
 dependencies = [
   "strands-agents[gemini]",
   "strands-agents-tools",
-  "bedrock-agentcore",
   "pydantic>=2",
   "pyyaml",
   "streamlit",
@@ -36,9 +35,9 @@ attest = ["policies/packs/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Puts the repo root on sys.path so tests can import root-level modules - `agent_runtime.py`,
-# which AgentCore requires at the root of the image. Removed when P7-S3 was reverted, on the
-# stated grounds that it should return alongside the step whose module needs it. It has.
+# Puts the repo root on sys.path so tests can import root-level modules. It arrived for
+# `agent_runtime.py`, which AgentCore required at the root of the image; that module is gone
+# (2026-09-13, AgentCore dropped) but `app.py` lives at the root too and tests import it.
 pythonpath = ["."]
 # Markers are generated from the step headings in PLAN.md. PLAN.md is the contract;
 # tests/test_p0_s3.py::test_every_step_has_a_marker fails if the two ever drift.

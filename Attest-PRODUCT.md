@@ -58,7 +58,10 @@
 
 ### 1.7 What this means for our build (constraints, not architecture)
 - Must be a Strands Agents project, newly built, that runs end to end and is judge-testable.
-- Prioritize a live demo and (if feasible) AgentCore deployment for the Technical Implementation score.
+- Prioritize a live demo for the Technical Implementation score. **AgentCore deployment was
+  evaluated and dropped (2026-09-13)** — it is optional under §1.3, and Bedrock model access never
+  cleared AWS verification. The live public console is the deployment judges can actually reach.
+  Strands is the only AWS SDK used; the model is Gemini. See `DECISIONS.md`.
 - The 5-minute video and the impact case carry as much weight as the code — plan for them as first-class deliverables.
 
 ---
@@ -132,7 +135,7 @@ Everywhere else the agent runs autonomously. The gates are a product requirement
 
 ## 8. Judging alignment (how the product maps to the five criteria)
 
-- **Technical Implementation** — a genuinely agentic, multi-step, tool-using system built on Strands Agents that determines PA need, matches criteria to evidence, and autonomously drafts appeals; strengthened by a live demo and (if feasible) AgentCore deployment.
+- **Technical Implementation** — a genuinely agentic, multi-step, tool-using system built on Strands Agents that determines PA need, matches criteria to evidence, and autonomously drafts appeals; strengthened by a live, keyless, publicly reachable demo. Depth is spent on Strands itself — `agent.as_tool()` orchestration, structured output, and the human-in-the-loop interrupt both gates are built on — rather than on an AgentCore deployment, which §1.3 makes optional and which was dropped on 2026-09-13.
 - **Design** — a complete experience an office manager could actually use: clear two-gate approval flow and a plain-language criteria-coverage checklist, not a bare proof of concept.
 - **Potential Impact** — a specific, credible case grounded in the section 2 numbers, with a measured before/after on time-per-PA and criteria coverage on the demo cases.
 - **Creativity & Originality** — the autonomous denial→appeal loop that cites the payer's *own* published criteria, and the "make appeals the default" framing, demonstrating real understanding of the PA problem space.

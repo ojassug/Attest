@@ -116,7 +116,8 @@ git push
 ## P0-S1 — Model provider access
 
 Human-driven. A free Gemini key from https://aistudio.google.com/apikey — no credit card, no
-account provisioning. Bedrock is deferred to P7; see DECISIONS.md.
+account provisioning. **Gemini is the model provider, permanently** — Bedrock was deferred to P7
+here and then dropped outright on 2026-09-13. See DECISIONS.md.
 
 **DoD**
 - [ ] **File** `.env` exists at the repo root containing a working `GOOGLE_API_KEY`, and is
@@ -135,7 +136,10 @@ account provisioning. Bedrock is deferred to P7; see DECISIONS.md.
 ## P0-S3 — Repo skeleton, tooling, and the gate runner
 
 **DoD**
-- [ ] **File** `pyproject.toml` declares `strands-agents`, `strands-agents-tools`, `bedrock-agentcore`, `pydantic`, `pytest`, `streamlit`, `pyyaml`
+- [ ] **File** `pyproject.toml` declares `strands-agents`, `strands-agents-tools`, `pydantic`, `pytest`, `streamlit`, `pyyaml`
+      *(amended 2026-09-13: `bedrock-agentcore` was in this list and is now forbidden by
+      `test_p0_s3.py::test_required_dependencies_declared`. Bedrock and AgentCore are out of the
+      architecture; Strands is the only AWS SDK. See DECISIONS.md.)*
 - [ ] **File** `LICENSE` exists and is Apache 2.0 (added in PR #1; the rules accept MIT or Apache)
 - [ ] **File** `src/attest/__init__.py` exists
 - [ ] **File** `scripts/verify.sh` exists and is executable
@@ -379,7 +383,15 @@ Everything above is a complete, coherent, submittable product. Do not start P7 u
 
 ---
 
-# P7 — Multi-agent depth & AgentCore
+# P7 — Multi-agent depth
+
+> **Renamed 2026-09-13.** This phase was "Multi-agent depth & AgentCore". Bedrock and AgentCore
+> were dropped from the architecture: the project uses the **Strands Agents SDK and nothing else
+> from AWS**, against a **Gemini** API key. `P7-S1` and `P7-S2` are unaffected and stay `DONE` —
+> they are Strands work, not AWS work. `P7-S3` and `P7-S4` are **superseded** and are retained
+> below rather than deleted, because `test_p0_s3.py` requires `PLAN.md` and `STATUS.md` to agree
+> step for step, and because a contract that quietly loses a step it once carried is a worse
+> record than one that says what happened to it.
 
 ## P7-S1 — Orchestrator with specialist subagents
 
@@ -400,20 +412,40 @@ Judging criterion 1 scores *how thoroughly and skilfully the project uses Strand
       means "cannot be replayed from a cassette", and this replays. P7-S1's two DoD tests are
       genuinely `live` — an agent's tool-calling loop is not cassette-backed — so those stand.)*
 
-## P7-S3 — AgentCore entrypoint
+## P7-S3 — AgentCore entrypoint  ~~SUPERSEDED 2026-09-13~~
 
-**DoD**
-- [ ] **File** `agent_runtime.py` uses `BedrockAgentCoreApp` with an `@app.entrypoint` handler
-- [ ] **File** `requirements.txt` pins the runtime dependencies
-- [ ] **Command** `python agent_runtime.py` then `curl -X POST localhost:8080/invocations -H 'Content-Type: application/json' -d '{"prompt":"..."}'` returns a valid packet payload
+**This step was `DONE` at `f8e50fb` and has been withdrawn.** It is not a failure and not
+incomplete work: `agent_runtime.py` was written, verified against the DoD's own `curl` command,
+and covered by seventeen tests. It has been deleted along with `tests/test_p7_s3.py`, because the
+runtime it was an entrypoint *for* is no longer part of this project.
 
-## P7-S4 — Deploy to AgentCore Runtime
+~~**DoD**~~
+- ~~**File** `agent_runtime.py` uses `BedrockAgentCoreApp` with an `@app.entrypoint` handler~~
+- ~~**File** `requirements.txt` pins the runtime dependencies~~
+- ~~**Command** `python agent_runtime.py` then `curl -X POST localhost:8080/invocations ...`~~
 
-**DoD**
-- [ ] **Command** `agentcore configure` and `agentcore launch` complete without error
-- [ ] **Command** `agentcore invoke` against the deployed runtime returns a correct packet for a synthetic case
-- [ ] **File** `docs/aws-setup.md` records the runtime ARN and the IAM role used
-- [ ] **Command** `./scripts/verify.sh P7` exits zero
+**What survived it.** The Gate 1 rule the module existed to prove headlessly — that no artifact is
+emitted without a clinician approving a named content hash — was never located in that file. It
+lives in `attest.gates`, and `src/attest/demo.py` still demonstrates it with no browser and no key.
+`requirements.txt` also stays one line for the reason recorded in DECISIONS.md on 2026-09-09; it
+simply has one consumer now instead of two.
+
+## P7-S4 — Deploy to AgentCore Runtime  ~~SUPERSEDED 2026-09-13~~
+
+**This step was `BLOCKED` and is now withdrawn rather than waiting.** It never depended on code.
+It needed AWS credentials, Docker, `bedrock-agentcore-starter-toolkit`, and — the part that never
+moved — Bedrock model access, which stayed `authorizationStatus: NOT_AUTHORIZED` account-wide
+through every re-check from 09-09 to 09-12.
+
+~~**DoD**~~
+- ~~**Command** `agentcore configure` / `agentcore launch` complete without error~~
+- ~~**Command** `agentcore invoke` returns a correct packet for a synthetic case~~
+- ~~**File** `docs/aws-setup.md` records the runtime ARN and the IAM role used~~
+- ~~**Command** `./scripts/verify.sh P7` exits zero~~
+
+**The last item is the one that still binds**, and it still passes: `./scripts/verify.sh P7` is
+green on `P7-S1` and `P7-S2` alone. The deployment surface judges can reach is
+<https://attest.streamlit.app>, which has been live and keyless since P6-S4.
 
 ---
 

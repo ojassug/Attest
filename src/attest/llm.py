@@ -1,7 +1,10 @@
 """Model provider selection — the single place the rest of the codebase learns which model to use.
 
-Everything else calls ``build_model()``. Swapping providers (Gemini today, Bedrock once the AWS
-account is set up) is a change here and nowhere else. See DECISIONS.md.
+Everything else calls ``build_model()``. The provider is **Gemini**, via Google AI Studio, and
+that is the architecture rather than a stopgap: Bedrock and AgentCore were dropped on 2026-09-13,
+and Strands is the only AWS SDK this project uses. The indirection stays because it is what keeps
+that true - no other module names a provider - so any future swap is a change here and nowhere
+else. See DECISIONS.md.
 
 Two tiers, because the pipeline's demands are wildly uneven:
 

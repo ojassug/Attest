@@ -8,7 +8,7 @@
 [![Hackathon: Agents for Humans](https://img.shields.io/badge/AWS-Agents%20for%20Humans-orange.svg)](https://agentsforhumans.devpost.com)
 [![Built with: Strands Agents](https://img.shields.io/badge/built%20with-Strands%20Agents-232f3e.svg)](https://github.com/strands-agents)
 
-> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and the AgentCore entrypoint (P7-S1–S3): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **366 tests** — replays offline from recorded model responses in about thirty seconds, **with no API key and no network**, on Linux, macOS and Windows alike. What remains is the demo video and the Devpost entry (P8-S4, P8-S5), plus an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
+> **Project status — the full loop runs, end to end, on a public URL.** Phases **P0 through P6 are complete and gated**, plus multi-agent orchestration and a second specialty (P7-S1–S2): you upload a clinical note, and it becomes a criteria-matched submission packet behind a clinician approval gate; upload the payer's denial and it becomes an evidence-backed appeal behind a second one. The whole suite — **380 tests** — replays offline from recorded model responses in under two minutes, **with no API key, no network and no AWS account**, on Linux, macOS and Windows alike. What remains is the demo video and the Devpost entry (P8-S4, P8-S5), plus an open final-improvements phase (P9). See [Project status & roadmap](#project-status--roadmap), and [STATUS.md](STATUS.md) for the live board.
 
 ---
 
@@ -18,6 +18,7 @@
 - [What Attest does](#what-attest-does)
 - [Who it's for](#who-its-for)
 - [How it works](#how-it-works)
+  - [The architecture, stated plainly](#the-architecture-stated-plainly)
 - [Design principles](#design-principles)
 - [Tech stack](#tech-stack)
 - [Project status & roadmap](#project-status--roadmap)
@@ -97,6 +98,23 @@ flowchart TD
 
 Attest is built as a multi-step, tool-using agent system on the **Strands Agents SDK**, with specialist agents (intake, criteria matching, packet assembly, appeal drafting) composed under an orchestrator. Both approval gates are implemented on Strands' first-class human-in-the-loop primitive (`BeforeToolCallEvent.interrupt(...)`), so the gate holds even when the agent is driven headlessly — it is a product requirement, not UI logic.
 
+### The architecture, stated plainly
+
+**Strands Agents is the only AWS SDK in this project. There is no Amazon Bedrock and no AgentCore, and the model is Gemini via a Google AI Studio API key.**
+
+That is a decision, not a gap waiting to close. Earlier revisions of this README described Bedrock as "the intended provider" and AgentCore Runtime as a planned deployment target; both were dropped on **2026-09-13**, and the dependency, the entrypoint module and its tests were removed with them. The reasoning is recorded in [DECISIONS.md](DECISIONS.md).
+
+What this leaves is deliberately small and entirely reproducible:
+
+| | |
+|---|---|
+| **Agent framework** | `strands-agents` — the orchestrator, the four specialists, `agent.as_tool()` composition, structured output, and the human-in-the-loop interrupt both gates are built on |
+| **Model** | Gemini, through Strands' `GeminiModel`, named in exactly one file — [`src/attest/llm.py`](src/attest/llm.py) |
+| **Everything else** | deterministic Python: the policy-pack loader, the evidence verifier, the gap list, the packet and appeal emitters, the case store |
+| **Where it runs** | Streamlit Community Cloud for the public console, and a terminal for `python -m attest.demo` |
+
+The verifier, the gates and the pack routing — the parts the product's safety claims rest on — contain no model call and never did. Nothing about this architecture is provider-shaped, which is why changing providers cost one file and dropping a cloud runtime cost no engine code at all.
+
 ## Design principles
 
 These are non-negotiable and encoded as tests, not aspirations:
@@ -113,10 +131,10 @@ These are non-negotiable and encoded as tests, not aspirations:
 |---|---|
 | Language | Python |
 | Agent framework | `strands-agents`, `strands-agents-tools` |
-| Model | **Gemini** via Google AI Studio — `gemini-3.5-flash-lite` (fast) and `gemini-3.6-flash` (reasoning). Amazon Bedrock is the intended provider and the swap is one constructor in `src/attest/llm.py` — nothing else names a provider. See [DECISIONS.md](DECISIONS.md). |
+| Model | **Gemini** via Google AI Studio — `gemini-3.5-flash-lite` (fast) and `gemini-3.6-flash` (reasoning), behind a free API key. Named in one file, `src/attest/llm.py`; nothing else names a provider. **Not Bedrock** — see [DECISIONS.md](DECISIONS.md). |
 | Structured output | Strands structured output → Pydantic models (typed verdicts, never parsed from prose) |
 | Human-in-the-loop | `BeforeToolCallEvent.interrupt(...)` |
-| Deployment | **Amazon Bedrock AgentCore Runtime** (`BedrockAgentCoreApp` + `@app.entrypoint`) — planned, P7 |
+| AWS surface | **`strands-agents` only.** No Bedrock, no AgentCore, and no AWS account required to build, test or run this project. (`boto3` appears in the install tree as a transitive dependency of `strands-agents-tools`; we declare it nowhere and no module imports it.) |
 | UI | **Streamlit**, hosted on Streamlit Community Cloud for a free, public, judge-testable link |
 | Documents | `fpdf2` for the submission and appeal PDFs |
 | Validation / data | `pydantic`, `pyyaml` |
@@ -136,7 +154,7 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | **P5** ▲ | Denial → appeal loop & Gate 2 (approval before appeal) | ✅ done |
 | **P6** ▲ | Case tracking, precedent reuse, Streamlit UI, public deploy | ✅ done |
 | — | **Submittable product complete through here** | |
-| **P7** | Multi-agent orchestration depth + AgentCore deployment | 🟡 S1–S3 done; S4 blocked on AWS Bedrock authorization |
+| **P7** | Multi-agent orchestration depth, second specialty | ✅ S1–S2 done; **S3–S4 superseded** — AgentCore dropped from the architecture (2026-09-13) |
 | **P8** | Submission deliverables — README, architecture diagram, metrics, demo video, Devpost | 🟡 S1–S2 done; S4 (video) and S5 (Devpost) outstanding |
 | **P9** | Final improvements — upload-driven intake, a keyless green gate, an error boundary, criteria that say what they mean (S1–S3, S8 done); phase deliberately open | 🟡 in progress |
 
@@ -151,7 +169,7 @@ Work is organized into small, individually verifiable steps. A step is **done on
 | Gap list vs. ground truth | exact on all three cases |
 | Contested criteria parsed from the denial letter | exact — plus the one objection that maps to no criterion, surfaced rather than dropped |
 | An uploaded note reaching its own payer's pack | derived from the extracted payer/plan/CPT — an unlisted payer stops the review rather than guessing |
-| `./scripts/verify.sh ALL --offline` | exits zero, **366 tests**, no API key, on Linux, macOS and Windows |
+| `./scripts/verify.sh ALL --offline` | exits zero, **380 tests**, no API key, no AWS account, on Linux, macOS and Windows |
 
 The same command runs in CI on every push, on Linux, with no credentials configured — the judge's scenario rather than ours.
 
@@ -247,7 +265,7 @@ Then run the full gate. It needs nothing else — no key, no network:
 ./scripts/verify.sh ALL --offline
 ```
 
-Expect **366 passed, 5 deselected**. The five are the provider-connectivity tests, which cannot be
+Expect **380 passed, 5 deselected**. The five are the provider-connectivity tests, which cannot be
 replayed from a cassette; `--offline` deselects them and that is a valid pass. The same command
 runs in CI on every push, on a clean Linux machine with no credentials configured — the judge's
 scenario rather than ours.
@@ -258,7 +276,7 @@ And to use the console locally:
 streamlit run app.py
 ```
 
-To re-record cassettes or run the three provider-connectivity tests you need a free [Google AI Studio](https://aistudio.google.com/apikey) key in `.env`. Note the free tier allows **20 requests per day per model** — see [`docs/setup.md`](docs/setup.md) for the model roster, rotation, and why cassettes exist. Amazon Bedrock is a one-constructor swap in `src/attest/llm.py`; the AgentCore entrypoint is written and verified, and deployment is blocked on Bedrock model access rather than on code — see [STATUS.md](STATUS.md).
+To re-record cassettes or run the three provider-connectivity tests you need a free [Google AI Studio](https://aistudio.google.com/apikey) key in `.env` — **that key is the only credential this project has ever needed.** There is no AWS account, no `aws configure`, and no Bedrock model access anywhere in the setup path. Note the free tier allows **20 requests per day per model** — see [`docs/setup.md`](docs/setup.md) for the model roster, rotation, and why cassettes exist.
 
 ## Compliance, safety & scope
 
@@ -270,7 +288,9 @@ To re-record cassettes or run the three provider-connectivity tests you need a f
 
 ## Hackathon context
 
-Attest is being built for the **AWS "Agents for Humans" hackathon** (sponsored by Amazon Web Services, administered by Devpost), in the **Professional Agents** track. The submission window runs **Aug 10 – Sep 14, 2026**. The hackathon requires a newly built agent on the **Strands Agents SDK** that does real work end to end; deploying with **Amazon Bedrock AgentCore** is optional but strengthens the technical-implementation score. Judging weighs Technical Implementation, Design, Potential Impact, Creativity & Originality, and Presentation equally.
+Attest is being built for the **AWS "Agents for Humans" hackathon** (sponsored by Amazon Web Services, administered by Devpost), in the **Professional Agents** track. The submission window runs **Aug 10 – Sep 14, 2026**. The hackathon requires a newly built agent on the **Strands Agents SDK** that does real work end to end; deploying with **Amazon Bedrock AgentCore** is explicitly *optional*, and strengthens the technical-implementation score.
+
+**We took the optional half and left it.** Attest is a Strands project and satisfies the required tool; it deploys instead to Streamlit Community Cloud, where a judge can reach the whole loop at a public URL with no account and no key. An AgentCore entrypoint was in fact built and passing at `f8e50fb` — what never arrived was Bedrock model access, which read `NOT_AUTHORIZED` account-wide on every check across four days. Trading a verified, reachable demo for an unreachable one was not a trade worth making, and carrying a dependency on an SDK the project does not import would have made the repository claim something untrue. Judging weighs Technical Implementation, Design, Potential Impact, Creativity & Originality, and Presentation equally.
 
 ## License
 

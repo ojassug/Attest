@@ -1645,3 +1645,72 @@ may be re-pointed at its own docstring, never widened away from it.
 right target despite not carrying the figures — a stale link is worse than an indirect one. And if
 a fourth figure ever appears here from a different body, the source stops being uniform and each
 `?` needs its own URL rather than the shared constant.
+
+---
+
+## 2026-09-13 · Strands is the only AWS SDK: Bedrock and AgentCore are dropped, Gemini is the provider
+
+**Supersedes:** *"Stack: Strands + Bedrock + AgentCore, Streamlit UI"* (2026-09-08) and the deferral
+half of *"Model provider is Gemini, not Bedrock — Bedrock deferred to P7"* (2026-09-08). The Gemini
+half of that second entry is not superseded; it is promoted from a stopgap to the architecture.
+
+**Decision.** Attest uses the **Strands Agents SDK and nothing else from AWS**. The model provider
+is **Gemini**, via a free Google AI Studio key, permanently rather than provisionally. Amazon
+Bedrock is not a future provider. AgentCore is not a deployment target. `bedrock-agentcore` is
+removed from `pyproject.toml`, `agent_runtime.py` and `tests/test_p7_s3.py` are deleted, and
+`P7-S3` and `P7-S4` are marked **SUPERSEDED** in `PLAN.md` and on the board.
+
+**Why now, and why not simply keep waiting.** P7-S4 had been `BLOCKED` since 09-09 on one thing:
+Bedrock model access read `authorizationStatus: NOT_AUTHORIZED` account-wide, with
+`agreementAvailability: NOT_AVAILABLE`, on every re-check from 09-09 through 09-12. Nothing was
+misconfigured — credentials authenticated, IAM carried `AmazonBedrockFullAccess`, the region was
+right, and the control plane returned 116 models. It was AWS's verification gate, and it did not
+move in four days. With the deadline at **Sep 14, 5:00pm PT**, "blocked on a third party" stopped
+being a status and became an answer.
+
+**The rules make this free.** `Attest-PRODUCT.md` §1.3 requires the **Strands Agents SDK**, and
+says in the same breath that deploying with Bedrock AgentCore is **optional** and merely
+*strengthens* the Technical Implementation score. §1.5 scores "a live demo **and/or** AgentCore
+deployment". We have the live demo, public and keyless, at <https://attest.streamlit.app>. Nothing
+required is lost.
+
+**Why the dependency had to go, and not just the plan.** This is the part worth recording, because
+leaving it would have been the easier call the day before a deadline. `pyproject.toml` declared
+`bedrock-agentcore` as a hard runtime dependency, and `test_p0_s3.py` *asserted* that it did. A
+README saying "there is no AgentCore" on a repository whose `pip install -e .` pulls an AgentCore
+SDK is a false claim installed into every judge's clone. This project rejects paraphrase in a
+medical-necessity justification on exactly this principle — a claim must be checkable against its
+source — and the principle does not get suspended for our own packaging. The assertion is now
+inverted: `FORBIDDEN_DEPS` fails the P0 gate if `bedrock-agentcore` ever returns. **The
+architecture claim is enforced by a gate rather than by a sentence**, which is the only form of
+claim this protocol has ever trusted.
+
+**What deleting P7-S3 cost, which is less than it looks.** `agent_runtime.py` was real, working
+code — fifteen tests, verified against its own DoD `curl` command, `DONE` at `f8e50fb`. It is gone
+because the runtime it was an entrypoint *for* is gone, not because it was wrong. Crucially, the
+product rule it existed to demonstrate was never located in it: the rule that no artifact is
+emitted without a clinician approving a named content hash lives in `attest.gates`, and
+`src/attest/demo.py` still shows it headlessly with no browser and no key. **The gate survived the
+deletion of the file that proved it**, which is the design working as intended.
+
+**The steps are superseded, not deleted, and that is a constraint as much as a preference.**
+`test_p0_s3.py::test_status_covers_all_plan_steps` requires `PLAN.md` and `STATUS.md` to agree step
+for step, in order, so the headings and the board rows stay and their pytest markers stay
+registered with them. That constraint happens to enforce the honest thing: a contract that quietly
+loses a step it once carried is a worse record than one that says what became of it. A reader can
+still see that AgentCore was built, evaluated, and dropped — which is a better signal than a
+repository that appears never to have considered it.
+
+**A stale number was found on the way and fixed.** `README.md` claimed the suite was **366 tests**
+in three places. The real count at `1412f05` was **395** — session 9 had recorded it correctly on
+the board and the README was never updated. It now reads **380**, which is 395 less the fifteen in
+`tests/test_p7_s3.py`, and that arithmetic was checked from both ends rather than assumed:
+`pytest --collect-only` on a detached worktree at `1412f05` reports `380/385 collected` precisely
+*because* `test_p7_s3.py` cannot import `bedrock_agentcore`.
+
+**What would change our mind.** If Bedrock access were granted *and* a deployment demonstrably
+raised the Technical Implementation score enough to justify the risk, the path back is open and
+cheap by construction — nothing outside `src/attest/llm.py` names a provider, and no engine module
+ever imported `bedrock_agentcore`. It would be a new step with a new gate, not a revert. Before
+that deadline, it is not a trade worth making: an unreachable deployment scores nothing on any of
+the five criteria, and a reachable one already exists.
