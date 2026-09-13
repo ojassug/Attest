@@ -130,8 +130,9 @@ def test_the_policy_packs_are_declared_as_package_data():
 def test_requirements_installs_editable_so_repo_assets_resolve():
     """`.` would install to site-packages and leave the corpus and cassettes behind.
 
-    Both deployment surfaces read this file — the Streamlit console and the AgentCore image — and
-    both need the repository layout the tests run against, not a copy of the `.py` files.
+    The Streamlit console deploys from this file and needs the repository layout the tests run
+    against, not a copy of the `.py` files. It had a second reader until 2026-09-13 — the
+    AgentCore container image — and the rule outlived it unchanged.
     """
     lines = [
         line.strip()

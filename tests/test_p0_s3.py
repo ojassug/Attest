@@ -20,15 +20,21 @@ REPO = Path(__file__).resolve().parents[1]
 STEP_HEADING = re.compile(r"^## (P\d+-S\d+)", re.M)
 STATUS_ROW = re.compile(r"^\|\s*(P\d+-S\d+)\s*\|", re.M)
 
+# `bedrock-agentcore` was here until 2026-09-13, when Bedrock and AgentCore were dropped from
+# the architecture entirely: Strands is the only AWS SDK this project uses, and the model is
+# Gemini. A declared dependency on an AgentCore SDK we never import would be a claim the README
+# contradicts, installed into every judge's clone. See DECISIONS.md, 2026-09-13.
 REQUIRED_DEPS = (
     "strands-agents",
     "strands-agents-tools",
-    "bedrock-agentcore",
     "pydantic",
     "pytest",
     "streamlit",
     "pyyaml",
 )
+
+
+FORBIDDEN_DEPS = ("bedrock-agentcore",)
 
 
 def plan_steps() -> list[str]:
@@ -86,6 +92,15 @@ def test_required_dependencies_declared():
     )
     missing = [d for d in REQUIRED_DEPS if d not in declared]
     assert not missing, f"dependencies missing from pyproject.toml: {missing}"
+
+    # The architecture claim is enforceable, so enforce it. README.md and DECISIONS.md both say
+    # this project uses Strands and nothing else from AWS; a dependency is the one place that
+    # claim can quietly become false without anyone reading a document.
+    present = [d for d in FORBIDDEN_DEPS if d in declared]
+    assert not present, (
+        f"dependencies pyproject.toml must not declare: {present}. Bedrock and AgentCore were "
+        "dropped on 2026-09-13 - see DECISIONS.md."
+    )
 
 
 def test_license_is_apache():
