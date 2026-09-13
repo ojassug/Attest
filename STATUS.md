@@ -178,9 +178,29 @@ Bedrock, no AgentCore, no AWS account.
 ID**, which nobody has obtained and which remains the one human errand. **Deadline: Sep 14, 2026,
 5:00pm PT.**
 
-Still unpruned, because an earlier session's sandbox refused the command:
-`origin/claude/attest-uiux-review-0d3f38` and `origin/worktree-p9-s1-upload` are both fully merged,
-and a stale worktree sits at `.claude/worktrees/p9-s1-upload`.
+### Branch and worktree cleanup is done, and the note that asked for it was wrong
+
+**The repository is pruned. `origin/main` is the only remote branch.** Ten stale local branches and
+six stale worktrees are gone; the main checkout and one working worktree remain.
+
+**Two of the three items sessions 8 and 9 carried as "still unpruned" did not exist.**
+`origin/worktree-p9-s1-upload` was not a branch on the remote, and there was no worktree at
+`.claude/worktrees/p9-s1-upload`. They were asked for across two handoffs and re-copied forward
+each time without anyone checking whether they were real.
+
+**The third was real but misdescribed.** `claude/attest-uiux-review-0d3f38` was called "fully
+merged"; it was not an ancestor of `main` at all, and reported **101 commits** not in it. That was
+not unmerged work — PRs #8 and #9 were squash-merged, so these branches kept pre-merge SHAs of work
+that reached `main` under different ones. Its `app.py` was **884 lines smaller** than `main`'s. The
+branch was behind, not ahead.
+
+**Verify before you prune, and prune on content rather than on commit count.**
+`git branch --merged` answers the wrong question in a squash-merge repo: every one of these ten
+branches failed it while being a strict subset of `main`. What settled it was
+`git diff origin/main <branch>` and checking which test files `main` had that the branch lacked.
+Two worktrees held uncommitted files — auto-generated AWS toolkit boilerplate in one, and in the
+other **eight files that were pure CRLF noise**, the same P9-S2 smudge documented above, with zero
+content change under `git diff --ignore-cr-at-eol`.
 
 **One thing to know if you rebuild the venv:** `boto3` and `botocore` are still installed. They are
 transitive dependencies of `strands-agents-tools`, not ours, and their presence is not a leftover
