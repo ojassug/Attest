@@ -328,7 +328,8 @@ on either.**
 
 **`docs/architecture.svg` draws AgentCore dashed and labelled "not deployed".** P7-S4 is `BLOCKED`
 on this very board, and a diagram contradicting the status board costs more credibility than the
-box is worth.
+box is worth. *(09-13 note: the box is gone entirely — AgentCore was dropped, and panel 3 now reads
+"no Bedrock, no AgentCore, no AWS account". The principle held; the diagram still matches the board.)*
 
 **Three README claims had quietly become false** and are corrected: the test count (357 → 366); a
 note saying `test_pa_tool_is_registered` still needs a credential, which was fixed at P2-S3 by the
@@ -611,6 +612,11 @@ step in P6 is deterministic — **no model calls, no quota, no credentials neede
 
 ### The provider situation — read before touching `llm.py`
 
+*(09-13 note: superseded. Bedrock and AgentCore were dropped from the architecture entirely and
+Gemini is the permanent provider — see the top handoff note and `DECISIONS.md`. Do not perform the
+swap described below. This whole section is history, kept because the reasoning that led to
+dropping Bedrock is only legible next to the plan it replaced.)*
+
 **We are on Gemini and want to be on Bedrock.** Bedrock was originally deferred because the AWS
 account did not exist. It exists now, but:
 
@@ -748,6 +754,8 @@ If you hit 429:
 - **Provider:** Gemini. `fast` = `gemini-3.5-flash-lite`, `reasoning` = `gemini-3.8-flash`.
   Bedrock deferred to P7 — AWS account not set up. Swapping is one constructor in
   `src/attest/llm.py`; nothing else names a provider.
+  *(09-13 note: Bedrock was dropped outright rather than picked up at P7; Gemini is permanent. The
+  reasoning tier is now `gemini-3.6-flash`.)*
 - **Matching accuracy:** 30/30 verdicts correct across three cases and both payers.
 - **Environment:** Python 3.12 in `.venv`. `python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"`.
 - **Run the gate:** `./scripts/verify.sh P3-S2 --offline` should be green before you start.
